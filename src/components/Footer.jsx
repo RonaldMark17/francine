@@ -14,11 +14,20 @@ export default function Footer() {
           
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="text-2xl font-light font-editorial tracking-[0.25em] text-white uppercase">
-              MAMA MO
-            </div>
-            <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-400 font-sans">
-              INK PRINT &amp; SUPPLIES • OMNICHANNEL RETAIL
+            <div className="flex items-center gap-3">
+              <img 
+                src="/images/mama_mo_logo.png" 
+                alt="Mama Mo Ink" 
+                className="w-12 h-12 rounded-full object-cover border border-neutral-700 shadow-md"
+              />
+              <div>
+                <div className="text-2xl font-light font-editorial tracking-[0.25em] text-white uppercase">
+                  MAMA MO
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-400 font-sans">
+                  INK PRINT &amp; SUPPLIES
+                </div>
+              </div>
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed font-light max-w-sm pt-2">
               &ldquo;Plumang abot kaya, dito lang yan kay Mama.&rdquo; Complete student-friendly school supplies and dependable printing services in Purok 5, Barangay Banago, Nagcarlan, Laguna.

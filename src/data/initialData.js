@@ -322,19 +322,45 @@ export const PRINTING_SERVICES = [
 
 export const INITIAL_ORDERS = [
   {
+    id: 'MM-2026-1050',
+    date: '2026-10-19T11:20:00Z',
+    userId: 'usr-admin-1',
+    customer: {
+      name: 'Anne Francine Celerio',
+      email: 'admin@mamamoinkprint.ph',
+      phone: '+63 917 882 6262',
+      type: 'Store Manager / Admin'
+    },
+    fulfillment: 'pickup',
+    pickupLocation: 'Mama Mo Banago (Express Counter 2, Nagcarlan)',
+    pickupTimeSlot: 'Today, 2:00 PM - 3:00 PM',
+    paymentMethod: 'In-Store Counter Payment',
+    status: 'Ready for Pickup',
+    statusNotes: 'Packaging ready at Ground Floor Counter 2.',
+    items: [
+      { id: 'prod-1', name: 'PaperOne Premium A4 Copy Paper 80gsm (500 Sheets)', price: 285, quantity: 2, sku: 'SKU-PAP-01' },
+      { id: 'prod-2', name: 'Pilot G-Tec-C4 Ultra Fine Gel Pen 0.4mm (Pack of 3)', price: 245, quantity: 1, sku: 'SKU-PEN-02' }
+    ],
+    subtotal: 815,
+    discountAmount: 100,
+    deliveryFee: 0,
+    total: 715
+  },
+  {
     id: 'MM-2026-1042',
     date: '2026-10-18T14:30:00Z',
+    userId: 'usr-student-1',
     customer: {
-      name: 'Teacher Maria Santos',
-      email: 'm.santos@plaridel.deped.gov.ph',
+      name: 'Maria Santos',
+      email: 'student@plaridel.edu.ph',
       phone: '0917-882-9411',
-      type: 'Educator / Faculty'
+      type: 'High School Student'
     },
     fulfillment: 'delivery',
-    deliveryAddress: 'Faculty Room, Plaridel Elementary School, Banago, Nagcarlan, Laguna 4002',
+    deliveryAddress: 'Purok 3, Barangay Banago, Nagcarlan, Laguna 4002',
     paymentMethod: 'GCash (Ref # 99281746)',
     status: 'Out for Delivery',
-    statusNotes: 'Staff on the way across Nagcarlan-Rizal Road to deliver directly to faculty room.',
+    statusNotes: 'Staff on the way across Nagcarlan-Rizal Road to deliver directly.',
     items: [
       { id: 'prod-1', name: 'PaperOne Premium A4 Copy Paper 80gsm (500 Sheets)', price: 285, quantity: 3 },
       { id: 'prod-10', name: 'Post-it Pastel Sticky Notes Multi-Pack (6 Pads)', price: 260, quantity: 2 },
@@ -348,11 +374,12 @@ export const INITIAL_ORDERS = [
   {
     id: 'MM-2026-1038',
     date: '2026-10-19T09:15:00Z',
+    userId: 'usr-teacher-1',
     customer: {
-      name: 'Juan Dela Cruz',
-      email: 'juan.delacruz@pinhs.edu.ph',
+      name: 'Mr. Ronald Mendoza',
+      email: 'teacher.mendoza@deped.gov.ph',
       phone: '0928-554-1290',
-      type: 'High School Student'
+      type: 'Educator / Faculty'
     },
     fulfillment: 'pickup',
     pickupLocation: 'Mama Mo Main Store (Ground Floor Express Counter, Banago, Nagcarlan)',
@@ -373,8 +400,9 @@ export const INITIAL_ORDERS = [
   {
     id: 'MM-2026-1025',
     date: '2026-10-17T11:00:00Z',
+    userId: null,
     customer: {
-      name: 'Elena Ramos',
+      name: 'Elena Ramos (Walk-in Buyer)',
       email: 'elena.ramos@banago.gov.ph',
       phone: '0908-123-4567',
       type: 'Local Resident / Office'

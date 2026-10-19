@@ -6,7 +6,7 @@ export const INITIAL_NAV_CONFIG = {
     { id: 'nav-shop', label: 'Shop', path: 'shop', isCustom: false, visible: true, order: 2 },
     { id: 'nav-promotions', label: 'Promotions', path: 'promotions', isCustom: false, visible: true, order: 3 },
     { id: 'nav-services', label: 'Printing Services', path: 'services', isCustom: false, visible: true, order: 4 },
-    { id: 'nav-tracking', label: 'Track Order', path: 'tracking', isCustom: false, visible: true, order: 5 },
+    { id: 'nav-transactions', label: 'Transactions', path: 'transactions', isCustom: false, visible: true, order: 5 },
     { id: 'nav-about', label: 'About Us', path: 'about', isCustom: false, visible: true, order: 6 },
     { id: 'nav-contact', label: 'Contact', path: 'contact', isCustom: false, visible: true, order: 7 }
   ],
@@ -14,9 +14,10 @@ export const INITIAL_NAV_CONFIG = {
     { id: 'fnav-shop', label: 'All Products', path: 'shop', isCustom: false, visible: true, order: 1 },
     { id: 'fnav-promos', label: 'Active Promotions', path: 'promotions', isCustom: false, visible: true, order: 2 },
     { id: 'fnav-services', label: 'Thesis & Printing', path: 'services', isCustom: false, visible: true, order: 3 },
-    { id: 'fnav-tracking', label: 'Order Tracking', path: 'tracking', isCustom: false, visible: true, order: 4 },
-    { id: 'fnav-about', label: 'Our Story', path: 'about', isCustom: false, visible: true, order: 5 },
-    { id: 'fnav-contact', label: 'Banago Store Location', path: 'contact', isCustom: false, visible: true, order: 6 }
+    { id: 'fnav-transactions', label: 'Transactions', path: 'transactions', isCustom: false, visible: true, order: 4 },
+    { id: 'fnav-tracking', label: 'Order Tracking', path: 'tracking', isCustom: false, visible: true, order: 5 },
+    { id: 'fnav-about', label: 'Our Story', path: 'about', isCustom: false, visible: true, order: 6 },
+    { id: 'fnav-contact', label: 'Banago Store Location', path: 'contact', isCustom: false, visible: true, order: 7 }
   ]
 };
 

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { doesOrderBelongToUser } from '../utils/orderUtils';
 import { 
   Search, 
   Package, 
@@ -12,31 +13,54 @@ import {
   ShieldCheck,
   MapPin,
   Calendar,
-  Receipt
+  Receipt,
+  ExternalLink
 } from 'lucide-react';
 
+const LOCAL_PRODUCT_IMAGES = {
+  'prod-1': '/images/paper_one_ream.jpg',
+  'prod-2': '/images/pilot_gtec_pens.jpg',
+  'prod-3': '/images/mongol_pencils.jpg',
+  'prod-4': '/images/epson_003_ink.jpg',
+  'prod-5': '/images/sterling_record_book.jpg',
+  'prod-6': '/images/deli_stapler.jpg',
+  'prod-7': '/images/laminating_film_pouches.jpg',
+  'prod-8': '/images/faber_castell_pencils.jpg',
+  'prod-9': '/images/wire_binding_spines.jpg',
+  'prod-10': '/images/post_it_notes.jpg',
+  'prod-11': '/images/paper_cutter_trimmer.jpg',
+  'prod-12': '/images/spiral_notebooks.jpg',
+};
+
 export default function OrderTrackingPage() {
-  const { orders, trackingOrderNumber, setTrackingOrderNumber } = useApp();
+  const { orders, currentUser, trackingOrderNumber, setTrackingOrderNumber, navigateTo } = useApp();
   const [searchInput, setSearchInput] = useState(trackingOrderNumber || '');
   const [activeOrder, setActiveOrder] = useState(null);
   const [searched, setSearched] = useState(false);
+
+  // Compute user's own orders
+  const myOrders = useMemo(() => {
+    if (!currentUser) return orders;
+    return orders.filter(o => doesOrderBelongToUser(o, currentUser));
+  }, [orders, currentUser]);
 
   // Sync if trackingOrderNumber state changed from outside
   useEffect(() => {
     if (trackingOrderNumber) {
       setSearchInput(trackingOrderNumber);
+      // Allow tracking any order by direct ID search (even if not the user's own)
       const match = orders.find(o => o.id.toLowerCase() === trackingOrderNumber.toLowerCase());
       if (match) {
         setActiveOrder(match);
         setSearched(true);
       }
-    } else if (orders.length > 0 && !activeOrder) {
-      // Default to most recent order if available
-      setActiveOrder(orders[0]);
-      setSearchInput(orders[0].id);
+    } else if (myOrders.length > 0 && !activeOrder) {
+      // Default to user's own most recent order
+      setActiveOrder(myOrders[0]);
+      setSearchInput(myOrders[0].id);
       setSearched(true);
     }
-  }, [trackingOrderNumber, orders]);
+  }, [trackingOrderNumber, orders, myOrders]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -118,23 +142,35 @@ export default function OrderTrackingPage() {
           </button>
         </form>
 
-        {/* Recent Orders Quick Access */}
+        {/* Recent Orders Quick Access & Transactions Shortcut */}
         {orders.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px]">
-            <span className="text-neutral-400">Recent Orders:</span>
-            {orders.slice(0, 3).map((o) => (
-              <button
-                key={o.id}
-                onClick={() => loadOrder(o.id)}
-                className={`px-2.5 py-1 font-mono transition-all border ${
-                  activeOrder?.id === o.id
-                    ? 'bg-neutral-900 text-white border-black'
-                    : 'bg-white text-neutral-700 border-neutral-300 hover:border-black'
-                }`}
-              >
-                {o.id} ({o.fulfillment})
-              </button>
-            ))}
+          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px]">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="text-neutral-400">Quick Track:</span>
+              {myOrders.slice(0, 4).map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => loadOrder(o.id)}
+                  className={`px-2.5 py-1 font-mono transition-all border ${
+                    activeOrder?.id === o.id
+                      ? 'bg-neutral-900 text-white border-black'
+                      : 'bg-white text-neutral-700 border-neutral-300 hover:border-black'
+                  }`}
+                >
+                  {o.id}
+                </button>
+              ))}
+            </div>
+
+            <span className="hidden sm:inline text-neutral-300">•</span>
+
+            <button
+              onClick={() => navigateTo('transactions')}
+              className="text-black font-semibold uppercase tracking-wider underline flex items-center gap-1 hover:text-neutral-600"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              <span>All Checked Out Transactions →</span>
+            </button>
           </div>
         )}
       </div>
@@ -178,26 +214,33 @@ export default function OrderTrackingPage() {
                 return (
                   <div 
                     key={step.key} 
-                    className={`p-4 border transition-all ${
+                    className={`p-4 border transition-all duration-300 relative card-interactive ${
                       isCurrent 
-                        ? 'border-black bg-white shadow-sm ring-1 ring-black' 
+                        ? 'border-black bg-white shadow-md ring-2 ring-black/80 scale-[1.02]' 
                         : isPassed 
-                        ? 'border-neutral-300 bg-white' 
+                        ? 'border-neutral-300 bg-white hover-lift' 
                         : 'border-neutral-200 bg-neutral-100 opacity-60'
                     }`}
                   >
+                    {isCurrent && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </span>
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-mono font-bold text-neutral-400">
                         0{idx + 1}
                       </span>
                       {isPassed ? (
-                        <CheckCircle2 className={`w-4 h-4 ${isCurrent ? 'text-black' : 'text-emerald-600'}`} />
+                        <CheckCircle2 className={`w-4 h-4 ${isCurrent ? 'text-black animate-pop-in' : 'text-emerald-600'}`} />
                       ) : (
                         <Clock className="w-4 h-4 text-neutral-400" />
                       )}
                     </div>
-                    <h4 className="text-xs font-semibold text-black uppercase tracking-wider">
-                      {step.label}
+                    <h4 className="text-xs font-semibold text-black uppercase tracking-wider flex items-center gap-1.5">
+                      <span>{step.label}</span>
+                      {isCurrent && <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>}
                     </h4>
                     <p className="text-[11px] text-neutral-500 font-light mt-1">
                       {step.desc}
@@ -250,18 +293,44 @@ export default function OrderTrackingPage() {
 
             {/* Itemized Order Receipt */}
             <div className="bg-white p-5 border border-neutral-200 space-y-3">
-              <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-black flex items-center gap-2">
-                <Receipt className="w-4 h-4" />
-                <span>Purchased Items &amp; Charges</span>
-              </h4>
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-black flex items-center gap-2">
+                  <Receipt className="w-4 h-4" />
+                  <span>Checked Out Items ({activeOrder.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 0})</span>
+                </h4>
+                <button
+                  onClick={() => navigateTo('transactions')}
+                  className="text-[10px] uppercase font-mono tracking-wider text-black underline flex items-center gap-1"
+                >
+                  <span>All Transactions</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
 
-              <div className="space-y-1.5 text-xs text-neutral-700">
-                {activeOrder.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between py-1 border-b border-neutral-100">
-                    <span className="truncate max-w-[70%]">{it.quantity}x {it.name}</span>
-                    <span className="font-mono font-medium text-black">₱{(it.price * it.quantity).toLocaleString()}</span>
-                  </div>
-                ))}
+              <div className="space-y-2.5">
+                {activeOrder.items.map((it, idx) => {
+                  const itImg = LOCAL_PRODUCT_IMAGES[it.id] || it.image || '/images/paper_one_ream.jpg';
+                  const itQty = it.quantity || 1;
+                  return (
+                    <div key={idx} className="flex items-center justify-between py-1.5 border-b border-neutral-100 gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-10 bg-neutral-100 border border-neutral-200 shrink-0 overflow-hidden">
+                          <img 
+                            src={itImg} 
+                            alt={it.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.src = '/images/paper_one_ream.jpg'; }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-medium text-black truncate block">{it.name}</span>
+                          <span className="text-[10px] text-neutral-400 font-mono">Qty: {itQty} × ₱{it.price?.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-semibold text-xs text-black shrink-0">₱{(it.price * itQty).toLocaleString()}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="pt-2 text-xs space-y-1 border-t border-neutral-200">
@@ -288,9 +357,18 @@ export default function OrderTrackingPage() {
 
           </div>
 
-          {/* Status Notice */}
-          <div className="text-[11px] text-neutral-500 text-center font-light border-t border-neutral-200 pt-4">
-            Order tracking updates are reflected here in real time. For any concerns, please contact our store at the number listed in the footer.
+          {/* Action Footer */}
+          <div className="border-t border-neutral-200 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <span className="text-neutral-500 font-light text-[11px]">
+              Order tracking updates are synchronized in real time with our Banago, Nagcarlan store.
+            </span>
+            <button
+              onClick={() => navigateTo('transactions')}
+              className="px-4 py-2 border border-neutral-300 hover:border-black bg-white uppercase tracking-wider text-[11px] font-medium transition-colors flex items-center gap-1.5"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              <span>Browse All Transactions</span>
+            </button>
           </div>
 
         </div>

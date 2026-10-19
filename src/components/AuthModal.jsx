@@ -8,7 +8,11 @@ import {
   Eye, 
   EyeOff, 
   LogOut, 
-  MapPin 
+  MapPin,
+  Receipt,
+  Truck,
+  ArrowRight,
+  Package
 } from 'lucide-react';
 
 export default function AuthModal() {
@@ -20,12 +24,15 @@ export default function AuthModal() {
     login, 
     register, 
     currentUser,
-    logout
+    logout,
+    orders = [],
+    navigateTo
   } = useApp();
 
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -62,20 +69,27 @@ export default function AuthModal() {
 
   if (!isAuthModalOpen) return null;
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setErrorMsg('Please provide both email and password.');
       return;
     }
-    const res = login(loginEmail, loginPassword);
-    if (!res.success) {
-      setErrorMsg(res.message);
+    setIsLoading(true);
+    try {
+      const res = await login(loginEmail, loginPassword);
+      if (!res.success) {
+        setErrorMsg(res.message);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     if (!regData.name.trim() || !regData.email.trim() || !regData.password.trim()) {
@@ -86,9 +100,16 @@ export default function AuthModal() {
       setErrorMsg('Password must be at least 6 characters.');
       return;
     }
-    const res = register(regData);
-    if (!res.success) {
-      setErrorMsg(res.message);
+    setIsLoading(true);
+    try {
+      const res = await register(regData);
+      if (!res.success) {
+        setErrorMsg(res.message);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Registration failed.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -184,6 +205,8 @@ export default function AuthModal() {
                 )}
               </div>
 
+
+
               <div className="pt-2 flex items-center justify-between border-t border-neutral-200">
                 <button
                   onClick={handleLogout}
@@ -192,12 +215,23 @@ export default function AuthModal() {
                   <LogOut className="w-3.5 h-3.5" />
                   Sign Out
                 </button>
-                <button
-                  onClick={handleClose}
-                  className="px-5 py-2 bg-black text-white text-xs uppercase tracking-wider font-medium hover:bg-neutral-800 transition-colors"
-                >
-                  Continue Shopping
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      handleClose();
+                      navigateTo('transactions');
+                    }}
+                    className="px-4 py-2 border border-neutral-300 text-black text-xs uppercase tracking-wider font-medium hover:border-black transition-colors"
+                  >
+                    All Transactions
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="px-4 py-2 bg-black text-white text-xs uppercase tracking-wider font-medium hover:bg-neutral-800 transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
               </div>
             </div>
           ) : (

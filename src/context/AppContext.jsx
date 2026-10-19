@@ -14,6 +14,7 @@ import {
   INITIAL_INVENTORY_LEDGER,
   INITIAL_PROMOTIONS_LIST
 } from '../data/builderData';
+import { sqliteApi } from '../services/api';
 
 const AppContext = createContext();
 
@@ -146,6 +147,14 @@ export function AppProvider({ children }) {
               ? { ...item, label: 'Banago Store Location' } 
               : item
           );
+          if (!parsed.footerNav.some(n => n.path === 'transactions' || n.id === 'fnav-transactions')) {
+            parsed.footerNav.splice(3, 0, { id: 'fnav-transactions', label: 'Transactions', path: 'transactions', isCustom: false, visible: true, order: 4 });
+            parsed.footerNav.forEach((item, idx) => item.order = idx + 1);
+          }
+        }
+        if (parsed.headerNav && !parsed.headerNav.some(n => n.path === 'transactions' || n.id === 'nav-transactions')) {
+          parsed.headerNav.splice(4, 0, { id: 'nav-transactions', label: 'Transactions', path: 'transactions', isCustom: false, visible: true, order: 5 });
+          parsed.headerNav.forEach((item, idx) => item.order = idx + 1);
         }
         return parsed;
       }
@@ -182,9 +191,19 @@ export function AppProvider({ children }) {
     }
   });
 
-  // Navigation and UI state
-  const [activeTab, setActiveTab] = useState('home');
-  const [activeCustomPageSlug, setActiveCustomPageSlug] = useState(null);
+  // Navigation and UI state — read initial page from URL hash for refresh persistence
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '').split('?')[0];
+    const validPages = ['home','shop','promotions','services','transactions','tracking','about','contact','admin','custom_page','docs'];
+    if (hash && validPages.includes(hash)) return hash;
+    if (hash && hash.startsWith('page-')) return 'custom_page';
+    return 'home';
+  });
+  const [activeCustomPageSlug, setActiveCustomPageSlug] = useState(() => {
+    const hash = window.location.hash.replace('#', '').split('?')[0];
+    if (hash && hash.startsWith('page-')) return hash.replace('page-', '');
+    return null;
+  });
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -192,6 +211,51 @@ export function AppProvider({ children }) {
   const [trackingOrderNumber, setTrackingOrderNumber] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [isSqliteConnected, setIsSqliteConnected] = useState(false);
+
+  // Synchronize initial state with SQLite Database on Mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSqliteDatabase() {
+      try {
+        const data = await sqliteApi.getAllData();
+        if (!isMounted || !data) return;
+
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
+        if (Array.isArray(data.users) && data.users.length > 0) {
+          setUsers(data.users);
+        }
+        if (Array.isArray(data.orders) && data.orders.length > 0) {
+          setOrders(data.orders);
+        }
+        if (Array.isArray(data.serviceInquiries) && data.serviceInquiries.length > 0) {
+          setServiceInquiries(data.serviceInquiries);
+        }
+        if (Array.isArray(data.promotionsList) && data.promotionsList.length > 0) {
+          setPromotionsList(data.promotionsList);
+        }
+        if (Array.isArray(data.customPages) && data.customPages.length > 0) {
+          setCustomPages(data.customPages);
+        }
+        if (data.navigationConfig && (data.navigationConfig.headerNav || data.navigationConfig.footerNav)) {
+          setNavigationConfig(data.navigationConfig);
+        }
+        if (Array.isArray(data.mediaLibrary) && data.mediaLibrary.length > 0) {
+          setMediaLibrary(data.mediaLibrary);
+        }
+        if (Array.isArray(data.inventoryLedger) && data.inventoryLedger.length > 0) {
+          setInventoryLedger(data.inventoryLedger);
+        }
+        setIsSqliteConnected(true);
+      } catch (err) {
+        console.warn('SQLite initial sync notice:', err.message);
+      }
+    }
+    loadSqliteDatabase();
+    return () => { isMounted = false; };
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -297,65 +361,104 @@ export function AppProvider({ children }) {
   // ==========================================
   // AUTHENTICATION & ROLE MANAGEMENT
   // ==========================================
-  const login = (emailOrUsername, password) => {
-    const trimmed = emailOrUsername.trim().toLowerCase();
-    
-    // Find user by exact email/username OR if entering 'admin' for an admin account
-    let user = users.find(u => u.email.toLowerCase() === trimmed);
-    if (!user && (trimmed === 'admin' || trimmed === 'admin@mamamoinkprint.ph')) {
-      user = users.find(u => u.role === 'admin' || u.email.toLowerCase().includes('admin'));
+  const login = async (emailOrUsername, password) => {
+    const trimmed = (emailOrUsername || '').trim();
+    if (!trimmed || !password) {
+      return { success: false, message: 'Please provide both email/username and password.' };
     }
 
-    if (!user) {
-      return { success: false, message: 'No registered account found with this email or username.' };
+    try {
+      const apiRes = await sqliteApi.login(trimmed, password);
+      if (apiRes && apiRes.success && apiRes.user) {
+        const loggedUser = {
+          ...apiRes.user,
+          role: apiRes.user.role === 'admin' ? 'admin' : 'buyer',
+          sessionToken: apiRes.token
+        };
+        setCurrentUser(loggedUser);
+        setIsAuthModalOpen(false);
+        showToast(`Welcome back, ${loggedUser.name}! (${loggedUser.role.toUpperCase()})`, 'success');
+        return { success: true, user: loggedUser };
+      }
+      return { success: false, message: apiRes?.message || 'Login failed.' };
+    } catch (err) {
+      // Offline fallback: check in-memory/localStorage users
+      const lower = trimmed.toLowerCase();
+      let user = users.find(u => u.email.toLowerCase() === lower);
+      if (!user && (lower === 'admin' || lower === 'admin@mamamoinkprint.ph')) {
+        user = users.find(u => u.role === 'admin' || u.email.toLowerCase().includes('admin'));
+      }
+
+      if (!user) {
+        return { success: false, message: 'Invalid credentials. Please verify your email/username and password.' };
+      }
+
+      // Check legacy or fallback
+      if (user.password && user.password !== password && !user.password.startsWith('scrypt$')) {
+        return { success: false, message: 'Incorrect password. Please try again.' };
+      }
+
+      const normalizedUser = {
+        ...user,
+        role: user.role === 'admin' ? 'admin' : 'buyer'
+      };
+
+      setCurrentUser(normalizedUser);
+      setIsAuthModalOpen(false);
+      showToast(`Welcome back, ${normalizedUser.name}! (${normalizedUser.role.toUpperCase()})`, 'success');
+      return { success: true, user: normalizedUser };
     }
-
-    if (user.password !== password) {
-      return { success: false, message: 'Incorrect password. Please try again.' };
-    }
-
-    const normalizedUser = {
-      ...user,
-      role: user.role === 'admin' ? 'admin' : 'buyer'
-    };
-
-    setCurrentUser(normalizedUser);
-    setIsAuthModalOpen(false);
-    showToast(`Welcome back, ${normalizedUser.name}! (${normalizedUser.role.toUpperCase()})`, 'success');
-    return { success: true, user: normalizedUser };
   };
 
-  const register = (userData) => {
-    const existing = users.find(u => u.email.toLowerCase() === userData.email.trim().toLowerCase());
-    if (existing) {
-      return { success: false, message: 'An account with this email address already exists.' };
+  const register = async (userData) => {
+    try {
+      const apiRes = await sqliteApi.register(userData);
+      if (apiRes && apiRes.success && apiRes.user) {
+        const newUser = {
+          ...apiRes.user,
+          sessionToken: apiRes.token
+        };
+        setUsers(prev => [newUser, ...prev]);
+        setCurrentUser(newUser);
+        setIsAuthModalOpen(false);
+        showToast(`Account created! Logged in as ${newUser.name} (BUYER)`, 'success');
+        return { success: true, user: newUser };
+      }
+      return { success: false, message: apiRes?.message || 'Registration failed.' };
+    } catch (err) {
+      const existing = users.find(u => u.email.toLowerCase() === userData.email.trim().toLowerCase());
+      if (existing) {
+        return { success: false, message: 'An account with this email address already exists.' };
+      }
+
+      const newUser = {
+        id: `usr-${Date.now()}`,
+        role: 'buyer',
+        name: userData.name,
+        email: userData.email.trim().toLowerCase(),
+        phone: userData.phone || '0917-000-0000',
+        affiliation: userData.affiliation || '',
+        idNumber: userData.idNumber || '',
+        joinedDate: new Date().toISOString().split('T')[0],
+        savedAddress: userData.savedAddress || 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002',
+        ordersCount: 0
+      };
+
+      setUsers(prev => [newUser, ...prev]);
+      setCurrentUser(newUser);
+      setIsAuthModalOpen(false);
+      showToast(`Account created! Logged in as ${newUser.name} (BUYER)`, 'success');
+      return { success: true, user: newUser };
     }
-
-    const newUser = {
-      id: `usr-${Date.now()}`,
-      role: 'buyer', // Automatically assigned as buyer
-      name: userData.name,
-      email: userData.email.trim().toLowerCase(),
-      password: userData.password,
-      phone: userData.phone || '0917-000-0000',
-      affiliation: userData.affiliation || '',
-      idNumber: userData.idNumber || '',
-      joinedDate: new Date().toISOString().split('T')[0],
-      savedAddress: userData.savedAddress || 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002',
-      ordersCount: 0
-    };
-
-    setUsers(prev => [newUser, ...prev]);
-    setCurrentUser(newUser);
-    setIsAuthModalOpen(false);
-    showToast(`Account created! Logged in as ${newUser.name} (BUYER)`, 'success');
-    return { success: true, user: newUser };
   };
 
   const logout = () => {
+    if (currentUser?.sessionToken) {
+      sqliteApi.logout(currentUser.sessionToken).catch(() => {});
+    }
     setCurrentUser(null);
     showToast('Signed out from your account.', 'info');
-    if (activeTab === 'admin') {
+    if (activeTab === 'admin' || activeTab === 'transactions') {
       setActiveTab('home');
       setActiveCustomPageSlug(null);
     }
@@ -366,6 +469,7 @@ export function AppProvider({ children }) {
     const updated = { ...currentUser, ...updatedFields };
     setCurrentUser(updated);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? updated : u));
+    sqliteApi.saveUser(updated).catch(err => console.warn('SQLite user update:', err.message));
     showToast('Profile information updated successfully.', 'success');
   };
 
@@ -375,26 +479,51 @@ export function AppProvider({ children }) {
   const navigateTo = (destination, params = {}) => {
     if (!destination) destination = 'home';
 
+    let newHash = destination;
     if (destination.startsWith('page:')) {
       const slug = destination.replace('page:', '');
       setActiveCustomPageSlug(slug);
       setActiveTab('custom_page');
+      newHash = `page-${slug}`;
     } else {
       // Check if destination matches any published custom page slug
       const matchingPage = customPages.find(p => p.slug === destination && p.status === 'published');
       if (matchingPage) {
         setActiveCustomPageSlug(destination);
         setActiveTab('custom_page');
+        newHash = `page-${destination}`;
       } else {
         setActiveTab(destination);
         setActiveCustomPageSlug(null);
       }
     }
 
+    // Update URL hash for refresh persistence
+    window.history.pushState(null, '', `#${newHash}`);
+
     if (params.category) setSelectedCategory(params.category);
     if (params.trackingId) setTrackingOrderNumber(params.trackingId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Listen for browser back/forward navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').split('?')[0];
+      if (!hash || hash === 'home') {
+        setActiveTab('home');
+        setActiveCustomPageSlug(null);
+      } else if (hash.startsWith('page-')) {
+        setActiveCustomPageSlug(hash.replace('page-', ''));
+        setActiveTab('custom_page');
+      } else {
+        setActiveTab(hash);
+        setActiveCustomPageSlug(null);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // ==========================================
   // CART OPERATIONS
@@ -543,6 +672,7 @@ export function AppProvider({ children }) {
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
+    sqliteApi.createOrder(newOrder).catch(err => console.warn('SQLite order save:', err.message));
     return newOrder;
   };
 
@@ -558,6 +688,7 @@ export function AppProvider({ children }) {
           : order
       )
     );
+    sqliteApi.updateOrderStatus(orderId, newStatus, newNotes).catch(err => console.warn('SQLite order status update:', err.message));
     showToast(`Order ${orderId} updated to "${newStatus}"`, 'success');
   };
 
@@ -586,6 +717,13 @@ export function AppProvider({ children }) {
     };
 
     setInventoryLedger(prev => [ledgerItem, ...prev]);
+    sqliteApi.adjustStock({
+      productId,
+      changeAmount: changeDelta,
+      reason,
+      user: operatorName || currentUser?.name || 'Store Admin'
+    }).catch(err => console.warn('SQLite stock adjust:', err.message));
+
     showToast(`Stock updated for "${product.name}". Recorded to audit ledger.`, 'success');
   };
 
@@ -613,19 +751,24 @@ export function AppProvider({ children }) {
       user: currentUser?.name || 'Store Admin'
     };
     setInventoryLedger(prev => [ledgerItem, ...prev]);
+    sqliteApi.saveProduct(newProd).catch(err => console.warn('SQLite add product:', err.message));
 
     showToast(`Product "${productData.name}" added to store inventory!`, 'success');
   };
 
   const updateProduct = (productId, updatedData) => {
+    const updated = products.find(p => p.id === productId);
+    const merged = { ...updated, ...updatedData, id: productId };
     setProducts(prev =>
-      prev.map(p => (p.id === productId ? { ...p, ...updatedData } : p))
+      prev.map(p => (p.id === productId ? merged : p))
     );
+    sqliteApi.saveProduct(merged).catch(err => console.warn('SQLite update product:', err.message));
     showToast('Product updated successfully!', 'success');
   };
 
   const deleteProduct = (productId) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
+    sqliteApi.deleteProduct(productId).catch(err => console.warn('SQLite delete product:', err.message));
     showToast('Product removed from store catalog', 'info');
   };
 
@@ -639,6 +782,7 @@ export function AppProvider({ children }) {
       ...inquiryData
     };
     setServiceInquiries(prev => [newInq, ...prev]);
+    sqliteApi.createInquiry(newInq).catch(err => console.warn('SQLite inquiry save:', err.message));
     showToast('Printing request submitted! Our production desk will review your specifications.', 'success');
     return newInq;
   };
@@ -647,6 +791,7 @@ export function AppProvider({ children }) {
     setServiceInquiries(prev =>
       prev.map(inq => (inq.id === inquiryId ? { ...inq, status: newStatus } : inq))
     );
+    sqliteApi.updateInquiryStatus(inquiryId, newStatus).catch(err => console.warn('SQLite inquiry update:', err.message));
     showToast(`Inquiry ${inquiryId} marked as "${newStatus}"`, 'info');
   };
 
@@ -662,6 +807,7 @@ export function AppProvider({ children }) {
       updatedList = [pageData, ...customPages];
     }
     setCustomPages(updatedList);
+    sqliteApi.saveCustomPage(pageData).catch(err => console.warn('SQLite page save:', err.message));
 
     // Sync navigation if requested
     if (pageData.showInNav) {
@@ -676,7 +822,9 @@ export function AppProvider({ children }) {
             visible: true,
             order: prev.headerNav.length + 1
           };
-          return { ...prev, headerNav: [...prev.headerNav, newItem] };
+          const nextNav = { ...prev, headerNav: [...prev.headerNav, newItem] };
+          sqliteApi.saveNavigation(nextNav).catch(err => console.warn('SQLite nav save:', err.message));
+          return nextNav;
         }
         return prev;
       });
@@ -698,18 +846,24 @@ export function AppProvider({ children }) {
       updatedAt: new Date().toISOString().split('T')[0]
     };
     setCustomPages([cloned, ...customPages]);
+    sqliteApi.saveCustomPage(cloned).catch(err => console.warn('SQLite page clone:', err.message));
     showToast(`Duplicated page as draft: "${cloned.title}"`, 'info');
   };
 
   const deleteCustomPage = (pageId) => {
     const target = customPages.find(p => p.id === pageId);
     setCustomPages(prev => prev.filter(p => p.id !== pageId));
+    sqliteApi.deleteCustomPage(pageId).catch(err => console.warn('SQLite page delete:', err.message));
     if (target) {
       // Remove from navigation config if linked
-      setNavigationConfig(prev => ({
-        headerNav: prev.headerNav.filter(n => n.path !== target.slug),
-        footerNav: prev.footerNav.filter(n => n.path !== target.slug)
-      }));
+      setNavigationConfig(prev => {
+        const nextNav = {
+          headerNav: prev.headerNav.filter(n => n.path !== target.slug),
+          footerNav: prev.footerNav.filter(n => n.path !== target.slug)
+        };
+        sqliteApi.saveNavigation(nextNav).catch(err => console.warn('SQLite nav update:', err.message));
+        return nextNav;
+      });
     }
     showToast('Page removed from website builder.', 'info');
   };
@@ -717,11 +871,13 @@ export function AppProvider({ children }) {
   const publishCustomPage = (pageId) => {
     setCustomPages(prev => prev.map(p => {
       if (p.id === pageId) {
-        return {
+        const updated = {
           ...p,
           status: 'published',
           publishedAt: new Date().toISOString().split('T')[0]
         };
+        sqliteApi.saveCustomPage(updated).catch(err => console.warn('SQLite publish page:', err.message));
+        return updated;
       }
       return p;
     }));
@@ -731,7 +887,9 @@ export function AppProvider({ children }) {
   const unpublishCustomPage = (pageId) => {
     setCustomPages(prev => prev.map(p => {
       if (p.id === pageId) {
-        return { ...p, status: 'draft' };
+        const updated = { ...p, status: 'draft' };
+        sqliteApi.saveCustomPage(updated).catch(err => console.warn('SQLite unpublish page:', err.message));
+        return updated;
       }
       return p;
     }));
@@ -739,10 +897,14 @@ export function AppProvider({ children }) {
   };
 
   const updateNavigationConfig = (type, items) => {
-    setNavigationConfig(prev => ({
-      ...prev,
-      [type]: items
-    }));
+    setNavigationConfig(prev => {
+      const nextNav = {
+        ...prev,
+        [type]: items
+      };
+      sqliteApi.saveNavigation(nextNav).catch(err => console.warn('SQLite nav update:', err.message));
+      return nextNav;
+    });
   };
 
   const addMediaItem = (mediaItem) => {
@@ -764,11 +926,13 @@ export function AppProvider({ children }) {
       usageCount: 0
     };
     setPromotionsList(prev => [newPromo, ...prev]);
+    sqliteApi.savePromotion(newPromo).catch(err => console.warn('SQLite add promo:', err.message));
     showToast(`Promotion code "${newPromo.code}" created!`, 'success');
   };
 
   const deletePromotion = (promoId) => {
     setPromotionsList(prev => prev.filter(p => p.id !== promoId));
+    sqliteApi.deletePromotion(promoId).catch(err => console.warn('SQLite delete promo:', err.message));
     showToast('Promotion code deleted.', 'info');
   };
 
@@ -779,6 +943,7 @@ export function AppProvider({ children }) {
       }
       return p;
     }));
+    sqliteApi.togglePromotion(promoId).catch(err => console.warn('SQLite toggle promo:', err.message));
     showToast('Promotion status toggled.', 'info');
   };
 
@@ -796,7 +961,24 @@ export function AppProvider({ children }) {
     setMediaLibrary(INITIAL_MEDIA_LIBRARY);
     setInventoryLedger(INITIAL_INVENTORY_LEDGER);
     setPromotionsList(INITIAL_PROMOTIONS_LIST);
-    showToast('System data reset to verified retail defaults.', 'info');
+
+    sqliteApi.resetDatabase()
+      .then(res => {
+        if (res?.data) {
+          if (Array.isArray(res.data.products)) setProducts(res.data.products);
+          if (Array.isArray(res.data.orders)) setOrders(res.data.orders);
+          if (Array.isArray(res.data.users)) setUsers(res.data.users);
+          if (Array.isArray(res.data.serviceInquiries)) setServiceInquiries(res.data.serviceInquiries);
+          if (Array.isArray(res.data.promotionsList)) setPromotionsList(res.data.promotionsList);
+          if (Array.isArray(res.data.customPages)) setCustomPages(res.data.customPages);
+          if (res.data.navigationConfig) setNavigationConfig(res.data.navigationConfig);
+          if (Array.isArray(res.data.mediaLibrary)) setMediaLibrary(res.data.mediaLibrary);
+          if (Array.isArray(res.data.inventoryLedger)) setInventoryLedger(res.data.inventoryLedger);
+        }
+      })
+      .catch(err => console.warn('SQLite reset notice:', err.message));
+
+    showToast('System data reset to verified retail defaults in SQLite.', 'info');
     setActiveTab('home');
     setActiveCustomPageSlug(null);
   };
@@ -804,6 +986,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider
       value={{
+        isSqliteConnected,
         products,
         orders,
         serviceInquiries,

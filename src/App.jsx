@@ -16,6 +16,7 @@ import ShopPage from './pages/ShopPage';
 import PromotionsPage from './pages/PromotionsPage';
 import PrintingServicesPage from './pages/PrintingServicesPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
+import TransactionsPage from './pages/TransactionsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -59,6 +60,8 @@ function MainLayout() {
         return <PromotionsPage />;
       case 'services':
         return <PrintingServicesPage />;
+      case 'transactions':
+        return <TransactionsPage />;
       case 'tracking':
         return <OrderTrackingPage />;
       case 'about':
@@ -79,9 +82,11 @@ function MainLayout() {
       {/* Navigation Bar - displayed on public storefront */}
       {!isAdminView && <Navbar />}
 
-      {/* Main Page View */}
+      {/* Main Page View with Animated Transition */}
       <main className="flex-1">
-        {renderContent()}
+        <div key={activeTab + (activeCustomPageSlug || '')} className="animate-page-enter">
+          {renderContent()}
+        </div>
       </main>
 
       {/* Footer - displayed on public storefront */}

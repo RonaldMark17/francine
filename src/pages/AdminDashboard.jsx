@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/initialData';
 import VisualPageEditor from '../components/builder/VisualPageEditor';
@@ -45,7 +45,8 @@ import {
   DollarSign,
   ArrowLeft,
   LogOut,
-  Menu
+  Menu,
+  Database
 } from 'lucide-react';
 
 const LOCAL_PRODUCT_IMAGES = {
@@ -73,6 +74,8 @@ export default function AdminDashboard() {
     mediaLibrary,
     inventoryLedger,
     promotionsList,
+    users,
+    isSqliteConnected,
     addProduct, 
     updateProduct, 
     deleteProduct, 
@@ -99,6 +102,13 @@ export default function AdminDashboard() {
   // Product management modal states
   const [editingProduct, setEditingProduct] = useState(null);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const productModalBodyRef = useRef(null);
+
+  useEffect(() => {
+    if (isAddProductModalOpen && productModalBodyRef.current) {
+      productModalBodyRef.current.scrollTop = 0;
+    }
+  }, [isAddProductModalOpen]);
   const [productForm, setProductForm] = useState({
     name: '',
     category: 'School Supplies',
@@ -166,7 +176,7 @@ export default function AdminDashboard() {
 
   // Navigation Items Config for Admin Sidebar
   const adminNavItems = [
-    { id: 'orders', label: 'Orders & Fulfillment', icon: ShoppingBag, count: orders.length },
+    { id: 'orders', label: 'Transactions & Orders', icon: ShoppingBag, count: orders.length },
     { id: 'inventory', label: 'Inventory & Stock Ledger', icon: Package, count: products.length },
     { id: 'pages', label: 'Dynamic Pages & CMS', icon: Layout, count: customPages.length },
     { id: 'promotions', label: 'Discounts & Promos', icon: Tag, count: promotionsList.length },
@@ -561,19 +571,19 @@ export default function AdminDashboard() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl w-full mx-auto">
           
           {/* KPI Metrics Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-down">
             
             {/* Card 1: Gross Sales */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
                   Total Gross Sales
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-700">
+                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-700 group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight">
+              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
                 ₱{totalRevenue.toLocaleString()}
               </div>
               <div className="text-[11px] text-neutral-500 flex items-center gap-1.5">
@@ -585,16 +595,16 @@ export default function AdminDashboard() {
             </div>
 
             {/* Card 2: Active Orders */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
                   Active Fulfillment
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <ShoppingBag className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight">
+              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
                 {pendingOrdersCount}
               </div>
               <div className="text-[11px] text-neutral-500">
@@ -603,22 +613,22 @@ export default function AdminDashboard() {
             </div>
 
             {/* Card 3: Inventory Units */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
                   Inventory Stock
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Package className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight">
+              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
                 {totalUnitsInStock} <span className="text-xs font-sans text-neutral-400 font-normal">units</span>
               </div>
               <div className="text-[11px]">
                 {lowStockProductsCount > 0 ? (
                   <span className="text-rose-700 font-semibold flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
+                    <AlertTriangle className="w-3 h-3 animate-pulse" />
                     {lowStockProductsCount} products low stock
                   </span>
                 ) : (
@@ -628,20 +638,20 @@ export default function AdminDashboard() {
             </div>
 
             {/* Card 4: Dynamic CMS Pages */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
                   Dynamic CMS Pages
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Layout className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight">
+              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
                 {customPages.length}
               </div>
               <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
                 <span>{customPages.filter(p => p.status === 'published').length} published on website</span>
               </div>
             </div>
@@ -649,8 +659,9 @@ export default function AdminDashboard() {
           </div>
 
           {/* ========================================================= */}
-          {/* TAB 1: ORDERS & FULFILLMENT QUEUE                         */}
+          {/* TAB CONTENT WITH PAGE-ENTER TRANSITION                    */}
           {/* ========================================================= */}
+          <div key={activeAdminTab} className="animate-page-enter">
           {activeAdminTab === 'orders' && (
             <div className="space-y-6">
               
@@ -782,13 +793,23 @@ export default function AdminDashboard() {
                                 </select>
                               </td>
                               <td className="py-4 px-4 text-right whitespace-nowrap">
-                                <button
-                                  onClick={() => setSelectedOrderPreview(order)}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-200 hover:border-black text-[11px] font-medium transition-colors bg-white shadow-xs"
-                                >
-                                  <Eye className="w-3 h-3 text-neutral-500" />
-                                  <span>Inspect</span>
-                                </button>
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => setSelectedOrderPreview(order)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-neutral-200 hover:border-black text-[11px] font-medium transition-colors bg-white shadow-xs"
+                                  >
+                                    <Eye className="w-3 h-3 text-neutral-500" />
+                                    <span>Inspect</span>
+                                  </button>
+                                  <button
+                                    onClick={() => navigateTo('tracking', { trackingId: order.id })}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-neutral-900 bg-neutral-900 hover:bg-black text-white text-[11px] font-medium transition-colors shadow-xs"
+                                    title="View customer tracking page"
+                                  >
+                                    <Truck className="w-3 h-3 text-amber-300" />
+                                    <span>Track</span>
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -901,7 +922,7 @@ export default function AdminDashboard() {
                                 <td className="py-3.5 px-4">
                                   <div className="flex items-center gap-3">
                                     <img
-                                      src={product.image}
+                                      src={LOCAL_PRODUCT_IMAGES[product.id] || product.image}
                                       alt={product.name}
                                       className="w-10 h-10 rounded-lg object-cover border border-neutral-200 bg-neutral-100 shrink-0 shadow-2xs"
                                     />
@@ -1503,6 +1524,8 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+
+
               {/* Danger Zone */}
               <div className="bg-white rounded-xl border border-rose-200 p-6 space-y-4 shadow-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1531,6 +1554,7 @@ export default function AdminDashboard() {
 
             </div>
           )}
+          </div>
 
         </main>
       </div>
@@ -1540,44 +1564,64 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {isAddProductModalOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
           onClick={() => setIsAddProductModalOpen(false)}
         >
           <div 
-            className="bg-white max-w-lg w-full rounded-2xl border border-neutral-200 shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto animate-modal-pop text-xs"
+            className="bg-white max-w-xl w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-              <h3 className="font-editorial text-xl text-black font-semibold">
-                {editingProduct ? 'Edit Catalog Product' : 'Add New Catalog Product'}
-              </h3>
+            {/* Pinned Header */}
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-editorial text-lg text-black font-semibold tracking-tight">
+                    {editingProduct ? 'Edit Catalog Product' : 'Add New Catalog Product'}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    {editingProduct ? `SKU: ${productForm.sku || 'N/A'}` : 'Live Catalog & Inventory Synchronization'}
+                  </p>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsAddProductModalOpen(false)}
-                className="text-neutral-400 hover:text-black p-1"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors"
+                title="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4">
+            {/* Scrollable Form Body */}
+            <form 
+              id="admin-product-form"
+              onSubmit={handleSaveProduct} 
+              ref={productModalBodyRef}
+              className="flex-1 overflow-y-auto p-6 space-y-4"
+            >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Product Title *</label>
                 <input
                   type="text"
                   value={productForm.name}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:border-black"
+                  placeholder="e.g. Paper One All-Purpose Bond Paper (Ream)"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:border-black transition-colors"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-medium text-neutral-700 mb-1">Category</label>
                   <select
                     value={productForm.category}
                     onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-white"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-black transition-colors"
                   >
                     {CATEGORIES.filter(c => c !== 'All').map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -1585,12 +1629,13 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">SKU Code</label>
+                  <label className="block font-medium text-neutral-700 mb-1">SKU Code *</label>
                   <input
                     type="text"
                     value={productForm.sku}
                     onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono"
+                    placeholder="e.g. SKU-1042"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                     required
                   />
                 </div>
@@ -1601,9 +1646,11 @@ export default function AdminDashboard() {
                   <label className="block font-medium text-neutral-700 mb-1">Price (₱) *</label>
                   <input
                     type="number"
+                    min="0"
+                    step="any"
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                     required
                   />
                 </div>
@@ -1611,36 +1658,54 @@ export default function AdminDashboard() {
                   <label className="block font-medium text-neutral-700 mb-1">Original Price (₱)</label>
                   <input
                     type="number"
+                    min="0"
+                    step="any"
                     value={productForm.originalPrice}
                     onChange={(e) => setProductForm({ ...productForm, originalPrice: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">Stock Quantity *</label>
+                  <label className="block font-medium text-neutral-700 mb-1">Stock Units *</label>
                   <input
                     type="number"
+                    min="0"
                     value={productForm.stock}
                     onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-medium text-neutral-700 mb-1">Photo URL</label>
-                <div className="flex gap-2">
+                <label className="block font-medium text-neutral-700 mb-1">Product Photo URL</label>
+                <div className="flex gap-2.5 items-center">
+                  {productForm.image ? (
+                    <div className="w-10 h-10 rounded-lg border border-neutral-200 overflow-hidden shrink-0 bg-neutral-100 flex items-center justify-center shadow-2xs">
+                      <img 
+                        src={productForm.image} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg border border-neutral-200 bg-neutral-50 flex items-center justify-center shrink-0 text-neutral-400">
+                      <ImageIcon className="w-4 h-4" />
+                    </div>
+                  )}
                   <input
                     type="text"
                     value={productForm.image}
                     onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-[11px] font-mono"
+                    placeholder="/images/... or https://..."
+                    className="flex-1 px-3 py-2 rounded-lg border border-neutral-200 text-[11px] font-mono focus:outline-none focus:border-black transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setIsMediaLibraryOpen(true)}
-                    className="px-3.5 py-2 rounded-lg border border-neutral-200 hover:border-black shrink-0 font-medium bg-neutral-50"
+                    className="px-3.5 py-2 rounded-lg border border-neutral-200 hover:border-black shrink-0 font-medium bg-neutral-50 hover:bg-neutral-100 transition-colors shadow-2xs"
                   >
                     Library
                   </button>
@@ -1650,50 +1715,59 @@ export default function AdminDashboard() {
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Product Description</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={productForm.description}
                   onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200"
+                  placeholder="High quality multipurpose paper, pens, notebooks..."
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:border-black transition-colors resize-none leading-relaxed"
                 />
               </div>
 
-              <div className="flex items-center gap-6 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="pt-2 flex flex-wrap items-center gap-4 border-t border-neutral-100">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none bg-neutral-50 hover:bg-neutral-100/80 px-3 py-2 rounded-lg border border-neutral-200/70 transition-colors">
                   <input
                     type="checkbox"
                     checked={productForm.isFeatured}
                     onChange={(e) => setProductForm({ ...productForm, isFeatured: e.target.checked })}
-                    className="accent-black w-4 h-4"
+                    className="accent-black w-4 h-4 rounded"
                   />
                   <span className="font-medium text-neutral-800">Featured in Showcase</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none bg-neutral-50 hover:bg-neutral-100/80 px-3 py-2 rounded-lg border border-neutral-200/70 transition-colors">
                   <input
                     type="checkbox"
                     checked={productForm.isDiscounted}
                     onChange={(e) => setProductForm({ ...productForm, isDiscounted: e.target.checked })}
-                    className="accent-black w-4 h-4"
+                    className="accent-black w-4 h-4 rounded"
                   />
                   <span className="font-medium text-neutral-800">Discounted Deal</span>
                 </label>
               </div>
+            </form>
 
-              <div className="pt-4 border-t border-neutral-100 flex justify-end gap-2.5">
+            {/* Pinned Footer */}
+            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-between shrink-0 bg-neutral-50/70">
+              <span className="text-[11px] text-neutral-400 font-mono hidden sm:inline">
+                {editingProduct ? 'Saving updates live store catalog' : 'Item will be appended to live inventory'}
+              </span>
+              <div className="flex items-center gap-2.5 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsAddProductModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-neutral-600 hover:text-black font-medium"
+                  className="px-4 py-2 rounded-lg text-neutral-600 hover:text-black font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-lg bg-black text-white text-xs uppercase tracking-wider font-semibold hover:bg-neutral-800 transition-colors shadow-xs"
+                  form="admin-product-form"
+                  className="px-5 py-2 rounded-lg bg-black text-white text-xs uppercase tracking-wider font-semibold hover:bg-neutral-800 transition-colors shadow-xs flex items-center gap-1.5"
                 >
-                  Save Product
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Save Product</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -1703,62 +1777,91 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {selectedOrderPreview && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
           onClick={() => setSelectedOrderPreview(null)}
         >
           <div 
-            className="bg-white max-w-xl w-full rounded-2xl border border-neutral-200 shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto animate-modal-pop text-xs text-neutral-800"
+            className="bg-white max-w-xl w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs text-neutral-800 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            {/* Pinned Header */}
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
               <div>
                 <span className="text-[10px] uppercase font-mono text-neutral-400">Order Verification</span>
                 <h3 className="font-editorial text-xl text-black font-semibold">{selectedOrderPreview.id}</h3>
               </div>
-              <button onClick={() => setSelectedOrderPreview(null)} className="text-neutral-400 hover:text-black p-1">
+              <button 
+                onClick={() => setSelectedOrderPreview(null)} 
+                className="text-neutral-400 hover:text-black p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
-              <div>
-                <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Customer</span>
-                <span className="font-semibold text-black">{selectedOrderPreview.name || selectedOrderPreview.customer?.name}</span>
-                <div className="text-neutral-500 mt-0.5">{selectedOrderPreview.phone || selectedOrderPreview.customer?.phone}</div>
-                <div className="text-neutral-500">{selectedOrderPreview.email || selectedOrderPreview.customer?.email}</div>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Fulfillment</span>
-                <span className="font-semibold text-black">
-                  {selectedOrderPreview.fulfillment === 'pickup' ? 'Counter Pickup (Banago, Nagcarlan Main Store)' : 'Courier Delivery'}
-                </span>
-                <div className="text-neutral-600 mt-0.5">
-                  {selectedOrderPreview.fulfillment === 'pickup' ? selectedOrderPreview.pickupSlot : selectedOrderPreview.deliveryAddress}
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Customer</span>
+                  <span className="font-semibold text-black">{selectedOrderPreview.name || selectedOrderPreview.customer?.name}</span>
+                  <div className="text-neutral-500 mt-0.5">{selectedOrderPreview.phone || selectedOrderPreview.customer?.phone}</div>
+                  <div className="text-neutral-500">{selectedOrderPreview.email || selectedOrderPreview.customer?.email}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Fulfillment</span>
+                  <span className="font-semibold text-black">
+                    {selectedOrderPreview.fulfillment === 'pickup' ? 'Counter Pickup (Banago, Nagcarlan Main Store)' : 'Courier Delivery'}
+                  </span>
+                  <div className="text-neutral-600 mt-0.5">
+                    {selectedOrderPreview.fulfillment === 'pickup' ? selectedOrderPreview.pickupSlot : selectedOrderPreview.deliveryAddress}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Items */}
-            <div className="space-y-2">
-              <span className="font-semibold text-black text-xs uppercase tracking-wider">Ordered Products</span>
-              <div className="divide-y divide-neutral-100 border border-neutral-200 rounded-xl overflow-hidden">
-                {(selectedOrderPreview.items || []).map((item, idx) => (
-                  <div key={idx} className="p-3.5 flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-black">{item.name}</div>
-                      <div className="text-[10px] text-neutral-500">Qty: {item.quantity} × ₱{item.price}</div>
+              {/* Items */}
+              <div className="space-y-2">
+                <span className="font-semibold text-black text-xs uppercase tracking-wider">Ordered Products</span>
+                <div className="divide-y divide-neutral-100 border border-neutral-200 rounded-xl overflow-hidden">
+                  {(selectedOrderPreview.items || []).map((item, idx) => (
+                    <div key={idx} className="p-3.5 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-black">{item.name}</div>
+                        <div className="text-[10px] text-neutral-500">Qty: {item.quantity} × ₱{item.price}</div>
+                      </div>
+                      <div className="font-mono font-bold text-black">
+                        ₱{(item.quantity * item.price).toLocaleString()}
+                      </div>
                     </div>
-                    <div className="font-mono font-bold text-black">
-                      ₱{(item.quantity * item.price).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-between items-center text-sm font-bold border-t border-neutral-100">
+                <span className="text-neutral-700">Total Payable:</span>
+                <span className="font-mono text-black text-base">₱{selectedOrderPreview.total?.toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="pt-3 flex justify-between items-center text-sm font-bold border-t border-neutral-100">
-              <span className="text-neutral-700">Total Payable:</span>
-              <span className="font-mono text-black text-base">₱{selectedOrderPreview.total?.toLocaleString()}</span>
+            {/* Pinned Footer */}
+            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-end gap-2 shrink-0 bg-neutral-50/70">
+              <button
+                onClick={() => window.print()}
+                className="px-3.5 py-2 rounded-lg border border-neutral-200 hover:border-black text-neutral-700 hover:text-black font-medium text-xs transition-colors flex items-center gap-1.5 bg-white"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Slip</span>
+              </button>
+              <button
+                onClick={() => {
+                  const targetId = selectedOrderPreview.id;
+                  setSelectedOrderPreview(null);
+                  navigateTo('tracking', { trackingId: targetId });
+                }}
+                className="px-4 py-2 rounded-lg bg-black text-white hover:bg-neutral-800 font-medium text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+              >
+                <Truck className="w-3.5 h-3.5 text-amber-300" />
+                <span>Track Live Order</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1769,23 +1872,32 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {isAddPromoOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
           onClick={() => setIsAddPromoOpen(false)}
         >
           <div 
-            className="bg-white max-w-md w-full rounded-2xl border border-neutral-200 shadow-2xl p-6 space-y-4 animate-modal-pop text-xs"
+            className="bg-white max-w-md w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            {/* Pinned Header */}
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
               <h3 className="font-editorial text-lg text-black uppercase tracking-wider font-semibold">
                 Create Promotion Voucher
               </h3>
-              <button onClick={() => setIsAddPromoOpen(false)} className="text-neutral-400 hover:text-black p-1">
+              <button 
+                onClick={() => setIsAddPromoOpen(false)} 
+                className="text-neutral-400 hover:text-black p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSavePromo} className="space-y-3.5">
+            {/* Scrollable Form Body */}
+            <form 
+              id="admin-promo-form"
+              onSubmit={handleSavePromo} 
+              className="flex-1 overflow-y-auto p-6 space-y-3.5"
+            >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Coupon Code *</label>
                 <input
@@ -1793,7 +1905,7 @@ export default function AdminDashboard() {
                   placeholder="e.g. EXAM20"
                   value={promoForm.code}
                   onChange={(e) => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono font-bold text-black focus:outline-none focus:border-black uppercase"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono font-bold text-black focus:outline-none focus:border-black uppercase transition-colors"
                   required
                 />
               </div>
@@ -1805,7 +1917,7 @@ export default function AdminDashboard() {
                   placeholder="e.g. Midterm Examination Discount"
                   value={promoForm.title}
                   onChange={(e) => setPromoForm({ ...promoForm, title: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:border-black"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:border-black transition-colors"
                   required
                 />
               </div>
@@ -1816,7 +1928,7 @@ export default function AdminDashboard() {
                   <select
                     value={promoForm.discountType}
                     onChange={(e) => setPromoForm({ ...promoForm, discountType: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-white"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-black transition-colors"
                   >
                     <option value="percentage">Percentage (% Off)</option>
                     <option value="fixed">Fixed Amount (₱ Flat Off)</option>
@@ -1828,7 +1940,7 @@ export default function AdminDashboard() {
                     type="number"
                     value={promoForm.discountValue}
                     onChange={(e) => setPromoForm({ ...promoForm, discountValue: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono font-bold"
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono font-bold focus:outline-none focus:border-black transition-colors"
                     required
                   />
                 </div>
@@ -1840,26 +1952,28 @@ export default function AdminDashboard() {
                   type="number"
                   value={promoForm.minSpend}
                   onChange={(e) => setPromoForm({ ...promoForm, minSpend: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                 />
               </div>
-
-              <div className="pt-3 border-t border-neutral-100 flex justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsAddPromoOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-700 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-black text-white uppercase tracking-wider font-semibold hover:bg-neutral-800 transition-colors shadow-xs"
-                >
-                  Save Promotion
-                </button>
-              </div>
             </form>
+
+            {/* Pinned Footer */}
+            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-end gap-2.5 shrink-0 bg-neutral-50/70">
+              <button
+                type="button"
+                onClick={() => setIsAddPromoOpen(false)}
+                className="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-700 font-medium hover:bg-neutral-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="admin-promo-form"
+                className="px-5 py-2 rounded-lg bg-black text-white uppercase tracking-wider font-semibold hover:bg-neutral-800 transition-colors shadow-xs"
+              >
+                Save Promotion
+              </button>
+            </div>
           </div>
         </div>
       )}

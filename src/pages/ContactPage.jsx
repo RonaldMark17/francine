@@ -14,10 +14,10 @@ import {
 export default function ContactPage() {
   const { storeInfo, showToast } = useApp();
 
-  const [contactName, setContactName] = useState('Juan Miguel Santos');
-  const [contactEmail, setContactEmail] = useState('jmsantos@sample.edu.ph');
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [contactSubject, setContactSubject] = useState('Bulk Order Inquiry');
-  const [contactMessage, setContactMessage] = useState('Good day! Inquiring about bulk discounts for 20 reams of A4 80gsm paper for our college department.');
+  const [contactMessage, setContactMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e) => {
@@ -49,7 +49,7 @@ export default function ContactPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
       {/* Header */}
-      <div className="border-b border-neutral-200 pb-8 text-center max-w-2xl mx-auto">
+      <div className="border-b border-neutral-200 pb-8 text-center max-w-2xl mx-auto animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
           Get in Touch
         </span>
@@ -65,16 +65,16 @@ export default function ContactPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         
         {/* Left: Store Location and Hours */}
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-up delay-75">
           
-          <div className="bg-[#FAF9F5] border border-neutral-300 p-8 space-y-6">
+          <div className="bg-[#FAF9F5] border border-neutral-300 p-8 space-y-6 card-interactive hover-lift">
             <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-neutral-400">
               Campus Store Location
             </h3>
 
             <div className="space-y-4 text-xs font-light text-neutral-700">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-black shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 group">
+                <MapPin className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">Physical Address:</strong>
                   <span>{storeInfo.address}</span>
@@ -84,8 +84,8 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Clock className="w-4 h-4 text-black shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 group">
+                <Clock className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:rotate-45 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">Store Operating Hours:</strong>
                   <p>{storeInfo.hours.weekdays}</p>
@@ -94,16 +94,16 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Phone className="w-4 h-4 text-black shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 group">
+                <Phone className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">Direct Telephone &amp; Hotline:</strong>
                   <span>{storeInfo.phone}</span>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Mail className="w-4 h-4 text-black shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 group">
+                <Mail className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">Email Address:</strong>
                   <span>{storeInfo.email}</span>
@@ -117,42 +117,72 @@ export default function ContactPage() {
                 Official Channels
               </span>
               <div className="flex flex-wrap gap-3 text-xs text-neutral-600">
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px]">
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">
                   FB: {storeInfo.social.facebook}
                 </span>
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px]">
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">
                   IG: {storeInfo.social.instagram}
                 </span>
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px]">
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">
                   Viber: {storeInfo.social.viber}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Map Mockup visual */}
-          <div className="bg-[#FAF9F5] border border-neutral-300 p-6 text-center space-y-2">
-            <div className="text-xs font-semibold text-black uppercase tracking-wider">
-              Banago, Nagcarlan Store Location Map
+          {/* Store Location Map with Satellite Pin */}
+          <div className="bg-[#FAF9F5] border border-neutral-300 p-6 space-y-3 card-interactive hover-lift">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold text-black uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-rose-600" />
+                <span>Banago, Nagcarlan Store Location Map</span>
+              </div>
+              <span className="text-[10px] uppercase font-mono tracking-wider bg-black text-white px-2 py-0.5 font-medium shadow-2xs">
+                Store Coordinates
+              </span>
             </div>
             <p className="text-[11px] text-neutral-500 font-light">
               Purok 5, Along Nagcarlan–Rizal Road (30m from Plaridel Elementary &amp; 50m from Plaridel Integrated National High School).
             </p>
-            <div className="h-40 bg-neutral-200 border border-neutral-300 flex items-center justify-center text-xs text-neutral-600 font-mono text-center px-4">
-              [ Interactive Location Map • Purok 5, Barangay Banago, Nagcarlan, Laguna 4002 ]
+            
+            {/* Visual Location Map from User Satellite Data */}
+            <div className="relative w-full border-2 border-neutral-300 overflow-hidden bg-neutral-900 group shadow-sm">
+              <img
+                src="/images/banago_store_location_map.png"
+                alt="Mama Mo Ink Print & Supplies - Barangay Banago, Nagcarlan, Laguna Location Map"
+                className="w-full h-auto object-cover max-h-[380px] transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 text-[10px] text-neutral-800 font-medium border border-neutral-300 shadow-xs flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Nagcarlan - Rizal Rd (Beside Maco's)</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <a 
+                href="https://www.google.com/maps/search/Barangay+Banago+Nagcarlan+Laguna+Philippines" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block text-[11px] text-[#0A1A3A] font-semibold underline hover:text-black transition-colors"
+              >
+                Open in Google Maps →
+              </a>
+              <span className="text-[10px] text-neutral-400 font-mono">
+                14°08'09.0"N 121°24'57.0"E
+              </span>
             </div>
           </div>
 
         </div>
 
         {/* Right: Customer Inquiry Form */}
-        <div className="bg-[#FAF9F5] border border-neutral-300 p-8 space-y-6">
+        <div className="bg-[#FAF9F5] border border-neutral-300 p-8 space-y-6 animate-fade-up delay-150 card-interactive">
           <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-neutral-400">
             Send an Inquiry
           </h3>
 
           {submitted ? (
-            <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 animate-fade-in">
+            <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 animate-pop-in">
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
               <h4 className="font-editorial text-xl text-black">Inquiry Dispatched</h4>
               <p className="text-xs text-neutral-500 max-w-xs mx-auto font-light leading-relaxed">
@@ -160,7 +190,7 @@ export default function ContactPage() {
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="mt-2 text-xs uppercase tracking-wider text-black underline font-medium"
+                className="mt-2 text-xs uppercase tracking-wider text-black underline font-medium hover:text-neutral-600 transition-colors"
               >
                 Send another message
               </button>
@@ -175,7 +205,8 @@ export default function ContactPage() {
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+                  placeholder="Juan Miguel Santos"
+                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors"
                   required
                 />
               </div>
@@ -188,7 +219,8 @@ export default function ContactPage() {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+                  placeholder="jmsantos@sample.edu.ph"
+                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors"
                   required
                 />
               </div>
@@ -200,7 +232,7 @@ export default function ContactPage() {
                 <select
                   value={contactSubject}
                   onChange={(e) => setContactSubject(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+                  className="w-full text-xs px-3 py-2 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors cursor-pointer"
                 >
                   <option value="Bulk Order Inquiry">Bulk School / Office Supplies Order</option>
                   <option value="Thesis Printing Inquiry">Thesis Hardbound / Bookbinding</option>
@@ -218,14 +250,15 @@ export default function ContactPage() {
                   rows="4"
                   value={contactMessage}
                   onChange={(e) => setContactMessage(e.target.value)}
-                  className="w-full text-xs p-3 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+                  placeholder="Good day! Inquiring about bulk discounts for 20 reams of A4 80gsm paper for our college department."
+                  className="w-full text-xs p-3 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-black text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-black text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-neutral-800 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 shadow-xs"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Submit Inquiry</span>
@@ -237,7 +270,7 @@ export default function ContactPage() {
       </div>
 
       {/* Frequently Asked Questions */}
-      <div className="pt-8 border-t border-neutral-200">
+      <div className="pt-8 border-t border-neutral-200 animate-fade-up delay-200">
         <div className="text-center max-w-xl mx-auto mb-10">
           <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
             Common Inquiries
@@ -249,7 +282,7 @@ export default function ContactPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           {faqs.map((faq, idx) => (
-            <div key={idx} className="p-6 bg-white border border-neutral-200 space-y-2">
+            <div key={idx} className="p-6 bg-white border border-neutral-200 space-y-2 card-interactive hover-lift">
               <h4 className="text-xs font-semibold text-black leading-snug">
                 {faq.q}
               </h4>

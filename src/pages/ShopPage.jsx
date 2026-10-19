@@ -71,7 +71,7 @@ export default function ShopPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       
       {/* Header Banner */}
-      <div className="border-b border-neutral-200 pb-8">
+      <div className="border-b border-neutral-200 pb-8 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
           Retail Collection
         </span>
@@ -84,15 +84,15 @@ export default function ShopPage() {
       </div>
 
       {/* Category Pills Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none animate-fade-up delay-75">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 text-xs uppercase tracking-wider font-medium whitespace-nowrap transition-all border ${
+            className={`px-4 py-2 text-xs uppercase tracking-wider font-medium whitespace-nowrap transition-all duration-200 border hover:scale-105 active:scale-95 ${
               selectedCategory === cat
-                ? 'bg-black text-white border-black'
-                : 'bg-white text-neutral-600 border-neutral-300 hover:border-black'
+                ? 'bg-black text-white border-black shadow-xs'
+                : 'bg-white text-neutral-600 border-neutral-300 hover:border-black hover:text-black'
             }`}
           >
             {cat}
@@ -101,7 +101,7 @@ export default function ShopPage() {
       </div>
 
       {/* Filter and Control Bar */}
-      <div className="p-4 sm:p-6 bg-[#FAF9F5] border border-neutral-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+      <div className="p-4 sm:p-6 bg-[#FAF9F5] border border-neutral-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-center animate-fade-up delay-150 card-interactive">
         
         {/* Real-time Search Input */}
         <div className="relative md:col-span-2">
@@ -111,7 +111,7 @@ export default function ShopPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by product name, SKU, or keyword..."
-            className="w-full text-xs pl-9 pr-4 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+            className="w-full text-xs pl-9 pr-4 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function ShopPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="w-full text-xs px-3 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black"
+            className="w-full text-xs px-3 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors cursor-pointer"
           >
             <option value="featured">Sort: Featured &amp; Best Sellers</option>
             <option value="price-asc">Sort: Price (Low to High)</option>
@@ -137,7 +137,7 @@ export default function ShopPage() {
           </span>
           <button
             onClick={handleResetFilters}
-            className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-neutral-600 hover:text-black transition-colors"
+            className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-neutral-600 hover:text-black transition-all hover:scale-105 active:scale-95"
             title="Reset all filters"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ export default function ShopPage() {
       </div>
 
       {/* Secondary Filter Toggles: Price Slider & Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-6 py-2 px-1 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-6 py-2 px-1 text-xs animate-fade-up delay-200">
         
         {/* Price Slider */}
         <div className="flex items-center gap-3">
@@ -167,7 +167,7 @@ export default function ShopPage() {
 
         {/* Checkbox Toggles */}
         <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label className="flex items-center gap-2 cursor-pointer select-none hover:text-black transition-colors">
             <input
               type="checkbox"
               checked={inStockOnly}
@@ -177,7 +177,7 @@ export default function ShopPage() {
             <span className="text-neutral-700">In Stock Only</span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label className="flex items-center gap-2 cursor-pointer select-none hover:text-black transition-colors">
             <input
               type="checkbox"
               checked={discountOnly}
@@ -190,23 +190,26 @@ export default function ShopPage() {
 
       </div>
 
-      {/* Product Grid */}
+      {/* Product Grid with Smooth Transition */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div 
+          key={`${selectedCategory}-${sortBy}-${priceMax}-${inStockOnly}-${discountOnly}-${searchQuery}`}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in"
+        >
           {filteredProducts.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-[#FAF9F5] border border-neutral-200 p-8 space-y-4">
-          <PackageOpen className="w-12 h-12 text-neutral-400 stroke-[1] mx-auto" />
+        <div className="text-center py-20 bg-[#FAF9F5] border border-neutral-200 p-8 space-y-4 animate-pop-in">
+          <PackageOpen className="w-12 h-12 text-neutral-400 stroke-[1] mx-auto animate-float" />
           <h3 className="font-editorial text-xl text-black">No matching products found</h3>
           <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">
             We could not find any items matching your selected filters. Try clearing your search term or broadening the price range.
           </p>
           <button
             onClick={handleResetFilters}
-            className="px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
+            className="px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-all hover:scale-105 active:scale-95 shadow-xs"
           >
             Reset All Filters
           </button>

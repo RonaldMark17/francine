@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Trash2, ArrowRight, ShoppingBag, Tag, Check, LogIn } from 'lucide-react';
+import { X, Trash2, ArrowRight, ShoppingBag, Tag, Check, LogIn, Receipt, Truck } from 'lucide-react';
 
 const LOCAL_PRODUCT_IMAGES = {
   'prod-1': '/images/paper_one_ream.jpg',
@@ -116,15 +116,27 @@ export default function CartDrawer({ onProceedToCheckout }) {
                 <p className="text-xs text-neutral-500 max-w-xs mt-1 mb-6 font-light">
                   Browse our curated catalog for university and office supplies or explore our printing services.
                 </p>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    navigateTo('shop');
-                  }}
-                  className="px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
-                >
-                  Explore Catalog
-                </button>
+                <div className="flex flex-col gap-2 w-full max-w-xs">
+                  <button
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      navigateTo('shop');
+                    }}
+                    className="w-full py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
+                  >
+                    Explore Catalog
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      navigateTo('transactions');
+                    }}
+                    className="w-full py-2 border border-neutral-300 hover:border-black text-neutral-700 hover:text-black text-xs uppercase tracking-wider font-medium transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    <span>View Transactions &amp; Track</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -301,6 +313,20 @@ export default function CartDrawer({ onProceedToCheckout }) {
                   You need to sign in or create an account before placing an order.
                 </p>
               )}
+
+              <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 border-t border-neutral-200/80">
+                <span>Looking for checked out items?</span>
+                <button
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigateTo('transactions');
+                  }}
+                  className="text-black font-medium underline flex items-center gap-1 hover:text-neutral-700"
+                >
+                  <Receipt className="w-3 h-3" />
+                  <span>Transactions &amp; Track →</span>
+                </button>
+              </div>
 
               <p className="text-[10px] text-center text-neutral-400 font-light">
                 Secure Checkout • In-Store Pickup or Doorstep Courier

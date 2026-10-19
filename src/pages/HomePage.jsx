@@ -75,8 +75,14 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10 py-16 sm:py-24">
           
-          <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.25em] text-neutral-600 mb-6 font-medium shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></span>
+          <img 
+            src="/images/mama_mo_logo.png" 
+            alt="Mama Mo Ink Print & Supplies" 
+            className="animate-pop-in w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-lg border-2 border-white/80 mb-6 hover:scale-105 transition-transform duration-300"
+          />
+
+          <div className="animate-fade-down delay-75 inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.25em] text-neutral-600 mb-6 font-medium shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-black animate-ping"></span>
             Purok 5, Banago, Nagcarlan • One-Stop School &amp; Print Hub
           </div>
 
@@ -94,39 +100,39 @@ export default function HomePage() {
           </p>
 
           {/* Action CTAs */}
-          <div className="animate-fade-up delay-300 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="animate-fade-up delay-250 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => navigateTo('shop')}
-              className="w-full sm:w-auto px-8 py-4 bg-black text-white text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-800 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-md hover:shadow-xl hover:-translate-y-0.5"
+              className="w-full sm:w-auto px-8 py-4 bg-black text-white text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-800 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-md hover:shadow-xl hover:-translate-y-0.5 group"
             >
               <span>Explore Catalog</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" />
             </button>
 
             <button
               onClick={() => navigateTo('services')}
-              className="w-full sm:w-auto px-8 py-4 bg-white/80 backdrop-blur-xs border border-neutral-400 text-neutral-900 text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-100 hover:border-black active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 bg-white/80 backdrop-blur-xs border border-neutral-400 text-neutral-900 text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-100 hover:border-black active:scale-95 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-xs"
             >
-              <Printer className="w-4 h-4 text-neutral-600" />
+              <Printer className="w-4 h-4 text-neutral-600 group-hover:scale-110 transition-transform" />
               <span>Book Printing Service</span>
             </button>
           </div>
 
           {/* Value Badges */}
-          <div className="animate-fade-up delay-400 mt-14 pt-10 border-t border-neutral-300/70 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
+          <div className="animate-fade-up delay-300 mt-14 pt-10 border-t border-neutral-300/70 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="space-y-1 p-3 bg-white/40 hover:bg-white hover-lift border border-transparent hover:border-neutral-200 transition-all">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Fulfillment</span>
               <p className="text-xs font-semibold text-black">In-Store Pickup &amp; Delivery</p>
             </div>
-            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
+            <div className="space-y-1 p-3 bg-white/40 hover:bg-white hover-lift border border-transparent hover:border-neutral-200 transition-all">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Academic Discounts</span>
               <p className="text-xs font-semibold text-black">15% Off with Student ID</p>
             </div>
-            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
+            <div className="space-y-1 p-3 bg-white/40 hover:bg-white hover-lift border border-transparent hover:border-neutral-200 transition-all">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Turnaround</span>
               <p className="text-xs font-semibold text-black">Same-Day Rush Printing</p>
             </div>
-            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
+            <div className="space-y-1 p-3 bg-white/40 hover:bg-white hover-lift border border-transparent hover:border-neutral-200 transition-all">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Currency</span>
               <p className="text-xs font-semibold text-black">Philippine Pesos (₱)</p>
             </div>
@@ -367,31 +373,31 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 card-interactive group hover-lift">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
               <GraduationCap className="w-6 h-6 stroke-[1.5]" />
             </div>
-            <h3 className="font-editorial text-lg text-black">For Students (PINHS &amp; Plaridel)</h3>
+            <h3 className="font-editorial text-lg text-black group-hover:text-amber-900 transition-colors">For Students (PINHS &amp; Plaridel)</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Located only 30m from Plaridel Elementary and 50m from Plaridel Integrated National High School. Stop by before class, at lunch, or dismissal for quick document printing, pens, notebooks, and project materials priced for student allowances.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 card-interactive group hover-lift">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A] group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
               <BookOpen className="w-6 h-6 stroke-[1.5]" />
             </div>
-            <h3 className="font-editorial text-lg text-black">For Educators &amp; Faculty</h3>
+            <h3 className="font-editorial text-lg text-black group-hover:text-amber-900 transition-colors">For Educators &amp; Faculty</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Exam sheets, syllabus printing, ream papers, and classroom materials with educator discounts and quick turnaround times. Reserve supplies online or through our Facebook page for instant pickup.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 card-interactive group hover-lift">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
               <Briefcase className="w-6 h-6 stroke-[1.5]" />
             </div>
-            <h3 className="font-editorial text-lg text-black">For Banago Residents &amp; Passersby</h3>
+            <h3 className="font-editorial text-lg text-black group-hover:text-amber-900 transition-colors">For Banago Residents &amp; Passersby</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Conveniently along Nagcarlan–Rizal Road with accessible parking beside Maco&apos;s commercial building. Fast photocopying, laminating, scanning, and office supplies with cash, GCash, Maya, and bank transfers accepted.
             </p>

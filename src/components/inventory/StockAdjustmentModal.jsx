@@ -54,11 +54,11 @@ export default function StockAdjustmentModal({ product, isOpen, onClose }) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
       onClick={onClose}
     >
       <div 
-        className="bg-white max-w-lg w-full border border-neutral-300 shadow-2xl p-6 space-y-5 animate-modal-pop text-xs text-neutral-800"
+        className="bg-white max-w-lg w-full rounded-2xl border border-neutral-300 shadow-2xl p-6 space-y-5 my-auto animate-modal-pop text-xs text-neutral-800 max-h-[92vh] sm:max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

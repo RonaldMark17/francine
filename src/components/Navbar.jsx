@@ -46,15 +46,31 @@ export default function Navbar() {
     .filter(item => item.visible !== false)
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  const navLinks = dynamicHeaderLinks.length > 0 ? dynamicHeaderLinks : [
+  const fallbackLinks = [
     { id: 'home', label: 'Home', path: 'home' },
     { id: 'shop', label: 'Shop', path: 'shop' },
     { id: 'promotions', label: 'Promotions', path: 'promotions' },
     { id: 'services', label: 'Printing Services', path: 'services' },
-    { id: 'tracking', label: 'Track Order', path: 'tracking' },
+    { id: 'transactions', label: 'Transactions', path: 'transactions' },
     { id: 'about', label: 'About Us', path: 'about' },
     { id: 'contact', label: 'Contact', path: 'contact' }
   ];
+
+  const rawLinks = dynamicHeaderLinks.length > 0 ? dynamicHeaderLinks : fallbackLinks;
+
+  // 1. Remove 'Track Order' in navbar
+  // 2. Make 'Transactions' appear only when an account is logged in
+  const navLinks = rawLinks.filter(item => {
+    const target = (item.path || item.id || '').toLowerCase();
+    const label = (item.label || '').toLowerCase();
+    if (target === 'tracking' || item.id === 'nav-tracking' || label.includes('track order')) {
+      return false;
+    }
+    if (target === 'transactions' || item.id === 'nav-transactions' || label.includes('transaction')) {
+      return Boolean(currentUser);
+    }
+    return true;
+  });
 
   const handleNavClick = (tabId) => {
     navigateTo(tabId);
@@ -101,17 +117,24 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Brand Logo - Celine Inspired High-End Typography */}
+          {/* Brand Logo */}
           <div className="shrink-0">
             <button 
               onClick={() => handleNavClick('home')}
-              className="group text-left inline-block focus:outline-none"
+              className="group text-left inline-flex items-center gap-3 focus:outline-none"
             >
-              <div className="text-2xl sm:text-3xl font-light font-editorial tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80">
-                MAMA MO
-              </div>
-              <div className="text-[9px] uppercase tracking-[0.32em] text-neutral-500 -mt-1 font-sans whitespace-nowrap">
-                INK PRINT &amp; SUPPLIES
+              <img 
+                src="/images/mama_mo_logo.png" 
+                alt="Mama Mo Ink Print & Supplies" 
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-neutral-200 transition-transform duration-300 group-hover:scale-105"
+              />
+              <div>
+                <div className="text-xl sm:text-2xl font-light font-editorial tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80">
+                  MAMA MO
+                </div>
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.32em] text-neutral-500 -mt-1 font-sans whitespace-nowrap">
+                  INK PRINT &amp; SUPPLIES
+                </div>
               </div>
             </button>
           </div>
@@ -143,36 +166,45 @@ export default function Navbar() {
           {/* Right Action Icons */}
           <div className="ml-auto shrink-0 flex items-center space-x-2 sm:space-x-4 pl-4">
             
-            {/* Search Toggle / Input */}
+            {/* Search Toggle / Floating Overlay */}
             <div className="relative">
-              {showSearchInput ? (
-                <form onSubmit={handleSearchSubmit} className="flex items-center">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search papers, pens, ink..."
-                    autoFocus
-                    className="w-48 sm:w-64 text-xs bg-white border border-neutral-300 px-3 py-1.5 focus:outline-none focus:border-black transition-all"
+              <button
+                onClick={() => setShowSearchInput(!showSearchInput)}
+                className="p-2 text-neutral-700 hover:text-black transition-colors"
+                title="Search inventory"
+                aria-label="Search"
+              >
+                {showSearchInput ? <X className="w-5 h-5 stroke-[1.5]" /> : <Search className="w-5 h-5 stroke-[1.5]" />}
+              </button>
+
+              {showSearchInput && (
+                <>
+                  {/* Backdrop */}
+                  <div 
+                    className="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs animate-fade-in" 
+                    onClick={() => setShowSearchInput(false)} 
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowSearchInput(false)}
-                    className="p-1.5 text-neutral-500 hover:text-black ml-1"
-                    aria-label="Close search"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setShowSearchInput(true)}
-                  className="p-2 text-neutral-700 hover:text-black transition-colors"
-                  title="Search inventory"
-                  aria-label="Search"
-                >
-                  <Search className="w-5 h-5 stroke-[1.5]" />
-                </button>
+                  {/* Floating search panel */}
+                  <div className="absolute right-0 top-full mt-3 z-50 w-80 sm:w-96 bg-white/95 backdrop-blur-md border border-black shadow-2xl p-1.5 animate-pop-in">
+                    <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+                      <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search papers, pens, ink, supplies..."
+                        autoFocus
+                        className="w-full text-xs pl-9 pr-14 py-2.5 bg-neutral-50/80 border border-neutral-200 focus:bg-white focus:outline-none focus:border-black font-sans transition-all"
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1 bg-black text-white text-[10px] uppercase tracking-wider font-medium hover:bg-neutral-800 active:scale-95 transition-all shadow-xs"
+                      >
+                        Search
+                      </button>
+                    </form>
+                  </div>
+                </>
               )}
             </div>
 

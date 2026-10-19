@@ -27,10 +27,10 @@ export default function PrintingServicesPage() {
   const [calcBinding, setCalcBinding] = useState('none'); // 'none' | 'staple' | 'spiral' | 'hardbound'
 
   // Inquiry Form State
-  const [clientName, setClientName] = useState('Bea Alonzo');
-  const [clientPhone, setClientPhone] = useState('0918-772-1092');
-  const [clientEmail, setClientEmail] = useState('bea.alonzo@pinhs.edu.ph');
-  const [specialInstructions, setSpecialInstructions] = useState('Front and back print on 80gsm paper please. Bound with black coil.');
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [specialInstructions, setSpecialInstructions] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [submittedInquiry, setSubmittedInquiry] = useState(null);
@@ -130,7 +130,7 @@ export default function PrintingServicesPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
       {/* Page Header */}
-      <div className="border-b border-neutral-200 pb-8">
+      <div className="border-b border-neutral-200 pb-8 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">
           Ground Floor Printing Counter • Banago, Nagcarlan
         </span>
@@ -143,23 +143,24 @@ export default function PrintingServicesPage() {
       </div>
 
       {/* Services Showcase Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {PRINTING_SERVICES.map((srv) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up delay-100">
+        {PRINTING_SERVICES.map((srv, idx) => (
           <div
             key={srv.id}
-            className="bg-[#FAF9F5] border border-neutral-300 p-6 flex flex-col justify-between space-y-6 hover:border-black transition-all"
+            className="bg-[#FAF9F5] border border-neutral-300 p-6 flex flex-col justify-between space-y-6 hover:border-black transition-all hover-lift card-interactive group"
+            style={{ animationDelay: `${(idx + 1) * 75}ms` }}
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
                   {srv.category}
                 </span>
-                <span className="text-xs font-semibold text-black">
+                <span className="text-xs font-semibold text-black bg-white px-2 py-0.5 border border-neutral-200">
                   ₱{srv.startingPrice.toFixed(2)} / {srv.priceUnit}
                 </span>
               </div>
 
-              <h3 className="font-editorial text-xl text-black leading-snug">
+              <h3 className="font-editorial text-xl text-black leading-snug group-hover:text-amber-900 transition-colors">
                 {srv.title}
               </h3>
 
@@ -169,7 +170,7 @@ export default function PrintingServicesPage() {
 
               <div className="pt-2 border-t border-neutral-200 space-y-1 text-xs">
                 <div className="flex items-center gap-1.5 text-neutral-600">
-                  <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                  <Clock className="w-3.5 h-3.5 text-neutral-400 group-hover:rotate-12 transition-transform duration-300" />
                   <span className="font-medium text-neutral-800">Turnaround:</span> {srv.turnaround}
                 </div>
                 <ul className="pt-1 space-y-1 text-[11px] text-neutral-500 font-light list-disc list-inside">
@@ -185,7 +186,7 @@ export default function PrintingServicesPage() {
                 setCalcService(srv.title);
                 window.scrollTo({ top: 750, behavior: 'smooth' });
               }}
-              className="w-full py-2.5 bg-white border border-neutral-300 hover:border-black text-black text-xs uppercase tracking-wider font-medium transition-colors"
+              className="w-full py-2.5 bg-white border border-neutral-300 hover:border-black hover:bg-neutral-900 hover:text-white text-black text-xs uppercase tracking-wider font-medium transition-all active:scale-95 shadow-2xs"
             >
               Calculate &amp; Request This Service
             </button>
@@ -355,12 +356,15 @@ export default function PrintingServicesPage() {
               </div>
 
               {/* Real-time calculated estimate display */}
-              <div className="p-4 bg-[#FAF9F5] border border-neutral-300 flex items-center justify-between">
+              <div className="p-4 bg-[#FAF9F5] border border-neutral-300 flex items-center justify-between card-interactive">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-neutral-400 block font-medium">
                     Estimated Cost
                   </span>
-                  <span className="text-xl font-bold text-black font-mono">
+                  <span 
+                    key={estimatedTotal} 
+                    className="text-xl font-bold text-black font-mono inline-block animate-pop-in"
+                  >
                     ₱{estimatedTotal.toLocaleString()}.00
                   </span>
                 </div>
@@ -385,8 +389,8 @@ export default function PrintingServicesPage() {
                     type="text"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black"
-                    placeholder="e.g. Maria Clara"
+                    className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black transition-colors"
+                    placeholder="Bea Alonzo"
                     required
                   />
                 </div>
@@ -400,8 +404,8 @@ export default function PrintingServicesPage() {
                       type="tel"
                       value={clientPhone}
                       onChange={(e) => setClientPhone(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black"
-                      placeholder="0917-000-0000"
+                      className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black transition-colors font-mono"
+                      placeholder="0918-772-1092"
                       required
                     />
                   </div>
@@ -413,8 +417,8 @@ export default function PrintingServicesPage() {
                       type="email"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black"
-                      placeholder="name@school.edu.ph"
+                      className="w-full text-xs px-3 py-2 border border-neutral-300 bg-white focus:outline-none focus:border-black transition-colors"
+                      placeholder="bea.alonzo@pinhs.edu.ph"
                     />
                   </div>
                 </div>
@@ -424,8 +428,8 @@ export default function PrintingServicesPage() {
                   <label className="block text-xs font-medium text-neutral-700 mb-1">
                     Attach Document File (Optional)
                   </label>
-                  <label className="border-2 border-dashed border-neutral-300 hover:border-black transition-colors p-4 flex flex-col items-center justify-center cursor-pointer bg-[#FAF9F5] text-center">
-                    <UploadCloud className="w-6 h-6 text-neutral-400 mb-1" />
+                  <label className="group border-2 border-dashed border-neutral-300 hover:border-black transition-all p-4 flex flex-col items-center justify-center cursor-pointer bg-[#FAF9F5] hover:bg-white text-center hover-lift">
+                    <UploadCloud className="w-6 h-6 text-neutral-400 group-hover:text-black group-hover:-translate-y-1 transition-all mb-1" />
                     <span className="text-xs font-medium text-black">
                       Click to choose document or drop file
                     </span>
@@ -470,8 +474,8 @@ export default function PrintingServicesPage() {
                     rows="3"
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
-                    className="w-full text-xs p-3 border border-neutral-300 bg-white focus:outline-none focus:border-black"
-                    placeholder="Specify hardbound foil color (Gold/Silver), thesis title, or urgent deadline..."
+                    className="w-full text-xs p-3 border border-neutral-300 bg-white focus:outline-none focus:border-black transition-colors"
+                    placeholder="Front and back print on 80gsm paper please. Bound with black coil."
                   />
                 </div>
               </div>

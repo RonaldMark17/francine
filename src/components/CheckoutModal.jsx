@@ -14,7 +14,8 @@ import {
   Printer,
   ChevronRight,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Receipt
 } from 'lucide-react';
 
 export default function CheckoutModal({ isOpen, onClose }) {
@@ -174,6 +175,11 @@ export default function CheckoutModal({ isOpen, onClose }) {
       onClose();
       navigateTo('tracking', { trackingId: createdOrder.id });
     }
+  };
+
+  const handleViewTransactions = () => {
+    onClose();
+    navigateTo('transactions');
   };
 
   return (
@@ -596,22 +602,30 @@ export default function CheckoutModal({ isOpen, onClose }) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto pt-2">
               <button
                 onClick={handleTrackNewOrder}
-                className="w-full sm:w-auto flex-1 py-3 px-6 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto flex-1 py-3 px-5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
               >
                 <span>Track This Order</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
+                onClick={handleViewTransactions}
+                className="w-full sm:w-auto px-4 py-3 bg-white border border-neutral-300 text-neutral-800 hover:border-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors font-medium"
+              >
+                <Receipt className="w-4 h-4" />
+                <span>My Transactions</span>
+              </button>
+
+              <button
                 onClick={handlePrintOrder}
-                className="w-full sm:w-auto px-4 py-3 border border-neutral-300 text-neutral-700 hover:text-black hover:border-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-3.5 py-3 border border-neutral-300 text-neutral-600 hover:text-black hover:border-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
                 title="Print order slip"
               >
                 <Printer className="w-4 h-4" />
-                <span>Print Slip</span>
+                <span>Print</span>
               </button>
             </div>
 

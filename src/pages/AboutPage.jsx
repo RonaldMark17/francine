@@ -27,8 +27,8 @@ export default function AboutPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20 animate-fade-in text-[#121212]">
       
       {/* Editorial Hero */}
-      <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="text-[11px] uppercase tracking-[0.3em] text-amber-700 font-semibold font-mono bg-amber-50 border border-amber-200 px-3 py-1 rounded-full inline-block">
+      <div className="text-center max-w-3xl mx-auto space-y-4 animate-fade-down">
+        <span className="text-[11px] uppercase tracking-[0.3em] text-amber-700 font-semibold font-mono bg-amber-50 border border-amber-200 px-3 py-1 rounded-full inline-block animate-pulse-subtle">
           Established 2026 • Nagcarlan, Laguna
         </span>
         <h1 className="text-4xl sm:text-5xl font-light font-editorial text-black tracking-tight uppercase leading-tight">
@@ -44,7 +44,7 @@ export default function AboutPage() {
       </div>
 
       {/* Feature Story Image & Text Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 shadow-xs">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 shadow-xs card-interactive hover-lift animate-fade-up delay-100">
         <div className="space-y-6">
           <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-semibold font-mono">
             Strategic Retail Origin
@@ -60,22 +60,22 @@ export default function AboutPage() {
           </p>
 
           <div className="pt-2 grid grid-cols-2 gap-4">
-            <div className="border-l-2 border-black pl-3 space-y-0.5">
+            <div className="border-l-2 border-black pl-3 space-y-0.5 hover-lift">
               <span className="text-base font-bold text-black font-mono">30–50m</span>
               <p className="text-[11px] text-neutral-500 font-light">From Local School Gates</p>
             </div>
-            <div className="border-l-2 border-black pl-3 space-y-0.5">
+            <div className="border-l-2 border-black pl-3 space-y-0.5 hover-lift">
               <span className="text-base font-bold text-black font-mono">2-in-1</span>
               <p className="text-[11px] text-neutral-500 font-light">School Supplies + Print Shop</p>
             </div>
           </div>
         </div>
 
-        <div className="relative aspect-[4/3] bg-neutral-200 overflow-hidden border border-neutral-300 rounded-xl shadow-sm">
+        <div className="relative aspect-[4/3] bg-neutral-200 overflow-hidden border border-neutral-300 rounded-xl shadow-sm image-zoom-container group">
           <img
             src="https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80"
             alt="Mama Mo Ink Retail Shop"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3 rounded-lg border border-neutral-200 text-xs">
@@ -86,17 +86,17 @@ export default function AboutPage() {
       </div>
 
       {/* Mission & Vision Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up delay-150">
         
         {/* Mission */}
-        <div className="bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs relative overflow-hidden group hover:border-black transition-all">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
+        <div className="bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs relative overflow-hidden group hover:border-black transition-all hover-lift card-interactive">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold group-hover:scale-110 transition-transform duration-300">
             <Target className="w-5 h-5" />
           </div>
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 block font-bold">
             Our Purpose
           </span>
-          <h3 className="font-editorial text-2xl text-black font-semibold">
+          <h3 className="font-editorial text-2xl text-black font-semibold group-hover:text-amber-900 transition-colors">
             Mission
           </h3>
           <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">
@@ -105,14 +105,14 @@ export default function AboutPage() {
         </div>
 
         {/* Vision */}
-        <div className="bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs relative overflow-hidden group hover:border-black transition-all">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-800 flex items-center justify-center font-bold">
+        <div className="bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs relative overflow-hidden group hover:border-black transition-all hover-lift card-interactive">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-800 flex items-center justify-center font-bold group-hover:scale-110 transition-transform duration-300">
             <Compass className="w-5 h-5" />
           </div>
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 block font-bold">
             Our Aspiration
           </span>
-          <h3 className="font-editorial text-2xl text-black font-semibold">
+          <h3 className="font-editorial text-2xl text-black font-semibold group-hover:text-blue-900 transition-colors">
             Vision
           </h3>
           <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">
@@ -213,26 +213,26 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs">
-            <Layers className="w-6 h-6 text-black stroke-[1.5]" />
-            <h4 className="font-editorial text-lg text-black font-semibold">Dual Services in One Stop</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-up delay-100">
+          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs card-interactive hover-lift group">
+            <Layers className="w-6 h-6 text-black stroke-[1.5] group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
+            <h4 className="font-editorial text-lg text-black font-semibold group-hover:text-amber-900 transition-colors">Dual Services in One Stop</h4>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Unlike local printing shops that lack school materials, or mini-stores that offer no printing, Mama Mo Ink provides both printing expertise and complete school supplies under one roof.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs">
-            <Award className="w-6 h-6 text-black stroke-[1.5]" />
-            <h4 className="font-editorial text-lg text-black font-semibold">Student-Friendly Rates</h4>
+          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs card-interactive hover-lift group">
+            <Award className="w-6 h-6 text-black stroke-[1.5] group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300" />
+            <h4 className="font-editorial text-lg text-black font-semibold group-hover:text-amber-900 transition-colors">Student-Friendly Rates</h4>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Priced to fit typical student allowances through effective inventory sourcing, volume supplier partnerships, and transparent pricing policies.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs">
-            <Sparkles className="w-6 h-6 text-black stroke-[1.5]" />
-            <h4 className="font-editorial text-lg text-black font-semibold">Multichannel Access</h4>
+          <div className="p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs card-interactive hover-lift group">
+            <Sparkles className="w-6 h-6 text-black stroke-[1.5] group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 text-amber-500" />
+            <h4 className="font-editorial text-lg text-black font-semibold group-hover:text-amber-900 transition-colors">Multichannel Access</h4>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
               Browse products, reserve reams, and pre-order rush prints online or via Facebook, picking up packed orders ready at Counter 2 in minutes.
             </p>
@@ -241,7 +241,7 @@ export default function AboutPage() {
       </div>
 
       {/* Team / Founders Section (From PDF Page 1) */}
-      <div className="bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 space-y-8 shadow-xs">
+      <div className="bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 space-y-8 shadow-xs animate-fade-up delay-150">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 font-bold">
             Strategic Retail Plan Team • 4BSBA-MM1
@@ -262,12 +262,12 @@ export default function AboutPage() {
             { name: 'Sarah Jean L. Corpuz', role: 'Financial Planning & Pricing', initials: 'SC' },
             { name: 'Angela D. Ignacio', role: 'Customer Experience & Quality', initials: 'AI' }
           ].map((member, idx) => (
-            <div key={idx} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs">
-              <div className="w-12 h-12 rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm">
+            <div key={idx} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
+              <div className="w-12 h-12 rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
                 {member.initials}
               </div>
               <div>
-                <h4 className="font-semibold text-black text-xs">{member.name}</h4>
+                <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{member.name}</h4>
                 <p className="text-[10px] text-neutral-500 mt-0.5 leading-snug">{member.role}</p>
               </div>
             </div>
