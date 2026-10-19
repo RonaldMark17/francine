@@ -34,25 +34,25 @@ export default function HomePage() {
     {
       name: 'School Supplies',
       desc: 'Pens, pencils, notebooks, and drafting essentials',
-      image: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=600&q=80',
+      image: '/images/pilot_gtec_pens.jpg',
       tag: 'Academic Staple'
     },
     {
       name: 'Paper Products',
       desc: 'Multipurpose 70/80gsm reams, specialty bond papers',
-      image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=600&q=80',
+      image: '/images/paper_one_ream.jpg',
       tag: 'Best Seller'
     },
     {
       name: 'Office Supplies',
       desc: 'Desk organizers, staplers, ledgers, and files',
-      image: 'https://images.unsplash.com/photo-1589365278144-c9e705f843ba?auto=format&fit=crop&w=600&q=80',
+      image: '/images/deli_stapler.jpg',
       tag: 'Faculty Choice'
     },
     {
       name: 'Printing Materials',
       desc: 'Genuine printer inks, binding wires, laminating sheets',
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+      image: '/images/epson_003_ink.jpg',
       tag: 'Production Grade'
     }
   ];

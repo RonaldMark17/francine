@@ -14,7 +14,7 @@ export const INITIAL_PRODUCTS = [
     description: 'High-opacity, ultra-smooth premium multipurpose paper engineered for laser, inkjet printing, and high-speed photocopying. Ideal for thesis submissions and professional documents.',
     features: ['80 GSM thickness', 'ProDigi HD Print Technology', '500 sheets ream', 'Acid-free, archival quality'],
     sku: 'PAP-A4-80G',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80',
+    image: '/images/paper_one_ream.jpg',
     fallbackCategory: 'paper'
   },
   {
@@ -31,7 +31,7 @@ export const INITIAL_PRODUCTS = [
     description: 'The iconic Japanese precision pen favored by Philippine high school, college, and engineering students. Bio-polymer ink prevents feathering and provides razor-sharp line clarity.',
     features: ['0.4mm needle point tip', 'Japanese bio-polymer ink', 'Set of 3: Black, Blue, Red', 'Textured ergonomic grip'],
     sku: 'PEN-GT-04',
-    image: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=800&q=80',
+    image: '/images/pilot_gtec_pens.jpg',
     fallbackCategory: 'pen'
   },
   {
@@ -48,7 +48,7 @@ export const INITIAL_PRODUCTS = [
     description: 'The golden standard of pencils in Philippine schools. Premium cedar wood casing with soft, smudge-free pink eraser. Certified for standard scantron examination sheets.',
     features: ['Medium soft #2 graphite lead', 'High-quality cedar wood', 'Durable pink eraser', 'PMA approved non-toxic'],
     sku: 'PEN-MG-12',
-    image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80',
+    image: '/images/mongol_pencils.jpg',
     fallbackCategory: 'pencil'
   },
   {
@@ -65,7 +65,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Original Epson 003 dye ink bottles for L-series printers (L3110, L3150, L3210, L3250). Spill-free key-lock nozzle design ensures mess-free refills and ultra-vivid output.',
     features: ['Genuine Epson formulated dye ink', 'Yield up to 4,500 pages (Black), 7,500 pages (Color)', 'Keyed nozzle design', 'Complete 4-bottle set: BK, C, M, Y'],
     sku: 'INK-EP-003',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+    image: '/images/epson_003_ink.jpg',
     fallbackCategory: 'ink'
   },
   {
@@ -82,7 +82,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Durable faux-leatherette hardbound ledger notebook with sewn bookbinding. Numbered rule lines suitable for store accounting, classroom attendance, and laboratory logs.',
     features: ['300 numbered ruled pages', 'Hardcover vinyl exterior', 'Thread-sewn binding opens flat', 'Heavy weight blue ledger paper'],
     sku: 'BOK-ST-300',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+    image: '/images/sterling_record_book.jpg',
     fallbackCategory: 'notebook'
   },
   {
@@ -99,7 +99,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Industrial lever-action stapler for thick book reports, legal filings, and classroom syllabus binding. Adjustable throat depth gauge from 10mm to 70mm.',
     features: ['All-metal durable body', 'Binds up to 100 sheets effortlessly', 'Uses 23/6 to 23/13 heavy duty staples', 'Non-skid base with paper guide'],
     sku: 'OFF-DL-100',
-    image: 'https://images.unsplash.com/photo-1589365278144-c9e705f843ba?auto=format&fit=crop&w=800&q=80',
+    image: '/images/deli_stapler.jpg',
     fallbackCategory: 'office'
   },
   {
@@ -150,7 +150,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Professional twin-loop metal wire binding rings for student handbooks, calendars, thesis manuscripts, and business portfolios. 3:1 pitch ratio.',
     features: ['1/2 inch (12.7mm) diameter', 'Binds up to 90 pages of 80gsm paper', 'Sleek matte black finish', 'Pack of 50 spines'],
     sku: 'BND-WR-50',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?auto=format&fit=crop&w=800&q=80',
     fallbackCategory: 'office'
   },
   {
@@ -167,7 +167,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Genuine 3M Post-it notes in calming aesthetic pastel tones (sage green, soft butter, lavender, rose, sky blue). Sticks reliably without leaving glue residue.',
     features: ['3 in x 3 in standard square', '100 sheets per pad (600 sheets total)', 'Clean removal guarantee', 'Recycled plant-based adhesive'],
     sku: 'NOT-3M-06',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?auto=format&fit=crop&w=800&q=80',
     fallbackCategory: 'paper'
   },
   {
@@ -184,7 +184,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Precision Japanese rotary blade paper trimmer with calibrated grid base. Trims up to 20 sheets of 80gsm paper cleanly in a single gliding stroke.',
     features: ['Self-sharpening hardened steel rotary blade', 'Solid steel base with metric & imperial guides', 'Cuts paper, photos, cardstock, laminates', 'Safety locking clamp'],
     sku: 'EQP-CR-A4',
-    image: 'https://images.unsplash.com/photo-1589365278144-c9e705f843ba?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1590402494587-44b71d7772f6?auto=format&fit=crop&w=800&q=80',
     fallbackCategory: 'office'
   },
   {
@@ -201,7 +201,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Essential college-ruled spiral notebooks featuring heavy poly-plastic covers that resist spills and backpack wear. 80 sheets of premium white ruled paper each.',
     features: ['Pack of 5 distinct color-coded notebooks', '80 micro-perforated sheets each', 'Snag-free spiral lock wire', 'Includes interior storage pockets'],
     sku: 'NOT-ST-05',
-    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=800&q=80',
     fallbackCategory: 'notebook'
   }
 ];

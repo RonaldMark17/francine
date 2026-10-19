@@ -13,8 +13,10 @@ export function AppProvider({ children }) {
   // Products state (persisted in localStorage)
   const [products, setProducts] = useState(() => {
     try {
-      const saved = localStorage.getItem('mm_products_v1');
-      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+      const saved = localStorage.getItem('mm_products_v2');
+      if (saved) return JSON.parse(saved);
+      localStorage.removeItem('mm_products_v1');
+      return INITIAL_PRODUCTS;
     } catch {
       return INITIAL_PRODUCTS;
     }
@@ -63,7 +65,7 @@ export function AppProvider({ children }) {
   // Sync products to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('mm_products_v1', JSON.stringify(products));
+      localStorage.setItem('mm_products_v2', JSON.stringify(products));
     } catch (e) {
       console.error(e);
     }
@@ -273,6 +275,7 @@ export function AppProvider({ children }) {
   // Reset to default sample demonstration state
   const resetToDefaultData = () => {
     localStorage.removeItem('mm_products_v1');
+    localStorage.removeItem('mm_products_v2');
     localStorage.removeItem('mm_orders_v1');
     localStorage.removeItem('mm_inquiries_v1');
     localStorage.removeItem('mm_cart_v1');
