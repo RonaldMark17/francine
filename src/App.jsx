@@ -7,7 +7,6 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProductDetailModal from './components/ProductDetailModal';
 import CheckoutModal from './components/CheckoutModal';
-import PresenterGuideModal from './components/PresenterGuideModal';
 import Toast from './components/Toast';
 
 // Pages
@@ -23,7 +22,6 @@ import AdminDashboard from './pages/AdminDashboard';
 function MainLayout() {
   const { activeTab } = useApp();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isPresenterGuideOpen, setIsPresenterGuideOpen] = useState(false);
 
   // Render current tab/page
   const renderContent = () => {
@@ -52,7 +50,7 @@ function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF9F5] text-[#161616]">
       {/* Navigation Bar */}
-      <Navbar onOpenPresenterGuide={() => setIsPresenterGuideOpen(true)} />
+      <Navbar />
 
       {/* Main Page View */}
       <main className="flex-1">
@@ -60,7 +58,7 @@ function MainLayout() {
       </main>
 
       {/* Footer */}
-      <Footer onOpenPresenterGuide={() => setIsPresenterGuideOpen(true)} />
+      <Footer />
 
       {/* Interactive Overlays */}
       <ProductDetailModal />
@@ -68,10 +66,6 @@ function MainLayout() {
       <CheckoutModal 
         isOpen={isCheckoutOpen} 
         onClose={() => setIsCheckoutOpen(false)} 
-      />
-      <PresenterGuideModal 
-        isOpen={isPresenterGuideOpen} 
-        onClose={() => setIsPresenterGuideOpen(false)} 
       />
       <Toast />
     </div>

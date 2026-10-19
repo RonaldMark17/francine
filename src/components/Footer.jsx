@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { MapPin, Phone, Mail, Clock, ShieldCheck, Heart } from 'lucide-react';
 
-export default function Footer({ onOpenPresenterGuide }) {
+export default function Footer() {
   const { storeInfo, navigateTo } = useApp();
 
   return (
@@ -116,15 +116,6 @@ export default function Footer({ onOpenPresenterGuide }) {
               <p>{storeInfo.hours.weekdays}</p>
               <p>{storeInfo.hours.saturday}</p>
               <p className="text-neutral-500">{storeInfo.hours.sunday}</p>
-            </div>
-
-            <div className="pt-3">
-              <button
-                onClick={onOpenPresenterGuide}
-                className="inline-block text-[11px] uppercase tracking-wider text-amber-300 hover:text-amber-100 underline underline-offset-4"
-              >
-                Presenter Script &amp; Tutorial
-              </button>
             </div>
           </div>
         </div>

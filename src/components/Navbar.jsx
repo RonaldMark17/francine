@@ -8,11 +8,10 @@ import {
   Clock, 
   ShieldCheck, 
   Sparkles,
-  HelpCircle,
   PackageCheck
 } from 'lucide-react';
 
-export default function Navbar({ onOpenPresenterGuide }) {
+export default function Navbar() {
   const { 
     activeTab, 
     navigateTo, 
@@ -162,16 +161,6 @@ export default function Navbar({ onOpenPresenterGuide }) {
               )}
             </div>
 
-            {/* Presenter Guide Modal Trigger */}
-            <button
-              onClick={onOpenPresenterGuide}
-              className="hidden sm:flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2.5 py-1 text-neutral-600 hover:text-black border border-neutral-300 hover:border-black transition-all"
-              title="Academic Presenter Script & Guide"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-neutral-500" />
-              <span>Demo Guide</span>
-            </button>
-
             {/* Admin Dashboard Portal Link */}
             <button
               onClick={() => handleNavClick('admin')}
@@ -220,16 +209,6 @@ export default function Navbar({ onOpenPresenterGuide }) {
             ))}
             
             <div className="pt-4 flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  onOpenPresenterGuide();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-center py-2.5 text-xs uppercase tracking-widest border border-neutral-400 text-neutral-800"
-              >
-                Open Presenter Guide &amp; Demo Script
-              </button>
-              
               <button
                 onClick={() => handleNavClick('admin')}
                 className="w-full text-center py-2.5 text-xs uppercase tracking-widest bg-black text-white"
