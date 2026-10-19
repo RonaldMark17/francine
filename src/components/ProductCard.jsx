@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div 
-      className="group relative flex flex-col bg-white border border-[#EBE8E1] hover:border-black transition-all duration-300"
+      className="group relative flex flex-col bg-white border border-[#EBE8E1] hover:border-black transition-all duration-300 hover-lift"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -78,13 +78,13 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Quick Action Overlay (Slide Up on Hover) */}
-        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between gap-2">
+        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-between gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setQuickViewProduct(product);
             }}
-            className="flex-1 bg-white text-black text-[11px] uppercase tracking-wider py-2 px-3 hover:bg-neutral-100 transition-colors flex items-center justify-center gap-1.5 font-medium shadow-sm"
+            className="flex-1 bg-white text-black text-[11px] uppercase tracking-wider py-2 px-3 hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center gap-1.5 font-medium shadow-sm"
           >
             <Eye className="w-3.5 h-3.5" />
             <span>Details</span>
@@ -93,7 +93,7 @@ export default function ProductCard({ product }) {
           <button
             onClick={handleAdd}
             disabled={product.stock <= 0}
-            className={`flex-1 text-[11px] uppercase tracking-wider py-2 px-3 transition-colors flex items-center justify-center gap-1.5 font-medium shadow-sm ${
+            className={`flex-1 text-[11px] uppercase tracking-wider py-2 px-3 active:scale-95 transition-all flex items-center justify-center gap-1.5 font-medium shadow-sm ${
               addedAnim 
                 ? 'bg-emerald-600 text-white' 
                 : 'bg-black text-white hover:bg-neutral-800'

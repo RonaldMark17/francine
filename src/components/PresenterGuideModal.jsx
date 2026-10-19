@@ -59,7 +59,7 @@ Let us now navigate to 'Track Order'. Entering the order number displays the dyn
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
       <div 
-        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-6 flex flex-col max-h-[90vh]"
+        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-6 flex flex-col max-h-[90vh] animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

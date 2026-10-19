@@ -135,7 +135,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
       <div 
-        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-8"
+        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-8 animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}

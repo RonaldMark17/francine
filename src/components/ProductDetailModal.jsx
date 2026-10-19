@@ -37,7 +37,7 @@ export default function ProductDetailModal() {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
       <div 
-        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden"
+        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   ShoppingBag, 
@@ -24,6 +24,15 @@ export default function Navbar({ onOpenPresenterGuide }) {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [badgeBouncing, setBadgeBouncing] = useState(false);
+
+  useEffect(() => {
+    if (cartCount > 0) {
+      setBadgeBouncing(true);
+      const timer = setTimeout(() => setBadgeBouncing(false), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
 
   const navLinks = [
     { id: 'home', label: 'Home' },
@@ -180,12 +189,12 @@ export default function Navbar({ onOpenPresenterGuide }) {
             {/* Shopping Bag Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-neutral-800 hover:text-black transition-colors group"
+              className="relative p-2 text-neutral-800 hover:text-black transition-transform duration-200 active:scale-95 group"
               aria-label="Shopping bag"
             >
-              <ShoppingBag className="w-5 h-5 stroke-[1.5]" />
+              <ShoppingBag className="w-5 h-5 stroke-[1.5] transition-transform duration-300 group-hover:scale-110" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#121212] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-semibold border-2 border-[#FAF9F5]">
+                <span className={`absolute -top-1 -right-1 bg-[#121212] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-semibold border-2 border-[#FAF9F5] transition-transform ${badgeBouncing ? 'animate-cart-bounce' : ''}`}>
                   {cartCount}
                 </span>
               )}

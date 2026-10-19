@@ -75,33 +75,33 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10 py-16 sm:py-24">
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.3em] text-neutral-600 mb-6 font-medium shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
+          <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.3em] text-neutral-600 mb-6 font-medium shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></span>
             Omnichannel Retail &amp; Production Printing
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-light font-editorial text-[#121212] tracking-tight leading-[1.08] uppercase">
+          <h1 className="animate-fade-up delay-100 text-4xl sm:text-6xl lg:text-7xl font-light font-editorial text-[#121212] tracking-tight leading-[1.08] uppercase">
             Everything You Need, <br className="hidden sm:inline" />
             <span className="italic font-normal">All in One Place.</span>
           </h1>
 
-          <p className="mt-6 text-sm sm:text-base text-neutral-600 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+          <p className="animate-fade-up delay-200 mt-6 text-sm sm:text-base text-neutral-600 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
             Shop university essentials, faculty supplies, and on-demand printing services with the effortless convenience of online ordering, express store pickup, and door-to-door delivery.
           </p>
 
           {/* Action CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="animate-fade-up delay-300 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => navigateTo('shop')}
-              className="w-full sm:w-auto px-8 py-4 bg-black text-white text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-800 transition-all flex items-center justify-center gap-3 shadow-md hover:shadow-lg"
+              className="w-full sm:w-auto px-8 py-4 bg-black text-white text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-800 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-md hover:shadow-xl hover:-translate-y-0.5"
             >
               <span>Explore Catalog</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
 
             <button
               onClick={() => navigateTo('services')}
-              className="w-full sm:w-auto px-8 py-4 bg-transparent border border-neutral-400 text-neutral-900 text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-100 hover:border-black transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 bg-white/80 backdrop-blur-xs border border-neutral-400 text-neutral-900 text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-100 hover:border-black active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <Printer className="w-4 h-4 text-neutral-600" />
               <span>Book Printing Service</span>
@@ -109,20 +109,20 @@ export default function HomePage() {
           </div>
 
           {/* Value Badges */}
-          <div className="mt-14 pt-10 border-t border-neutral-300/70 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="space-y-1">
+          <div className="animate-fade-up delay-400 mt-14 pt-10 border-t border-neutral-300/70 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Fulfillment</span>
               <p className="text-xs font-semibold text-black">In-Store Pickup &amp; Delivery</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Academic Discounts</span>
               <p className="text-xs font-semibold text-black">15% Off with Student ID</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Turnaround</span>
               <p className="text-xs font-semibold text-black">Same-Day Rush Printing</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 p-2 hover:bg-white/60 transition-colors">
               <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Currency</span>
               <p className="text-xs font-semibold text-black">Philippine Pesos (₱)</p>
             </div>
@@ -159,7 +159,7 @@ export default function HomePage() {
                 setSelectedCategory(cat.name);
                 navigateTo('shop', { category: cat.name });
               }}
-              className="group cursor-pointer bg-white border border-[#EBE8E1] hover:border-black transition-all duration-300 overflow-hidden flex flex-col justify-between"
+              className="group cursor-pointer bg-white border border-[#EBE8E1] hover:border-black transition-all duration-300 overflow-hidden flex flex-col justify-between hover-lift"
             >
               <div className="relative aspect-[4/3] bg-neutral-100 overflow-hidden">
                 <img
