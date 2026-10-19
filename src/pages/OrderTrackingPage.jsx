@@ -31,7 +31,7 @@ export default function OrderTrackingPage() {
         setSearched(true);
       }
     } else if (orders.length > 0 && !activeOrder) {
-      // Default to first order for quick presentation readiness
+      // Default to most recent order if available
       setActiveOrder(orders[0]);
       setSearchInput(orders[0].id);
       setSearched(true);
@@ -46,7 +46,7 @@ export default function OrderTrackingPage() {
     setActiveOrder(match || null);
   };
 
-  const loadDemoOrder = (id) => {
+  const loadOrder = (id) => {
     setSearchInput(id);
     const match = orders.find(o => o.id.toUpperCase() === id.toUpperCase());
     setActiveOrder(match || null);
@@ -118,23 +118,25 @@ export default function OrderTrackingPage() {
           </button>
         </form>
 
-        {/* Demo Quick Order Selectors for Presenters */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px]">
-          <span className="text-neutral-400">Quick Demo Records:</span>
-          {orders.slice(0, 3).map((o) => (
-            <button
-              key={o.id}
-              onClick={() => loadDemoOrder(o.id)}
-              className={`px-2.5 py-1 font-mono transition-all border ${
-                activeOrder?.id === o.id
-                  ? 'bg-neutral-900 text-white border-black'
-                  : 'bg-white text-neutral-700 border-neutral-300 hover:border-black'
-              }`}
-            >
-              {o.id} ({o.fulfillment})
-            </button>
-          ))}
-        </div>
+        {/* Recent Orders Quick Access */}
+        {orders.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px]">
+            <span className="text-neutral-400">Recent Orders:</span>
+            {orders.slice(0, 3).map((o) => (
+              <button
+                key={o.id}
+                onClick={() => loadOrder(o.id)}
+                className={`px-2.5 py-1 font-mono transition-all border ${
+                  activeOrder?.id === o.id
+                    ? 'bg-neutral-900 text-white border-black'
+                    : 'bg-white text-neutral-700 border-neutral-300 hover:border-black'
+                }`}
+              >
+                {o.id} ({o.fulfillment})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tracking Result View */}
@@ -228,9 +230,9 @@ export default function OrderTrackingPage() {
               <div className="text-xs space-y-2 text-neutral-600 font-light">
                 {activeOrder.fulfillment === 'pickup' ? (
                   <>
-                    <p><strong className="text-black font-medium">Pickup Branch:</strong> {activeOrder.pickupLocation || 'Mama Mo Main Campus Store'}</p>
-                    <p><strong className="text-black font-medium">Designated Window:</strong> {activeOrder.pickupTimeSlot || 'Standard Business Hours'}</p>
-                    <p><strong className="text-black font-medium">Counter Instructions:</strong> Proceed to Counter 2 and show Order ID <code className="font-mono bg-neutral-100 px-1">{activeOrder.id}</code> to staff.</p>
+                    <p><strong className="text-black font-medium">Pickup Branch:</strong> {activeOrder.pickupLocation || 'Mama Mo Ink Main Store (Purok 5, Banago, Nagcarlan, Laguna)'}</p>
+                    <p><strong className="text-black font-medium">Designated Window:</strong> {activeOrder.pickupTimeSlot || 'Standard Business Hours (7:00 AM - 7:00 PM)'}</p>
+                    <p><strong className="text-black font-medium">Counter Instructions:</strong> Proceed to Ground Floor Cashier / Express Counter and present Order ID <code className="font-mono bg-neutral-100 px-1">{activeOrder.id}</code>.</p>
                   </>
                 ) : (
                   <>
@@ -238,7 +240,7 @@ export default function OrderTrackingPage() {
                     {activeOrder.deliveryNotes && (
                       <p><strong className="text-black font-medium">Rider Notes:</strong> {activeOrder.deliveryNotes}</p>
                     )}
-                    <p><strong className="text-black font-medium">Courier Fee:</strong> ₱{activeOrder.deliveryFee || 60} Standard Local Metro Rate</p>
+                    <p><strong className="text-black font-medium">Courier Fee:</strong> ₱{activeOrder.deliveryFee ?? 30} (Banago &amp; Nearby Laguna Barangays Delivery)</p>
                   </>
                 )}
                 <p><strong className="text-black font-medium">Customer Phone:</strong> {activeOrder.customer.phone}</p>
@@ -286,9 +288,9 @@ export default function OrderTrackingPage() {
 
           </div>
 
-          {/* Academic Prototype Notice */}
+          {/* Status Notice */}
           <div className="text-[11px] text-neutral-500 text-center font-light border-t border-neutral-200 pt-4">
-            Simulated demonstration order tracking. To update this order's status to test live timeline changes, open the <strong className="text-black font-medium">Admin Portal</strong>.
+            Order tracking updates are reflected here in real time. For any concerns, please contact our store at the number listed in the footer.
           </div>
 
         </div>
@@ -297,7 +299,7 @@ export default function OrderTrackingPage() {
           <AlertCircle className="w-10 h-10 text-neutral-400 mx-auto" />
           <h3 className="font-editorial text-xl text-black">Order Not Found</h3>
           <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">
-            We could not locate an order matching "{searchInput}". Please double check your order number or select one of the demonstration test orders above.
+            We could not locate an order matching "{searchInput}". Please verify your order number and try again.
           </p>
         </div>
       ) : null}

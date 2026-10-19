@@ -79,7 +79,7 @@ export default function ShopPage() {
           Product Catalog
         </h1>
         <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-xl">
-          Curated everyday essentials for students, teachers, and offices. All products are in stock at our Sampaloc store ready for immediate pickup or delivery.
+          Curated everyday essentials for students, teachers, and offices. All products are in stock at our Banago, Nagcarlan store ready for immediate pickup or delivery.
         </p>
       </div>
 

@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Trash2, ArrowRight, ShoppingBag, Tag, Check } from 'lucide-react';
+import { X, Trash2, ArrowRight, ShoppingBag, Tag, Check, LogIn } from 'lucide-react';
+
+const LOCAL_PRODUCT_IMAGES = {
+  'prod-1': '/images/paper_one_ream.jpg',
+  'prod-2': '/images/pilot_gtec_pens.jpg',
+  'prod-3': '/images/mongol_pencils.jpg',
+  'prod-4': '/images/epson_003_ink.jpg',
+  'prod-5': '/images/sterling_record_book.jpg',
+  'prod-6': '/images/deli_stapler.jpg',
+  'prod-7': '/images/laminating_film_pouches.jpg',
+  'prod-8': '/images/faber_castell_pencils.jpg',
+  'prod-9': '/images/wire_binding_spines.jpg',
+  'prod-10': '/images/post_it_notes.jpg',
+  'prod-11': '/images/paper_cutter_trimmer.jpg',
+  'prod-12': '/images/spiral_notebooks.jpg',
+};
 
 export default function CartDrawer({ onProceedToCheckout }) {
   const {
     isCartOpen,
     setIsCartOpen,
-    cart,
+    cart = [],
     updateQuantity,
     removeFromCart,
     cartCount,
@@ -16,11 +31,26 @@ export default function CartDrawer({ onProceedToCheckout }) {
     appliedPromo,
     applyPromoCode,
     removePromoCode,
-    navigateTo
+    navigateTo,
+    currentUser,
+    setIsAuthModalOpen,
+    setAuthModalMode
   } = useApp();
 
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState('');
+  const safeCart = Array.isArray(cart) ? cart : [];
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isCartOpen) {
+        setIsCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isCartOpen, setIsCartOpen]);
 
   if (!isCartOpen) return null;
 
@@ -37,9 +67,17 @@ export default function CartDrawer({ onProceedToCheckout }) {
   };
 
   const handleStartCheckout = () => {
+    if (!currentUser) {
+      // Require login before checkout
+      setIsCartOpen(false);
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setIsCartOpen(false);
     onProceedToCheckout();
   };
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-fade-in">
@@ -71,7 +109,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
 
           {/* Cart Item List */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {cart.length === 0 ? (
+            {safeCart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
                 <ShoppingBag className="w-12 h-12 text-neutral-300 stroke-[1] mb-3" />
                 <h3 className="font-editorial text-xl text-neutral-800">Your bag is empty</h3>
@@ -90,7 +128,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
               </div>
             ) : (
               <div className="space-y-4">
-                {cart.map((item) => (
+                {safeCart.map((item) => (
                   <div
                     key={item.id}
                     className="flex gap-4 p-3 bg-[#FAF9F5] border border-neutral-200"
@@ -98,7 +136,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
                     {/* Thumbnail */}
                     <div className="w-16 h-20 bg-neutral-100 shrink-0 overflow-hidden border border-neutral-200">
                       <img
-                        src={item.image}
+                        src={LOCAL_PRODUCT_IMAGES[item.id] || item.image}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -169,7 +207,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
           </div>
 
           {/* Footer & Totals */}
-          {cart.length > 0 && (
+          {safeCart.length > 0 && (
             <div className="p-6 border-t border-neutral-200 bg-[#FAF9F5] space-y-4">
               
               {/* Promo Code Input */}
@@ -239,14 +277,33 @@ export default function CartDrawer({ onProceedToCheckout }) {
               {/* Checkout Button */}
               <button
                 onClick={handleStartCheckout}
-                className="w-full py-3.5 bg-black text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                className={`w-full py-3.5 text-white text-xs uppercase tracking-[0.2em] font-medium transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                  currentUser 
+                    ? 'bg-black hover:bg-neutral-800' 
+                    : 'bg-neutral-700 hover:bg-neutral-900'
+                }`}
               >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
+                {currentUser ? (
+                  <>
+                    <span>Proceed to Checkout</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In to Checkout</span>
+                  </>
+                )}
               </button>
 
+              {!currentUser && (
+                <p className="text-[10px] text-center text-amber-700 font-medium">
+                  You need to sign in or create an account before placing an order.
+                </p>
+              )}
+
               <p className="text-[10px] text-center text-neutral-400 font-light">
-                Secure demonstration checkout • Academic prototype
+                Secure Checkout • In-Store Pickup or Doorstep Courier
               </p>
             </div>
           )}

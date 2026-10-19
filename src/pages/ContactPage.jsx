@@ -133,13 +133,13 @@ export default function ContactPage() {
           {/* Map Mockup visual */}
           <div className="bg-[#FAF9F5] border border-neutral-300 p-6 text-center space-y-2">
             <div className="text-xs font-semibold text-black uppercase tracking-wider">
-              University Belt Hub Map
+              Banago, Nagcarlan Store Location Map
             </div>
             <p className="text-[11px] text-neutral-500 font-light">
-              Located conveniently within 3 minutes walking distance from university gates.
+              Purok 5, Along Nagcarlan–Rizal Road (30m from Plaridel Elementary &amp; 50m from Plaridel Integrated National High School).
             </p>
-            <div className="h-40 bg-neutral-200 border border-neutral-300 flex items-center justify-center text-xs text-neutral-600 font-mono">
-              [ Interactive Campus Map Placeholder • Sampaloc, Manila ]
+            <div className="h-40 bg-neutral-200 border border-neutral-300 flex items-center justify-center text-xs text-neutral-600 font-mono text-center px-4">
+              [ Interactive Location Map • Purok 5, Barangay Banago, Nagcarlan, Laguna 4002 ]
             </div>
           </div>
 

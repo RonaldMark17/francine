@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import confetti from 'canvas-confetti';
 import { 
@@ -26,30 +26,74 @@ export default function CheckoutModal({ isOpen, onClose }) {
     appliedPromo,
     placeOrder,
     navigateTo,
-    storeInfo
+    storeInfo,
+    currentUser
   } = useApp();
 
   // Steps: 'form' | 'confirmation'
   const [step, setStep] = useState('form');
   const [createdOrder, setCreatedOrder] = useState(null);
 
-  // Form states
+  // Derive customer type from role
+  const getCustomerType = (role) => {
+    switch (role) {
+      case 'admin': return 'School Admin / Staff';
+      case 'buyer': 
+      default: return 'Buyer';
+    }
+  };
+
+  // Form states - auto-filled from logged-in user
   const [formData, setFormData] = useState({
-    name: 'Juan Dela Cruz',
-    email: 'juan.delacruz@ust.edu.ph',
-    phone: '0917-555-8921',
-    customerType: 'Student', // Student | Teacher/Faculty | General Customer
-    fulfillment: 'pickup', // pickup | delivery
+    name: '',
+    email: '',
+    phone: '',
+    customerType: 'Buyer',
+    fulfillment: 'pickup',
     pickupSlot: 'Today, 3:00 PM – 5:00 PM',
-    deliveryAddress: 'Unit 503, Espana Grand Residences, Espana Blvd, Sampaloc, Manila',
-    deliveryLandmark: 'Across UST Gate 2',
-    deliveryNotes: 'Please ring bell or text upon arrival.',
-    paymentMethod: 'Cash on Pickup / COD', // GCash | Maya | Cash on Pickup / COD
-    gcashRef: '9081234912',
+    deliveryAddress: '',
+    deliveryLandmark: '',
+    deliveryNotes: '',
+    paymentMethod: 'Cash on Pickup / COD',
+    gcashRef: '',
     notes: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // Reset and populate form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setStep('form');
+      setCreatedOrder(null);
+      setFormErrors({});
+      setFormData({
+        name: currentUser?.name || '',
+        email: currentUser?.email || '',
+        phone: currentUser?.phone || '',
+        customerType: currentUser ? getCustomerType(currentUser.role) : 'Buyer',
+        fulfillment: 'pickup',
+        pickupSlot: 'Today, 3:00 PM – 5:00 PM',
+        deliveryAddress: currentUser?.savedAddress || '',
+        deliveryLandmark: '',
+        deliveryNotes: '',
+        paymentMethod: 'Cash on Pickup / COD',
+        gcashRef: '',
+        notes: ''
+      });
+    }
+  }, [isOpen, currentUser]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -109,7 +153,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
     setCreatedOrder(newOrder);
     setStep('confirmation');
 
-    // Confetti celebration for presentation WOW factor
+    // Confetti celebration
     try {
       confetti({
         particleCount: 80,
@@ -133,16 +177,19 @@ export default function CheckoutModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+      onClick={onClose}
+    >
       <div 
-        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-8 animate-modal-pop"
+        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-8 animate-modal-pop max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
         <div className="bg-[#FAF9F5] border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-light font-editorial uppercase tracking-[0.2em] text-black">
-              {step === 'form' ? 'Checkout & Demonstration Order' : 'Order Confirmation'}
+              {step === 'form' ? 'Checkout' : 'Order Confirmation'}
             </h2>
           </div>
           <button
@@ -158,12 +205,12 @@ export default function CheckoutModal({ isOpen, onClose }) {
         {step === 'form' ? (
           <form onSubmit={handleSubmitOrder} className="p-6 sm:p-8 space-y-8">
             
-            {/* Academic Notice Banner */}
+            {/* Order Info Banner */}
             <div className="bg-neutral-100 border-l-2 border-black p-3.5 text-xs text-neutral-600 flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-neutral-700 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-black">Academic Project Demonstration:</span> Simulated checkout. 
-                Delivery rates, store pickup schedules, and payment channels are configurable demonstration values.
+                <span className="font-semibold text-black">Secure Checkout:</span> Please review your order details before submitting. 
+                Delivery rates and pickup schedules are subject to availability.
               </div>
             </div>
 
@@ -225,7 +272,8 @@ export default function CheckoutModal({ isOpen, onClose }) {
                     onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
                     className="w-full text-xs px-3 py-2 border border-neutral-300 focus:outline-none focus:border-black bg-white"
                   >
-                    <option value="Student">College / High School Student</option>
+                    <option value="Buyer">Buyer (Student / Teacher / Customer)</option>
+                    <option value="Student">Student</option>
                     <option value="Teacher / Faculty">Teacher / Professor / Faculty</option>
                     <option value="School Admin / Staff">School Admin / Staff</option>
                     <option value="General Customer">General Customer / Enterprise</option>
@@ -268,7 +316,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
                     Collect at our physical counter. Packed ready in 15-30 minutes.
                   </p>
                   <div className="mt-2 text-[10px] text-neutral-400">
-                    Location: Sampaloc Manila Main Branch
+                    Location: Purok 5, Banago, Nagcarlan Main Branch
                   </div>
                 </div>
 
@@ -296,7 +344,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
                     Delivered directly to dorm, campus gate, or home via local rider.
                   </p>
                   <div className="mt-2 text-[10px] text-neutral-400">
-                    Metro Manila &amp; University Belt
+                    Banago, Nagcarlan &amp; Nearby Laguna Barangays
                   </div>
                 </div>
 
@@ -375,7 +423,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
             <div className="space-y-4">
               <h3 className="text-xs uppercase tracking-[0.2em] text-neutral-400 font-semibold flex items-center gap-2">
                 <span>03</span>
-                <span className="text-black">Payment Method (Simulation)</span>
+                <span className="text-black">Payment Method</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -399,14 +447,14 @@ export default function CheckoutModal({ isOpen, onClose }) {
               </div>
 
               {formData.paymentMethod === 'GCash' && (
-                <div className="bg-[#FAF9F5] p-3 border border-neutral-200 text-xs space-y-2">
+                  <div className="bg-[#FAF9F5] p-3 border border-neutral-200 text-xs space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-neutral-600">Simulated GCash Merchant:</span>
+                    <span className="text-neutral-600">GCash Merchant:</span>
                     <span className="font-mono font-medium text-black">MAMA MO SUPPLIES (0917-882-6262)</span>
                   </div>
                   <div>
                     <label className="block text-[11px] text-neutral-600 mb-1">
-                      Simulated 10-Digit Reference No.
+                      GCash Reference No.
                     </label>
                     <input
                       type="text"
@@ -463,11 +511,11 @@ export default function CheckoutModal({ isOpen, onClose }) {
                 type="submit"
                 className="w-full py-4 bg-black text-white text-xs uppercase tracking-[0.22em] font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>Submit Demonstration Order</span>
+                <span>Place Order</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <p className="text-[10px] text-center text-neutral-400 mt-2 font-light">
-                Order will be registered instantly in the demonstration database and order tracking system.
+                Your order will be registered and available for tracking immediately.
               </p>
             </div>
 
@@ -488,7 +536,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
                 Thank You, {createdOrder?.customer.name}!
               </h3>
               <p className="text-xs text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
-                Your demonstration order has been placed in our local omnichannel queue. You can track this order in real time.
+                Your order has been placed successfully. You can track its fulfillment status in real time.
               </p>
             </div>
 
@@ -560,7 +608,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
               <button
                 onClick={handlePrintOrder}
                 className="w-full sm:w-auto px-4 py-3 border border-neutral-300 text-neutral-700 hover:text-black hover:border-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
-                title="Print official demo order slip"
+                title="Print order slip"
               >
                 <Printer className="w-4 h-4" />
                 <span>Print Slip</span>

@@ -116,7 +116,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Crystal-clear glossy laminating pouches offering rigid protection for school IDs, certificates, diplomas, menus, and flashcards. Waterproof and tear-resistant.',
     features: ['125 microns thickness', 'A4 standard format (216 x 303mm)', 'Round corners for safety', 'Pack of 100 sheets'],
     sku: 'LAM-A4-125',
-    image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80',
+    image: '/images/laminating_film_pouches.jpg',
     fallbackCategory: 'craft'
   },
   {
@@ -133,7 +133,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Hexagonal color pencils with break-resistant SV bonding. Rich, highly pigmented colors ideal for art classes, science illustrations, and creative school projects.',
     features: ['24 vibrant brilliant shades', 'SV secure bonding prevents lead breakage', 'Eco-friendly sustainable wood', 'Easily sharpened with regular sharpeners'],
     sku: 'ART-FC-24',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80',
+    image: '/images/faber_castell_pencils.jpg',
     fallbackCategory: 'pencil'
   },
   {
@@ -150,7 +150,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Professional twin-loop metal wire binding rings for student handbooks, calendars, thesis manuscripts, and business portfolios. 3:1 pitch ratio.',
     features: ['1/2 inch (12.7mm) diameter', 'Binds up to 90 pages of 80gsm paper', 'Sleek matte black finish', 'Pack of 50 spines'],
     sku: 'BND-WR-50',
-    image: 'https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?auto=format&fit=crop&w=800&q=80',
+    image: '/images/wire_binding_spines.jpg',
     fallbackCategory: 'office'
   },
   {
@@ -167,7 +167,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Genuine 3M Post-it notes in calming aesthetic pastel tones (sage green, soft butter, lavender, rose, sky blue). Sticks reliably without leaving glue residue.',
     features: ['3 in x 3 in standard square', '100 sheets per pad (600 sheets total)', 'Clean removal guarantee', 'Recycled plant-based adhesive'],
     sku: 'NOT-3M-06',
-    image: 'https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?auto=format&fit=crop&w=800&q=80',
+    image: '/images/post_it_notes.jpg',
     fallbackCategory: 'paper'
   },
   {
@@ -184,7 +184,7 @@ export const INITIAL_PRODUCTS = [
     description: 'Precision Japanese rotary blade paper trimmer with calibrated grid base. Trims up to 20 sheets of 80gsm paper cleanly in a single gliding stroke.',
     features: ['Self-sharpening hardened steel rotary blade', 'Solid steel base with metric & imperial guides', 'Cuts paper, photos, cardstock, laminates', 'Safety locking clamp'],
     sku: 'EQP-CR-A4',
-    image: 'https://images.unsplash.com/photo-1590402494587-44b71d7772f6?auto=format&fit=crop&w=800&q=80',
+    image: '/images/paper_cutter_trimmer.jpg',
     fallbackCategory: 'office'
   },
   {
@@ -198,10 +198,10 @@ export const INITIAL_PRODUCTS = [
     isDiscounted: true,
     rating: 4.7,
     reviewsCount: 44,
-    description: 'Essential college-ruled spiral notebooks featuring heavy poly-plastic covers that resist spills and backpack wear. 80 sheets of premium white ruled paper each.',
+    description: 'Essential college-ruled spiral notebooks featuring heavy poly-plastic covers that resist spills and backpack wear. 80 micro-perforated sheets of premium white ruled paper each.',
     features: ['Pack of 5 distinct color-coded notebooks', '80 micro-perforated sheets each', 'Snag-free spiral lock wire', 'Includes interior storage pockets'],
     sku: 'NOT-ST-05',
-    image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=800&q=80',
+    image: '/images/spiral_notebooks.jpg',
     fallbackCategory: 'notebook'
   }
 ];
@@ -325,16 +325,16 @@ export const INITIAL_ORDERS = [
     id: 'MM-2026-1042',
     date: '2026-10-18T14:30:00Z',
     customer: {
-      name: 'Prof. Maria Santos',
-      email: 'm.santos@stjude.edu.ph',
+      name: 'Teacher Maria Santos',
+      email: 'm.santos@plaridel.deped.gov.ph',
       phone: '0917-882-9411',
-      type: 'Teacher / Faculty'
+      type: 'Educator / Faculty'
     },
     fulfillment: 'delivery',
-    deliveryAddress: 'Room 304, Faculty Hall, St. Jude College, Manila (Near Central Market)',
+    deliveryAddress: 'Faculty Room, Plaridel Elementary School, Banago, Nagcarlan, Laguna 4002',
     paymentMethod: 'GCash (Ref # 99281746)',
     status: 'Out for Delivery',
-    statusNotes: 'Rider on the way via local courier partner.',
+    statusNotes: 'Staff on the way across Nagcarlan-Rizal Road to deliver directly to faculty room.',
     items: [
       { id: 'prod-1', name: 'PaperOne Premium A4 Copy Paper 80gsm (500 Sheets)', price: 285, quantity: 3 },
       { id: 'prod-10', name: 'Post-it Pastel Sticky Notes Multi-Pack (6 Pads)', price: 260, quantity: 2 },
@@ -342,24 +342,24 @@ export const INITIAL_ORDERS = [
     ],
     subtotal: 1855,
     discountAmount: 185,
-    deliveryFee: 60,
-    total: 1730
+    deliveryFee: 0,
+    total: 1670
   },
   {
     id: 'MM-2026-1038',
     date: '2026-10-19T09:15:00Z',
     customer: {
       name: 'Juan Dela Cruz',
-      email: 'juan.delacruz@ust.edu.ph',
+      email: 'juan.delacruz@pinhs.edu.ph',
       phone: '0928-554-1290',
-      type: 'College Student'
+      type: 'High School Student'
     },
     fulfillment: 'pickup',
-    pickupLocation: 'Mama Mo Main Store (Counter 2 - Quick Express)',
-    pickupTimeSlot: 'Today, 4:00 PM - 6:00 PM',
+    pickupLocation: 'Mama Mo Main Store (Ground Floor Express Counter, Banago, Nagcarlan)',
+    pickupTimeSlot: 'Today, 4:00 PM - 5:00 PM (After Dismissal)',
     paymentMethod: 'Cash on Pickup',
     status: 'Ready for Pickup',
-    statusNotes: 'Items packed in paper shopping bag. Waiting at Counter 2.',
+    statusNotes: 'Items packed in paper shopping bag. Waiting at Ground Floor Cashier counter.',
     items: [
       { id: 'prod-2', name: 'Pilot G-Tec-C4 Ultra Fine Gel Pen 0.4mm (Pack of 3)', price: 245, quantity: 1 },
       { id: 'prod-12', name: 'Sterling College Ruled Spiral Notebooks (Pack of 5)', price: 185, quantity: 1 },
@@ -375,23 +375,23 @@ export const INITIAL_ORDERS = [
     date: '2026-10-17T11:00:00Z',
     customer: {
       name: 'Elena Ramos',
-      email: 'elena.ramos@brightminds.org',
+      email: 'elena.ramos@banago.gov.ph',
       phone: '0908-123-4567',
-      type: 'Admin Officer'
+      type: 'Local Resident / Office'
     },
     fulfillment: 'delivery',
-    deliveryAddress: 'Unit 402, Sunshine Plaza, España Blvd, Sampaloc, Manila',
+    deliveryAddress: 'Purok 3, Barangay Banago, Nagcarlan, Laguna 4002 (Near Barangay Hall)',
     paymentMethod: 'Maya (Ref # 41829013)',
     status: 'Completed',
-    statusNotes: 'Delivered and received by building security with signed proof.',
+    statusNotes: 'Delivered and received with signed proof of receipt.',
     items: [
       { id: 'prod-4', name: 'Epson 003 Genuine EcoTank Refill Ink Set (4 Colors)', price: 1180, quantity: 1 },
       { id: 'prod-7', name: 'Thermal Laminating Film Pouches A4 125 Microns', price: 390, quantity: 2 }
     ],
     subtotal: 1960,
     discountAmount: 100,
-    deliveryFee: 60,
-    total: 1920
+    deliveryFee: 30,
+    total: 1890
   }
 ];
 
@@ -430,15 +430,33 @@ export const INITIAL_SERVICE_INQUIRIES = [
 
 export const STORE_INFO = {
   name: 'Mama Mo Ink Print and Supplies',
-  tagline: 'Elevated essentials for students, educators, and enterprise printing.',
-  address: '1249 F. Cayco St. corner España Boulevard, Sampaloc, Manila, 1008',
-  landmark: 'Right across University Arch Gate 3 (Near UST & FEU transit belt)',
-  phone: '+63 (02) 8734-9210 / +63 917 882 6262',
+  tagline: 'Plumang abot kaya, dito lang yan kay Mama',
+  subtitle: 'Convenient one-stop retail store for quality school supplies and student-friendly printing services.',
+  address: 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002',
+  landmark: 'Along Nagcarlan–Rizal Road (30m from Plaridel Elementary & 50m from Plaridel Integrated National High School)',
+  phone: '+63 917 882 6262',
   email: 'hello@mamamoinkprint.ph',
+  established: 2026,
+  classSection: '4BSBA-MM1',
+  advisor: 'Sir Guillermo Briones',
+  teamMembers: [
+    { name: 'Celerio Anne Francine', role: 'Store Manager / Operations Lead' },
+    { name: 'Bagatao Pia Maureen M.', role: 'Retail Strategy & Marketing' },
+    { name: 'Brit Margaret M.', role: 'Inventory Sourcing & Procurement' },
+    { name: 'Corpuz Sarah Jean L.', role: 'Financial Planning & Pricing' },
+    { name: 'Ignacio Angela D.', role: 'Customer Experience & Quality Control' }
+  ],
+  mission: 'To provide fast, reliable, and high-quality printing services together with complete school supplies at a price range that is affordable to all students and to cater to the needs of customers without making them waste their time and money.',
+  vision: 'To be known to the community of Banago, Nagcarlan, as the most reliable and preferred school supply provider that offers convenience and affordability in purchasing school supplies and dependable customer service that will cater to the needs of every learner.',
+  usp: [
+    'Multichannel Access: Physical store & online ordering',
+    'Student Friendly Rates: Affordable pricing fitting daily student allowances',
+    'Dual Services in One Stop: Full school supplies + comprehensive print shop'
+  ],
   hours: {
-    weekdays: 'Monday – Friday: 7:30 AM – 7:30 PM',
+    weekdays: 'Monday – Friday: 7:00 AM – 6:30 PM (Aligned with school hours)',
     saturday: 'Saturday: 8:00 AM – 5:00 PM',
-    sunday: 'Sunday: Closed (Online orders queued for Monday)'
+    sunday: 'Sunday: Closed (Online orders queued for Monday morning)'
   },
   social: {
     facebook: 'facebook.com/MamaMoInkPrintSupplies',

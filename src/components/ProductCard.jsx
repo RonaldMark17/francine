@@ -2,12 +2,28 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ShoppingBag, Eye, Check } from 'lucide-react';
 
+const LOCAL_PRODUCT_IMAGES = {
+  'prod-1': '/images/paper_one_ream.jpg',
+  'prod-2': '/images/pilot_gtec_pens.jpg',
+  'prod-3': '/images/mongol_pencils.jpg',
+  'prod-4': '/images/epson_003_ink.jpg',
+  'prod-5': '/images/sterling_record_book.jpg',
+  'prod-6': '/images/deli_stapler.jpg',
+  'prod-7': '/images/laminating_film_pouches.jpg',
+  'prod-8': '/images/faber_castell_pencils.jpg',
+  'prod-9': '/images/wire_binding_spines.jpg',
+  'prod-10': '/images/post_it_notes.jpg',
+  'prod-11': '/images/paper_cutter_trimmer.jpg',
+  'prod-12': '/images/spiral_notebooks.jpg',
+};
+
 export default function ProductCard({ product }) {
   const { addToCart, setQuickViewProduct } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [addedAnim, setAddedAnim] = useState(false);
 
+  const productImage = LOCAL_PRODUCT_IMAGES[product.id] || product.image;
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountPercent = hasDiscount 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
@@ -33,7 +49,7 @@ export default function ProductCard({ product }) {
       >
         {!imageError ? (
           <img
-            src={product.image}
+            src={productImage}
             alt={product.name}
             onError={() => setImageError(true)}
             className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"

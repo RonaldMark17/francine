@@ -75,9 +75,9 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10 py-16 sm:py-24">
           
-          <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.3em] text-neutral-600 mb-6 font-medium shadow-xs">
+          <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-300 text-[10px] uppercase tracking-[0.25em] text-neutral-600 mb-6 font-medium shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></span>
-            Omnichannel Retail &amp; Production Printing
+            Purok 5, Banago, Nagcarlan • One-Stop School &amp; Print Hub
           </div>
 
           <h1 className="animate-fade-up delay-100 text-4xl sm:text-6xl lg:text-7xl font-light font-editorial text-[#121212] tracking-tight leading-[1.08] uppercase">
@@ -85,8 +85,12 @@ export default function HomePage() {
             <span className="italic font-normal">All in One Place.</span>
           </h1>
 
-          <p className="animate-fade-up delay-200 mt-6 text-sm sm:text-base text-neutral-600 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
-            Shop university essentials, faculty supplies, and on-demand printing services with the effortless convenience of online ordering, express store pickup, and door-to-door delivery.
+          <p className="animate-fade-up delay-150 font-editorial text-xl sm:text-2xl text-neutral-800 italic mt-4">
+            &ldquo;Plumang abot kaya, dito lang yan kay Mama&rdquo;
+          </p>
+
+          <p className="animate-fade-up delay-200 mt-4 text-sm sm:text-base text-neutral-600 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+            Conveniently located 30–50m from Plaridel Elementary School and Plaridel Integrated National High School. Complete school supplies, photocopying, and rush printing tailored to student allowances.
           </p>
 
           {/* Action CTAs */}
@@ -354,42 +358,42 @@ export default function HomePage() {
       {/* 7. TARGET CUSTOMER AUDIENCES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
-            Designed for Campus &amp; Beyond
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">
+            Serving Banago, Nagcarlan &amp; Partner Campuses
           </span>
           <h2 className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-wide mt-1">
-            Built for Everyone Who Learns and Works
+            Built for Students, Educators &amp; Our Local Community
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3">
-            <div className="w-12 h-12 mx-auto bg-[#FAF9F5] border border-neutral-300 flex items-center justify-center text-black">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
               <GraduationCap className="w-6 h-6 stroke-[1.5]" />
             </div>
-            <h3 className="font-editorial text-lg text-black">For Students</h3>
+            <h3 className="font-editorial text-lg text-black">For Students (PINHS &amp; Plaridel)</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
-              Skip long bookstore lines between classes. Order your exam papers, G-Tec pens, and project materials online and pick up at the express counter.
+              Located only 30m from Plaridel Elementary and 50m from Plaridel Integrated National High School. Stop by before class, at lunch, or dismissal for quick document printing, pens, notebooks, and project materials priced for student allowances.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3">
-            <div className="w-12 h-12 mx-auto bg-[#FAF9F5] border border-neutral-300 flex items-center justify-center text-black">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
               <BookOpen className="w-6 h-6 stroke-[1.5]" />
             </div>
             <h3 className="font-editorial text-lg text-black">For Educators &amp; Faculty</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
-              Classroom ream bundles, heavy-duty staplers, and bulk syllabus printing with special academic credit pricing and direct faculty room delivery.
+              Exam sheets, syllabus printing, ream papers, and classroom materials with educator discounts and quick turnaround times. Reserve supplies online or through our Facebook page for instant pickup.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3">
-            <div className="w-12 h-12 mx-auto bg-[#FAF9F5] border border-neutral-300 flex items-center justify-center text-black">
+          <div className="p-8 bg-white border border-neutral-200 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 mx-auto bg-[#0A1A3A]/5 border border-[#0A1A3A]/15 flex items-center justify-center text-[#0A1A3A]">
               <Briefcase className="w-6 h-6 stroke-[1.5]" />
             </div>
-            <h3 className="font-editorial text-lg text-black">For Local Offices</h3>
+            <h3 className="font-editorial text-lg text-black">For Banago Residents &amp; Passersby</h3>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">
-              Original printer ink refills, thermal laminating films, receipt ledgers, and wire binding spines with tax invoice receipts available upon request.
+              Conveniently along Nagcarlan–Rizal Road with accessible parking beside Maco&apos;s commercial building. Fast photocopying, laminating, scanning, and office supplies with cash, GCash, Maya, and bank transfers accepted.
             </p>
           </div>
         </div>

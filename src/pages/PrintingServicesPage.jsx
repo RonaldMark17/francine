@@ -29,7 +29,7 @@ export default function PrintingServicesPage() {
   // Inquiry Form State
   const [clientName, setClientName] = useState('Bea Alonzo');
   const [clientPhone, setClientPhone] = useState('0918-772-1092');
-  const [clientEmail, setClientEmail] = useState('bea.alonzo@ust.edu.ph');
+  const [clientEmail, setClientEmail] = useState('bea.alonzo@pinhs.edu.ph');
   const [specialInstructions, setSpecialInstructions] = useState('Front and back print on 80gsm paper please. Bound with black coil.');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState('');
@@ -131,23 +131,15 @@ export default function PrintingServicesPage() {
       
       {/* Page Header */}
       <div className="border-b border-neutral-200 pb-8">
-        <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
-          Production &amp; Finishing
+        <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">
+          Ground Floor Printing Counter • Banago, Nagcarlan
         </span>
         <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">
-          Printing &amp; Bookbinding Services
+          Printing, Copying &amp; Document Finishing Services
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-2xl">
-          Complete academic and commercial document solutions. We support walk-in express requests and convenient online file pre-orders for classroom notes, thesis manuscripts, and marketing collaterals.
+        <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-2xl leading-relaxed">
+          Fast, reliable, and high-quality printing services tailored for students and educators in Banago, Nagcarlan (steps from Plaridel Elementary and Plaridel Integrated National High School). Upload your file online for express queueing, or visit our ground floor computer station.
         </p>
-
-        {/* Prototype notice */}
-        <div className="mt-4 p-3 bg-neutral-100 border-l-2 border-black text-neutral-600 text-xs flex items-start gap-2.5 max-w-2xl">
-          <AlertCircle className="w-4 h-4 text-neutral-800 shrink-0 mt-0.5" />
-          <p className="font-light">
-            <strong className="font-medium text-black">Prototype Demonstration:</strong> Prices, turnaround guarantees, and file format specifications are configurable business policies.
-          </p>
-        </div>
       </div>
 
       {/* Services Showcase Cards */}
@@ -366,7 +358,7 @@ export default function PrintingServicesPage() {
               <div className="p-4 bg-[#FAF9F5] border border-neutral-300 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-neutral-400 block font-medium">
-                    Estimated Cost (Demo)
+                    Estimated Cost
                   </span>
                   <span className="text-xl font-bold text-black font-mono">
                     ₱{estimatedTotal.toLocaleString()}.00
@@ -430,7 +422,7 @@ export default function PrintingServicesPage() {
                 {/* File Upload Box */}
                 <div>
                   <label className="block text-xs font-medium text-neutral-700 mb-1">
-                    Attach Document File (Optional Demo Upload)
+                    Attach Document File (Optional)
                   </label>
                   <label className="border-2 border-dashed border-neutral-300 hover:border-black transition-colors p-4 flex flex-col items-center justify-center cursor-pointer bg-[#FAF9F5] text-center">
                     <UploadCloud className="w-6 h-6 text-neutral-400 mb-1" />

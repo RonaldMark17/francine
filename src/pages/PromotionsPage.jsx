@@ -33,23 +33,18 @@ export default function PromotionsPage() {
       
       {/* Header */}
       <div className="border-b border-neutral-200 pb-8">
-        <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
-          Exclusive Offers
+        <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">
+          Balik-Eskwela &amp; Academic Bundles
         </span>
         <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">
-          Promotions &amp; Academic Perks
+          Promotions &amp; Student Perks
         </h1>
-        <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-xl">
-          Discover seasonal price drops, student package bundles, and classroom volume discounts tailored to the university community.
+        <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-xl leading-relaxed">
+          Seasonal discounts, bundle corners, and educator perks for in-demand periods like Balik-Eskwela, enrollment, research, and examinations at Plaridel Elementary, PINHS, and Banago, Nagcarlan.
         </p>
 
-        {/* Demo Disclaimer Alert */}
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5 max-w-2xl">
-          <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-          <p className="font-light">
-            <strong className="font-medium">Demonstration Notice:</strong> All discount codes and promotional banners shown on this page are sample demonstration data designed for this academic presentation.
-          </p>
-        </div>
+
+
       </div>
 
       {/* Promotional Cards Banner Grid */}

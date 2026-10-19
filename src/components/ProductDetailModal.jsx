@@ -1,6 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, ShoppingBag, Check, ShieldCheck, Truck, RefreshCw, Star } from 'lucide-react';
+
+const LOCAL_PRODUCT_IMAGES = {
+  'prod-1': '/images/paper_one_ream.jpg',
+  'prod-2': '/images/pilot_gtec_pens.jpg',
+  'prod-3': '/images/mongol_pencils.jpg',
+  'prod-4': '/images/epson_003_ink.jpg',
+  'prod-5': '/images/sterling_record_book.jpg',
+  'prod-6': '/images/deli_stapler.jpg',
+  'prod-7': '/images/laminating_film_pouches.jpg',
+  'prod-8': '/images/faber_castell_pencils.jpg',
+  'prod-9': '/images/wire_binding_spines.jpg',
+  'prod-10': '/images/post_it_notes.jpg',
+  'prod-11': '/images/paper_cutter_trimmer.jpg',
+  'prod-12': '/images/spiral_notebooks.jpg',
+};
 
 export default function ProductDetailModal() {
   const { 
@@ -14,9 +29,30 @@ export default function ProductDetailModal() {
   const [imageError, setImageError] = useState(false);
   const [added, setAdded] = useState(false);
 
+  // Reset state when a different product is viewed
+  useEffect(() => {
+    if (quickViewProduct) {
+      setQuantity(1);
+      setImageError(false);
+      setAdded(false);
+    }
+  }, [quickViewProduct?.id]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && quickViewProduct) {
+        setQuickViewProduct(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [quickViewProduct, setQuickViewProduct]);
+
   if (!quickViewProduct) return null;
 
   const product = quickViewProduct;
+  const productImage = LOCAL_PRODUCT_IMAGES[product.id] || product.image;
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountPercent = hasDiscount 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
@@ -34,16 +70,23 @@ export default function ProductDetailModal() {
     setIsCartOpen(true);
   };
 
+  const handleClose = () => {
+    setQuickViewProduct(null);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+      onClick={handleClose}
+    >
       <div 
-        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden animate-modal-pop"
+        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden animate-modal-pop max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
-          onClick={() => setQuickViewProduct(null)}
-          className="absolute top-4 right-4 z-20 p-2 bg-white/80 hover:bg-neutral-100 text-neutral-800 transition-colors"
+          onClick={handleClose}
+          className="absolute top-4 right-4 z-20 p-2 bg-white/90 hover:bg-neutral-100 text-neutral-800 transition-colors border border-neutral-200"
           aria-label="Close product modal"
         >
           <X className="w-5 h-5" />
@@ -55,7 +98,7 @@ export default function ProductDetailModal() {
           <div className="relative aspect-[4/5] bg-[#F7F6F2] overflow-hidden flex items-center justify-center">
             {!imageError ? (
               <img
-                src={product.image}
+                src={productImage}
                 alt={product.name}
                 onError={() => setImageError(true)}
                 className="w-full h-full object-cover object-center"
@@ -93,7 +136,7 @@ export default function ProductDetailModal() {
                   <span>•</span>
                   <div className="flex items-center gap-1 text-amber-600">
                     <Star className="w-3.5 h-3.5 fill-current" />
-                    <span>{product.rating || '4.9'} ({product.reviewsCount || 24} student ratings)</span>
+                    <span>{product.rating || '4.9'} ({product.reviewsCount || 24} ratings)</span>
                   </div>
                 </div>
               </div>
@@ -118,10 +161,17 @@ export default function ProductDetailModal() {
               {/* Stock Indicator */}
               <div className="py-2 border-y border-neutral-100 flex items-center justify-between text-xs">
                 <span className="text-neutral-500">Stock Availability:</span>
-                <span className="font-medium text-emerald-800 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                  {product.stock > 0 ? `${product.stock} units ready for dispatch` : 'Out of Stock'}
-                </span>
+                {product.stock > 0 ? (
+                  <span className="font-medium text-emerald-800 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                    {product.stock} units ready for dispatch
+                  </span>
+                ) : (
+                  <span className="font-medium text-rose-600 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                    Out of Stock
+                  </span>
+                )}
               </div>
 
               {/* Description */}
@@ -150,8 +200,9 @@ export default function ProductDetailModal() {
                 <div className="flex items-center border border-neutral-300">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 text-neutral-600 hover:text-black hover:bg-neutral-50 text-sm"
+                    className="px-3 py-2 text-neutral-600 hover:text-black hover:bg-neutral-50 text-sm transition-colors"
                     aria-label="Decrease quantity"
+                    disabled={product.stock <= 0}
                   >
                     -
                   </button>
@@ -160,8 +211,9 @@ export default function ProductDetailModal() {
                   </span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="px-3 py-2 text-neutral-600 hover:text-black hover:bg-neutral-50 text-sm"
+                    className="px-3 py-2 text-neutral-600 hover:text-black hover:bg-neutral-50 text-sm transition-colors"
                     aria-label="Increase quantity"
+                    disabled={product.stock <= 0}
                   >
                     +
                   </button>
@@ -171,7 +223,9 @@ export default function ProductDetailModal() {
                   onClick={handleAddToCart}
                   disabled={product.stock <= 0}
                   className={`flex-1 py-3 px-4 text-xs uppercase tracking-[0.18em] font-medium transition-all flex items-center justify-center gap-2 ${
-                    added 
+                    product.stock <= 0
+                      ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                      : added 
                       ? 'bg-emerald-700 text-white' 
                       : 'bg-black text-white hover:bg-neutral-800'
                   }`}
@@ -184,19 +238,20 @@ export default function ProductDetailModal() {
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4" />
-                      <span>Add to Bag</span>
+                      <span>{product.stock <= 0 ? 'Out of Stock' : 'Add to Bag'}</span>
                     </>
                   )}
                 </button>
               </div>
 
-              <button
-                onClick={handleBuyNow}
-                disabled={product.stock <= 0}
-                className="w-full py-3 text-xs uppercase tracking-[0.18em] font-medium border border-black text-black hover:bg-neutral-50 transition-colors"
-              >
-                Buy Now &amp; Checkout
-              </button>
+              {product.stock > 0 && (
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full py-3 text-xs uppercase tracking-[0.18em] font-medium border border-black text-black hover:bg-neutral-50 transition-colors"
+                >
+                  Buy Now &amp; Checkout
+                </button>
+              )}
 
               {/* Guarantees */}
               <div className="grid grid-cols-2 gap-2 text-[10px] text-neutral-500 font-light pt-2">
