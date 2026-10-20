@@ -763,7 +763,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             {/* Use the storefront design within the selected device viewport. */}
             <PreviewFrame>
             {page.systemRoute && <div inert><Navbar previewTab={page.systemRoute === '/' ? 'home' : page.systemRoute.slice(1)} /></div>}
-            <CoreSelectionContext.Provider value={true}>
+            <CoreSelectionContext.Provider value={{ onChange: (id, value) => setNativeContent(previous => ({ ...previous, [id]: value })) }}>
             <style>{`
               [data-editor-preview] [data-core-field] { cursor: pointer; }
               [data-editor-preview] [data-core-field]:hover,
@@ -771,7 +771,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               ${selectedField ? `[data-editor-preview] [data-core-field="${selectedField}"] { outline: 2px solid #d97706; outline-offset: 4px; background-color: #fbbf241a; }` : ''}
             `}</style>
             <div data-editor-preview onClickCapture={event => {
-              event.preventDefault();
+              if (!event.target.closest('[contenteditable="true"]')) event.preventDefault();
               event.stopPropagation();
               const field = event.target.closest('[data-core-field]');
               if (field) {
@@ -782,6 +782,10 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 if (section) { setSelectedField(null); handleSelectComponent(section.dataset.componentId); }
               }
             }} onKeyDownCapture={event => {
+              if (event.target.closest('[contenteditable="true"]')) {
+                event.stopPropagation();
+                return;
+              }
               if (event.key === 'Enter' || event.key === ' ') {
                 const field = event.target.closest('[data-core-field]');
                 if (field) { event.preventDefault(); event.stopPropagation(); setSelectedCompId('native-content'); setSelectedField(field.dataset.coreField); }
@@ -818,7 +822,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5 text-xs">
             {selectedCompId === 'native-content' && page.systemRoute ? (
               <>
-              {selectedField && <button type="button" onClick={() => setSelectedField(null)} className="text-xs text-amber-300 hover:text-white">? All page content</button>}
+              {selectedField && <button type="button" onClick={() => setSelectedField(null)} className="text-xs text-amber-300 hover:text-white">All page content</button>}
               <NativeContentInspector key={selectedField || 'all'} selectedField={selectedField} route={page.systemRoute} title={pageTitle} values={nativeContent} onChange={setNativeContent} onChooseImage={id => {
                 setActiveMediaTargetField(() => url => setNativeContent(values => ({ ...values, [id]: url })));
                 setIsMediaPickerOpen(true);

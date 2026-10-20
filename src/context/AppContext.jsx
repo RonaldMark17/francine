@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { collectMediaAssets } from '../utils/mediaAssets';
+import { isPromotionExpired } from '../utils/promotionDates';
 import {
   INITIAL_PRODUCTS,
   INITIAL_ORDERS,
@@ -588,8 +589,13 @@ export function AppProvider({ children }) {
   const applyPromoCode = (code) => {
     const trimmed = code.trim().toUpperCase();
     // Check dynamic promotionsList first
-    const dynamicPromo = promotionsList.find(p => p.code === trimmed && p.active);
+    const dynamicPromo = promotionsList.find(p => p.code === trimmed);
     if (dynamicPromo) {
+      if (!dynamicPromo.active || isPromotionExpired(dynamicPromo)) {
+        const message = isPromotionExpired(dynamicPromo) ? 'This promo code has expired.' : 'This promo code is disabled.';
+        showToast(message, 'error');
+        return { success: false, message };
+      }
       // Redemption limit validation
       const limit = dynamicPromo.usage_limit ?? dynamicPromo.usageLimit;
       const count = dynamicPromo.times_used ?? dynamicPromo.usageCount ?? 0;
@@ -631,7 +637,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
   let cartDiscount = 0;
-  if (appliedPromo) {
+  if (appliedPromo && !isPromotionExpired(appliedPromo)) {
     if (appliedPromo.discountType === 'percentage' || appliedPromo.discountPercentage) {
       const pct = appliedPromo.discountValue || appliedPromo.discountPercentage || 15;
       cartDiscount = Math.round(cartSubtotal * (pct / 100));

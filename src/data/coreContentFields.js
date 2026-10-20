@@ -1,3 +1,4 @@
+import { ABOUT_TEAM } from './aboutTeam.js';
 // Stable field identifiers for the original storefront layouts.
 export const CORE_CONTENT_FIELDS = {
   "/": [
@@ -1081,6 +1082,12 @@ export const CORE_CONTENT_FIELDS = {
     }
   ],
   "/about": [
+    ...ABOUT_TEAM.flatMap((member, index) => [
+      { id: `team-${index}-image`, kind: "image", label: `Team member ${index + 1}: photo`, defaultValue: "" },
+      { id: `team-${index}-initials`, kind: "text", label: `Team member ${index + 1}: initials`, defaultValue: member.initials },
+      { id: `team-${index}-name`, kind: "text", label: `Team member ${index + 1}: name`, defaultValue: member.name },
+      { id: `team-${index}-role`, kind: "text", label: `Team member ${index + 1}: role`, defaultValue: member.role },
+    ]),
     {
       "id": "content-1",
       "kind": "text",

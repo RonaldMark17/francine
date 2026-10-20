@@ -1,3 +1,4 @@
+import { ABOUT_TEAM } from '../data/aboutTeam';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React from 'react';
 import { useApp } from '../context/AppContext';
@@ -62,7 +63,7 @@ export default function AboutPage() {
             alt={coreContent("content-18", "Mama Mo Ink Retail Shop")}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
           <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3 rounded-lg border border-neutral-200 text-xs">
             <div className="font-semibold text-black">{coreContent.text("content-19", "Purok 5, Barangay Banago, Nagcarlan, Laguna 4002")}</div>
             <div className="text-[10px] text-neutral-500">{coreContent.text("content-20", "Along Nagcarlan–Rizal Road (Parking Area Available)")}</div>
@@ -204,20 +205,16 @@ export default function AboutPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            { name: 'Anne Francine Celerio', role: 'Store Manager / Operations', initials: 'AC' },
-            { name: 'Pia Maureen M. Bagatao', role: 'Retail Strategy & Marketing', initials: 'PB' },
-            { name: 'Margaret M. Brit', role: 'Inventory Sourcing & Procurement', initials: 'MB' },
-            { name: 'Sarah Jean L. Corpuz', role: 'Financial Planning & Pricing', initials: 'SC' },
-            { name: 'Angela D. Ignacio', role: 'Customer Experience & Quality', initials: 'AI' }
-          ].map((member, idx) => (
-            <div key={idx} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
-              <div className="w-12 h-12 rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
-                {member.initials}
+          {ABOUT_TEAM.map((member, idx) => (
+            <div key={idx} data-core-field={`team-${idx}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
+              <div data-core-field={`team-${idx}-image`} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
+                {coreContent(`team-${idx}-image`, '') ? (
+                  <img src={coreContent(`team-${idx}-image`, '')} alt={coreContent(`team-${idx}-name`, member.name)} className="w-full h-full object-cover" />
+                ) : coreContent.text(`team-${idx}-initials`, member.initials)}
               </div>
               <div>
-                <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{member.name}</h4>
-                <p className="text-[10px] text-neutral-500 mt-0.5 leading-snug">{member.role}</p>
+                <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{coreContent.text(`team-${idx}-name`, member.name)}</h4>
+                <p className="text-[10px] text-neutral-500 mt-0.5 leading-snug">{coreContent.text(`team-${idx}-role`, member.role)}</p>
               </div>
             </div>
           ))}

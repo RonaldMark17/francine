@@ -1,4 +1,5 @@
 import ModalOverlay from '../components/ModalOverlay';
+import { isPromotionExpired, storeDate } from '../utils/promotionDates';
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
@@ -1437,7 +1438,7 @@ export default function AdminDashboard() {
                             promo.active ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-neutral-100 text-neutral-600 border-neutral-200'
                           }`}
                         >
-                          {promo.active ? 'Active' : 'Disabled'}
+                          {isPromotionExpired(promo) ? 'Expired' : promo.active ? 'Active' : 'Disabled'}
                         </button>
                       </div>
 
@@ -1452,6 +1453,10 @@ export default function AdminDashboard() {
                           <span className="font-bold text-black font-mono text-sm">
                             {promo.discountType === 'percentage' ? `${promo.discountValue}% Off` : `₱${promo.discountValue} Flat Off`}
                           </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-neutral-500">Expires:</span>
+                          <span className="font-mono text-neutral-700">{promo.endDate || 'No expiration'}</span>
                         </div>
                         {promo.minSpend > 0 && (
                           <div className="flex justify-between items-center">
@@ -2133,6 +2138,20 @@ export default function AdminDashboard() {
                   onChange={(e) => setPromoForm({ ...promoForm, minSpend: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="promo-expiration" className="block font-medium text-neutral-700 mb-1">Expiration Date *</label>
+                <input
+                  id="promo-expiration"
+                  type="date"
+                  required
+                  min={storeDate()}
+                  value={promoForm.endDate}
+                  onChange={(e) => setPromoForm({ ...promoForm, endDate: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
+                />
+                <p className="text-[10px] text-neutral-400 mt-1">Valid through the selected date (Philippine time).</p>
               </div>
 
               <div>
