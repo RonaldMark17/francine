@@ -1,3 +1,4 @@
+import { printRequestToOrder } from '../src/utils/printRequest.js';
 import Database from 'better-sqlite3';
 import { getAccountReference } from '../src/utils/accountReference.js';
 import path from 'path';
@@ -331,6 +332,16 @@ export function initDatabase(initialData = {}) {
 
   // Populate & synchronize normalized relational tables
   syncNormalizedData();
+  // Move legacy print requests atomically, preserving references and contact inquiries.
+  db.transaction(() => {
+    const requests = db.prepare("SELECT * FROM service_inquiries WHERE COALESCE(paperType, '') != 'Contact inquiry'").all();
+    for (const request of requests) {
+      if (!db.prepare('SELECT id FROM orders WHERE id = ?').get(request.id)) {
+        saveOrderToDb(printRequestToOrder(request));
+      }
+      db.prepare('DELETE FROM service_inquiries WHERE id = ?').run(request.id);
+    }
+  })();
 }
 
 export function upgradeExistingUserPasswords() {

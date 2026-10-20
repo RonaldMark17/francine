@@ -18,7 +18,7 @@ import {
 
 export default function PrintingServicesPage() {
   const coreContent = useCoreContent();
-  const { submitServiceInquiry, showToast } = useApp();
+  const { submitPrintRequest, showToast } = useApp();
 
   // Interactive Calculator State
   const [calcService, setCalcService] = useState('Document Printing');
@@ -121,15 +121,15 @@ export default function PrintingServicesPage() {
         : 'Loose Sheets / None',
       quantity: calcCopies,
       estimatedCost: estimatedTotal,
-      attachedFileName: selectedFile ? selectedFile.name : 'Sample_Thesis_Chapter1.pdf',
+      attachedFileName: selectedFile ? selectedFile.name : '',
       notes: specialInstructions
     };
 
     try {
-      const newInq = await submitServiceInquiry(inquiryPayload);
+      const newInq = await submitPrintRequest(inquiryPayload);
       setSubmittedInquiry(newInq);
     } catch {
-      showToast('Unable to send your inquiry. Please try again.', 'error');
+      showToast('Unable to submit your print request. Please try again.', 'error');
     }
   };
 
@@ -213,7 +213,7 @@ export default function PrintingServicesPage() {
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h3 className="font-editorial text-2xl text-black">{coreContent.text("content-11", "Inquiry Submitted!")}</h3>
-            <div className="text-xs text-neutral-600 font-light leading-relaxed">{coreContent.text("content-12", "Your inquiry reference number is ")}<strong className="font-mono font-bold text-black">{submittedInquiry.id}</strong>{coreContent.text("content-13", ". Estimated total is ")}<strong className="font-semibold text-black">{coreContent.text("content-14", "₱")}{submittedInquiry.estimatedCost.toLocaleString()}</strong>{coreContent.text("content-15", ". Our print specialist will review your document and notify you via SMS/Email.")}</div>
+            <div className="text-xs text-neutral-600 font-light leading-relaxed">{coreContent.text("content-12", "Your transaction reference number is ")}<strong className="font-mono font-bold text-black">{submittedInquiry.id}</strong>{coreContent.text("content-13", ". Estimated total is ")}<strong className="font-semibold text-black">{coreContent.text("content-14", "₱")}{submittedInquiry.estimatedCost.toLocaleString()}</strong>{coreContent.text("content-15", ". Our print specialist will review your document and notify you via SMS/Email.")}</div>
             <button
               onClick={() => setSubmittedInquiry(null)}
               className="mt-4 px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"

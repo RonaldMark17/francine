@@ -259,6 +259,9 @@ export function sqliteApiMiddleware() {
         const parts = pathname.split('/');
         const id = parts[3];
         const body = await parseBody(req);
+        if (!['In Review', 'Responded', 'Closed'].includes(body.status)) {
+          return sendJson(res, 400, { error: 'Invalid inquiry status.' });
+        }
         updateInquiryStatusInDb(id, body.status);
         return sendJson(res, 200, { success: true, id, status: body.status });
       }

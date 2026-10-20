@@ -97,7 +97,7 @@ function MainLayout() {
 
       {/* Main Page View with Animated Transition */}
       <main className="flex-1">
-        <div key={activeTab + (activeCustomPageSlug || '')} className="animate-page-enter">
+        <div key={activeTab + (activeCustomPageSlug || '')} className={isAdminView ? undefined : "animate-page-enter"}>
           {renderContent()}
         </div>
       </main>

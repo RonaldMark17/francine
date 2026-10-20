@@ -165,6 +165,10 @@ export default function TransactionsPage() {
 
   const handleReorderItems = (order) => {
     if (!order.items || order.items.length === 0) return;
+    if (order.items.some(item => item.sku === 'PRINT-SERVICE')) {
+      navigateTo('services');
+      return;
+    }
     order.items.forEach(it => {
       addToCart({
         id: it.id,
@@ -451,6 +455,7 @@ export default function TransactionsPage() {
                       })}
                     </div>
 
+                    {order.notes && <p className="text-xs text-neutral-600 whitespace-pre-wrap">{order.notes}</p>}
                     {/* In-Line Live Tracking Toggle */}
                     <div className="pt-2">
                       <button

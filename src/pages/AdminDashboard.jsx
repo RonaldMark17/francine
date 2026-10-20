@@ -15,6 +15,7 @@ import { loadPageBuilderDraft } from '../utils/pageBuilderDraft';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { 
   Package, 
+  Receipt,
   ShoppingBag, 
   Printer, 
   Settings, 
@@ -505,7 +506,7 @@ export default function AdminDashboard() {
   const activeTabMeta = adminNavItems.find(t => t.id === activeAdminTab);
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] text-[#121212] flex flex-col md:flex-row antialiased font-sans">
+    <div className="admin-dashboard min-h-screen bg-[#F7F6F2] text-[#121212] flex flex-col md:flex-row antialiased font-sans">
       
       {/* ========================================================= */}
       {/* SIDEBAR NAVIGATION (Desktop Fixed / Mobile Drawer)       */}
@@ -648,8 +649,8 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header App Bar */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 px-4 sm:px-6 lg:px-8 py-3.5">
-          <div className="flex items-center justify-between gap-4">
+        <header className="admin-header sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 px-4 sm:px-6 lg:px-8 py-3.5">
+          <div className="admin-header-row flex items-center justify-between gap-4">
             
             {/* Left: Mobile hamburger + Active View Title */}
             <div className="flex items-center gap-3">
@@ -662,14 +663,14 @@ export default function AdminDashboard() {
               </button>
 
               <div>
-                <h2 className="text-lg sm:text-xl font-light font-editorial uppercase tracking-wider text-black font-semibold flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-light font-editorial uppercase tracking-wider text-black flex items-center gap-2">
                   {activeTabMeta?.label || 'Control Center'}
                 </h2>
               </div>
             </div>
 
             {/* Right: Operational Actions */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="admin-header-actions flex items-center gap-2 sm:gap-2.5">
               
               <button
                 onClick={() => setIsNavManagerOpen(true)}
@@ -712,96 +713,62 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl w-full mx-auto">
+        <main className="admin-content flex-1 p-4 sm:p-6 lg:p-8 space-y-6 w-full mx-auto">
           
           {/* KPI Metrics Summary Cards */}
           {activeAdminTab === 'orders' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-down">
-            
-            {/* Card 1: Gross Sales */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
-                  Total Gross Sales
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-700 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="w-3.5 h-3.5" />
+            <section aria-label="Store overview" className="admin-overview grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="rounded-xl border border-neutral-200/90 bg-white p-5 shadow-xs">
+                <div className="relative flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Total gross sales</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700"><TrendingUp className="h-4 w-4" /></span>
+                </div>
+                <div className="mt-4 text-3xl font-medium tracking-tight text-neutral-900 tabular-nums"><span className="mr-1 text-xl font-normal text-neutral-500">&#8369;</span>{totalRevenue.toLocaleString()}</div>
+                <div className="mt-5 flex items-center gap-2 border-t border-neutral-100 pt-4 text-xs text-neutral-500">
+                  <Receipt className="h-3.5 w-3.5 text-neutral-500" />
+                  <span>Across <strong className="font-semibold text-neutral-900">{orders.length}</strong> orders</span>
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
-                ₱{totalRevenue.toLocaleString()}
-              </div>
-              <div className="text-[11px] text-neutral-500 flex items-center gap-1.5">
-                <span className="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded text-[10px]">
-                  +18.4%
-                </span>
-                <span>Across {orders.length} orders</span>
-              </div>
-            </div>
 
-            {/* Card 2: Active Orders */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
-                  Active Fulfillment
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <ShoppingBag className="w-3.5 h-3.5" />
+              <div className="rounded-xl border border-neutral-200/90 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Active fulfillment</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700"><ShoppingBag className="h-4 w-4" /></span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1"><span className="text-3xl font-medium tracking-tight text-neutral-900 tabular-nums">{pendingOrdersCount}</span><span className="text-xs text-neutral-500">in progress</span></div>
+                <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-neutral-100 pt-4 text-xs text-neutral-500">
+                  <span className="inline-flex items-center gap-1.5"><Store className="h-3.5 w-3.5 text-neutral-500" />{pickupOrdersCount} pickups</span>
+                  <span className="inline-flex items-center gap-1.5"><Truck className="h-3.5 w-3.5 text-neutral-400" />{deliveryOrdersCount} deliveries</span>
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
-                {pendingOrdersCount}
-              </div>
-              <div className="text-[11px] text-neutral-500">
-                {pickupOrdersCount} in-store pickups • {deliveryOrdersCount} courier deliveries
-              </div>
-            </div>
 
-            {/* Card 3: Inventory Units */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
-                  Inventory Stock
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Package className="w-3.5 h-3.5" />
+              <div className="rounded-xl border border-neutral-200/90 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Inventory stock</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700"><Package className="h-4 w-4" /></span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1"><span className="text-3xl font-medium tracking-tight text-neutral-900 tabular-nums">{totalUnitsInStock.toLocaleString()}</span><span className="text-xs text-neutral-500">units available</span></div>
+                <div className="mt-5 border-t border-neutral-100 pt-4">
+                  {lowStockProductsCount > 0 ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700"><AlertTriangle className="h-3.5 w-3.5" />{lowStockProductsCount} {lowStockProductsCount === 1 ? 'product needs' : 'products need'} restocking</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" />All stock levels healthy</span>
+                  )}
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
-                {totalUnitsInStock} <span className="text-xs font-sans text-neutral-400 font-normal">units</span>
-              </div>
-              <div className="text-[11px]">
-                {lowStockProductsCount > 0 ? (
-                  <span className="text-rose-700 font-semibold flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 animate-pulse" />
-                    {lowStockProductsCount} products low stock
-                  </span>
-                ) : (
-                  <span className="text-emerald-700 font-medium">All stock optimal</span>
-                )}
-              </div>
-            </div>
 
-            {/* Card 4: Dynamic CMS Pages */}
-            <div className="bg-white rounded-xl border border-neutral-200/90 p-5 shadow-xs space-y-2 card-interactive hover-lift group">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono font-medium">
-                  Dynamic CMS Pages
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Layout className="w-3.5 h-3.5" />
+              <div className="rounded-xl border border-neutral-200/90 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Website pages</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700"><Layout className="h-4 w-4" /></span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1"><span className="text-3xl font-medium tracking-tight text-neutral-900 tabular-nums">{customPages.length}</span><span className="text-xs text-neutral-500">custom pages</span></div>
+                <div className="mt-5 flex items-center gap-2 border-t border-neutral-100 pt-4 text-xs text-emerald-700">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50" />
+                  <span><strong className="font-semibold">{customPages.filter(p => p.status === 'published').length}</strong> published on website</span>
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-tight group-hover:scale-105 origin-left transition-transform duration-300">
-                {customPages.length}
-              </div>
-              <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>{customPages.filter(p => p.status === 'published').length} published on website</span>
-              </div>
-            </div>
-
-          </div>
+            </section>
           )}
 
           {/* ========================================================= */}
@@ -811,13 +778,14 @@ export default function AdminDashboard() {
           {activeAdminTab === 'orders' && (
             <div className="space-y-6">
               
-              <div className="bg-white p-4 rounded-xl border border-neutral-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="admin-order-toolbar bg-white p-4 rounded-xl border border-neutral-200/90 shadow-xs flex flex-wrap items-center justify-between gap-4">
                 
                 {/* Filter Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                <div className="admin-order-filters flex flex-wrap items-center gap-1.5">
                   {['All', ...orderStatusOptions].map(st => (
                     <button
                       key={st}
+                      aria-pressed={orderFilterStatus === st}
                       onClick={() => setOrderFilterStatus(st)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                         orderFilterStatus === st 
@@ -831,11 +799,12 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Search & Export */}
-                <div className="flex items-center gap-2.5">
-                  <div className="relative flex-1 sm:w-64">
+                <div className="admin-order-search flex items-center gap-2.5">
+                  <div className="relative min-w-0 flex-1">
                     <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
+                      aria-label="Search orders by order ID or customer"
                       placeholder="Search order ID or client..."
                       value={orderSearchQuery}
                       onChange={(e) => setOrderSearchQuery(e.target.value)}
@@ -858,7 +827,7 @@ export default function AdminDashboard() {
               {/* Orders Table */}
               <div className="bg-white rounded-xl border border-neutral-200/90 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table className="admin-orders-table w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-[#FAF9F5] border-b border-neutral-200 text-[10px] uppercase tracking-wider text-neutral-500 font-mono">
                         <th className="py-3.5 px-4">Order Code</th>
@@ -920,7 +889,7 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="py-4 px-4">
-                                <span className="px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 text-[11px] font-medium">
+                                <span className="inline-block px-2 py-1 rounded bg-neutral-100 text-neutral-700 text-[11px] font-medium leading-relaxed">
                                   {order.paymentMethod || 'Cash'}
                                 </span>
                               </td>
@@ -1523,17 +1492,17 @@ export default function AdminDashboard() {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 5: PRINTING SERVICES INQUIRIES                        */}
+          {/* TAB 5: CUSTOMER INQUIRIES                                 */}
           {/* ========================================================= */}
           {activeAdminTab === 'inquiries' && (
             <div className="space-y-6">
               
               <div className="bg-white p-5 rounded-xl border border-neutral-200/90 shadow-xs">
                 <h3 className="text-base font-light font-editorial uppercase tracking-[0.16em] text-black font-semibold">
-                  Customer Inquiries & Print Requests
+                  Customer Inquiries
                 </h3>
                 <p className="text-xs text-neutral-500 font-light mt-0.5">
-                  Contact messages and printing requests. Refreshes automatically every 10 seconds.
+                  Contact messages. Print requests appear in Transactions. Refreshes automatically every 10 seconds.
                 </p>
               </div>
 
@@ -1577,14 +1546,14 @@ export default function AdminDashboard() {
                           </td>
                           <td className="py-4 px-4">
                             <select
-                              value={inq.status}
+                              aria-label={`Status for inquiry from ${inq.clientName}`}
+                              value={['In Review', 'Responded', 'Closed'].includes(inq.status) ? inq.status : inq.status === 'Completed' ? 'Closed' : 'In Review'}
                               onChange={(e) => updateInquiryStatus(inq.id, e.target.value)}
                               className="text-xs px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white font-medium focus:outline-none focus:border-black cursor-pointer shadow-2xs"
                             >
                               <option value="In Review">In Review</option>
-                              <option value="Approved & Printing">Approved & Printing</option>
-                              <option value="Ready for Pickup">Ready for Pickup</option>
-                              <option value="Completed">Completed</option>
+                              <option value="Responded">Responded</option>
+                              <option value="Closed">Closed</option>
                             </select>
                           </td>
                         </tr>

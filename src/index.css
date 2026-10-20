@@ -420,3 +420,35 @@
   .store-header-actions > button,
   .store-header-actions > div > button { min-width: 36px; padding-inline: 7px; }
 }
+
+/* Admin workspace: controls wrap according to the available content width. */
+.admin-header-row { flex-wrap: wrap; }
+.admin-header-actions { flex-wrap: wrap; }
+.admin-header-actions button { min-height: 36px; white-space: nowrap; }
+.admin-content { max-width: 1680px; }
+.admin-overview > div { min-width: 0; display: flex; flex-direction: column; }
+.admin-overview > div > div:last-child { margin-top: auto; padding-top: 16px; }
+.admin-overview > div > div:nth-last-child(2) { margin-bottom: 20px; line-height: 1.2; }
+.admin-order-filters { flex: 1 1 560px; }
+.admin-order-search { flex: 1 1 360px; max-width: 480px; }
+.admin-order-search button { flex-shrink: 0; min-height: 36px; white-space: nowrap; }
+.admin-order-search input { min-height: 36px; }
+.admin-orders-table { min-width: 1120px; }
+.admin-orders-table th { white-space: nowrap; font-weight: 500; }
+.admin-orders-table th:nth-child(2) { width: 25%; }
+.admin-orders-table td:nth-child(2) { min-width: 240px; overflow-wrap: anywhere; }
+.admin-orders-table td:nth-child(3) > div > span { white-space: nowrap; }
+.admin-orders-table td:nth-child(4) { min-width: 140px; }
+.admin-orders-table td:last-child { white-space: nowrap; }
+.admin-dashboard :is(button, input, select):focus-visible { outline: 2px solid #9b7b32; outline-offset: 3px; }
+@media (max-width: 1279px) {
+  .admin-header-actions { gap: 8px; }
+  .admin-header-actions button { font-size: 10px; letter-spacing: 0.04em; }
+}
+@media (max-width: 639px) {
+  .admin-header-row { gap: 12px; }
+  .admin-header-actions { width: 100%; padding-left: 0; }
+  .admin-header-actions > button { flex: 1; }
+  .admin-order-search { max-width: none; flex-basis: 100%; }
+  .admin-order-filters { gap: 6px; }
+}

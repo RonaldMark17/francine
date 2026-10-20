@@ -1,3 +1,4 @@
+import { printRequestToOrder } from '../utils/printRequest';
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { collectMediaAssets } from '../utils/mediaAssets';
 import { isPromotionExpired } from '../utils/promotionDates';
@@ -852,6 +853,15 @@ export function AppProvider({ children }) {
     showToast('Product removed from store catalog', 'info');
   };
 
+  const submitPrintRequest = async (requestData) => {
+    const request = { ...requestData, id: `PRINT-${crypto.randomUUID()}`, date: new Date().toISOString() };
+    const order = printRequestToOrder(request, currentUser?.id);
+    await sqliteApi.createOrder(order);
+    setOrders(prev => [order, ...prev]);
+    showToast('Print request submitted! View it in Transactions.', 'success');
+    return { ...request, ...order, estimatedCost: request.estimatedCost };
+  };
+
   // Printing Inquiries
   const submitServiceInquiry = async (inquiryData) => {
     const newInquiryId = `INQ-${crypto.randomUUID()}`;
@@ -867,12 +877,17 @@ export function AppProvider({ children }) {
     return newInq;
   };
 
-  const updateInquiryStatus = (inquiryId, newStatus) => {
-    setServiceInquiries(prev =>
-      prev.map(inq => (inq.id === inquiryId ? { ...inq, status: newStatus } : inq))
-    );
-    sqliteApi.updateInquiryStatus(inquiryId, newStatus).catch(err => console.warn('SQLite inquiry update:', err.message));
-    showToast(`Inquiry ${inquiryId} marked as "${newStatus}"`, 'info');
+  const updateInquiryStatus = async (inquiryId, newStatus) => {
+    try {
+      await sqliteApi.updateInquiryStatus(inquiryId, newStatus);
+      setServiceInquiries(prev =>
+        prev.map(inq => (inq.id === inquiryId ? { ...inq, status: newStatus } : inq))
+      );
+      showToast(`Inquiry marked as "${newStatus}"`, 'success');
+    } catch (err) {
+      console.warn('SQLite inquiry update:', err.message);
+      showToast('Unable to update inquiry status. Please try again.', 'error');
+    }
   };
 
   // ==========================================
@@ -1182,6 +1197,7 @@ export function AppProvider({ children }) {
         updateProduct,
         deleteProduct,
         submitServiceInquiry,
+        submitPrintRequest,
         updateInquiryStatus,
         saveCustomPage,
         duplicateCustomPage,
