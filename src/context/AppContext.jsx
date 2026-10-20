@@ -18,6 +18,14 @@ import { sqliteApi } from '../services/api';
 
 const AppContext = createContext();
 
+const getCurrentRoute = () => {
+  const hashRoute = window.location.hash.replace('#', '').split('?')[0];
+  if (hashRoute) return hashRoute;
+
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  return pathSegments[pathSegments.length - 1] || 'home';
+};
+
 export function AppProvider({ children }) {
   // Products state (persisted in localStorage)
   const [products, setProducts] = useState(() => {
@@ -193,14 +201,14 @@ export function AppProvider({ children }) {
 
   // Navigation and UI state — read initial page from URL hash for refresh persistence
   const [activeTab, setActiveTab] = useState(() => {
-    const hash = window.location.hash.replace('#', '').split('?')[0];
+    const hash = getCurrentRoute();
     const validPages = ['home','shop','promotions','services','transactions','tracking','about','contact','admin','custom_page','docs'];
     if (hash && validPages.includes(hash)) return hash;
     if (hash && hash.startsWith('page-')) return 'custom_page';
     return 'home';
   });
   const [activeCustomPageSlug, setActiveCustomPageSlug] = useState(() => {
-    const hash = window.location.hash.replace('#', '').split('?')[0];
+    const hash = getCurrentRoute();
     if (hash && hash.startsWith('page-')) return hash.replace('page-', '');
     return null;
   });
@@ -510,7 +518,7 @@ export function AppProvider({ children }) {
   // so popstate is needed in addition to direct hash changes.
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '').split('?')[0];
+      const hash = getCurrentRoute();
       if (!hash || hash === 'home') {
         setActiveTab('home');
         setActiveCustomPageSlug(null);

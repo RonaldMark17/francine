@@ -9,6 +9,7 @@ import ProductDetailModal from './components/ProductDetailModal';
 import CheckoutModal from './components/CheckoutModal';
 import AuthModal from './components/AuthModal';
 import Toast from './components/Toast';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -61,7 +62,11 @@ function MainLayout() {
       case 'services':
         return <PrintingServicesPage />;
       case 'transactions':
-        return <TransactionsPage />;
+        return (
+          <ProtectedRoute message="Please sign in to view your orders and transactions.">
+            <TransactionsPage />
+          </ProtectedRoute>
+        );
       case 'tracking':
         return <OrderTrackingPage />;
       case 'about':

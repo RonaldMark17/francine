@@ -314,21 +314,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
                 </p>
               )}
 
-              <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 border-t border-neutral-200/80">
-                <span>Looking for checked out items?</span>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    navigateTo('transactions');
-                  }}
-                  className="text-black font-medium underline flex items-center gap-1 hover:text-neutral-700"
-                >
-                  <Receipt className="w-3 h-3" />
-                  <span>Transactions &amp; Track →</span>
-                </button>
-              </div>
-
-              <p className="text-[10px] text-center text-neutral-400 font-light">
+              <p className="pt-1 text-center text-[10px] font-light text-neutral-400">
                 Secure Checkout • In-Store Pickup or Doorstep Courier
               </p>
             </div>
