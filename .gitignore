@@ -26,3 +26,9 @@ dist-ssr
 # SQLite temporary WAL/SHM files
 *.sqlite-wal
 *.sqlite-shm
+
+# Deployment secrets
+.env
+.env.*
+!.env.example
+backup-pre-vercel-*/

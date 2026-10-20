@@ -9,7 +9,6 @@ import {
   PROMOTIONS,
   STORE_INFO
 } from '../data/initialData';
-import { INITIAL_USERS } from '../data/authUsers';
 import {
   INITIAL_NAV_CONFIG,
   INITIAL_CUSTOM_PAGES,
@@ -65,27 +64,7 @@ export function AppProvider({ children }) {
   });
 
   // Registered Users state (persisted in localStorage)
-  const [users, setUsers] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mm_users_v1');
-      let loaded = saved ? JSON.parse(saved) : INITIAL_USERS;
-
-      // Ensure admin with password 'admin123' exists even if older data was saved in localStorage
-      const adminExists = loaded.some(u => u.email.toLowerCase() === 'admin' && u.password === 'admin123');
-      if (!adminExists) {
-        const nonAdmins = loaded.filter(u => u.role !== 'admin' && !u.email.toLowerCase().startsWith('admin'));
-        const adminAccounts = INITIAL_USERS.filter(u => u.role === 'admin');
-        loaded = [...adminAccounts, ...nonAdmins];
-      }
-
-      return loaded.map(u => ({
-        ...u,
-        role: u.role === 'admin' ? 'admin' : 'buyer'
-      }));
-    } catch {
-      return INITIAL_USERS;
-    }
-  });
+  const [users, setUsers] = useState([]);
 
   // Current Logged-in User Session (starts logged out)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -269,6 +248,21 @@ export function AppProvider({ children }) {
     return () => { isMounted = false; };
   }, []);
 
+  // Refresh protected records once a real API session is established. The
+  // first anonymous load intentionally omits customer orders and inbox data.
+  useEffect(() => {
+    if (!currentUser?.sessionToken) return;
+    let cancelled = false;
+    sqliteApi.getAllData().then(data => {
+      if (cancelled || !data) return;
+      if (Array.isArray(data.orders)) setOrders(data.orders);
+      if (Array.isArray(data.users)) setUsers(data.users);
+      if (currentUser.role === 'admin' && Array.isArray(data.serviceInquiries)) setServiceInquiries(data.serviceInquiries);
+      if (Array.isArray(data.inventoryLedger)) setInventoryLedger(data.inventoryLedger);
+    }).catch(err => console.warn('Authenticated data refresh:', err.message));
+    return () => { cancelled = true; };
+  }, [currentUser?.sessionToken, currentUser?.role]);
+
   // Keep the admin inbox current across customer browsers and devices.
   useEffect(() => {
     if (currentUser?.role !== 'admin') return;
@@ -436,31 +430,7 @@ export function AppProvider({ children }) {
       }
       return { success: false, message: apiRes?.message || 'Login failed.' };
     } catch (err) {
-      // Offline fallback: check in-memory/localStorage users
-      const lower = trimmed.toLowerCase();
-      let user = users.find(u => u.email.toLowerCase() === lower);
-      if (!user && (lower === 'admin' || lower === 'admin@mamamoinkprint.ph')) {
-        user = users.find(u => u.role === 'admin' || u.email.toLowerCase().includes('admin'));
-      }
-
-      if (!user) {
-        return { success: false, message: 'Invalid credentials. Please verify your email/username and password.' };
-      }
-
-      // Check legacy or fallback
-      if (user.password && user.password !== password && !user.password.startsWith('scrypt$')) {
-        return { success: false, message: 'Incorrect password. Please try again.' };
-      }
-
-      const normalizedUser = {
-        ...user,
-        role: user.role === 'admin' ? 'admin' : 'buyer'
-      };
-
-      setCurrentUser(normalizedUser);
-      setIsAuthModalOpen(false);
-      showToast(`Welcome back, ${normalizedUser.name}! (${normalizedUser.role.toUpperCase()})`, 'success');
-      return { success: true, user: normalizedUser };
+      return { success: false, message: err.message || 'The sign-in service is unavailable.' };
     }
   };
 
@@ -480,29 +450,7 @@ export function AppProvider({ children }) {
       }
       return { success: false, message: apiRes?.message || 'Registration failed.' };
     } catch (err) {
-      const existing = users.find(u => u.email.toLowerCase() === userData.email.trim().toLowerCase());
-      if (existing) {
-        return { success: false, message: 'An account with this email address already exists.' };
-      }
-
-      const newUser = {
-        id: `usr-${Date.now()}`,
-        role: 'buyer',
-        name: userData.name,
-        email: userData.email.trim().toLowerCase(),
-        phone: userData.phone || '0917-000-0000',
-        affiliation: userData.affiliation || '',
-        idNumber: userData.idNumber || '',
-        joinedDate: new Date().toISOString().split('T')[0],
-        savedAddress: userData.savedAddress || 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002',
-        ordersCount: 0
-      };
-
-      setUsers(prev => [newUser, ...prev]);
-      setCurrentUser(newUser);
-      setIsAuthModalOpen(false);
-      showToast(`Account created! Logged in as ${newUser.name} (BUYER)`, 'success');
-      return { success: true, user: newUser };
+      return { success: false, message: err.message || 'The registration service is unavailable.' };
     }
   };
 
@@ -1187,7 +1135,7 @@ export function AppProvider({ children }) {
     setProducts(INITIAL_PRODUCTS);
     setOrders(INITIAL_ORDERS);
     setServiceInquiries(INITIAL_SERVICE_INQUIRIES);
-    setUsers(INITIAL_USERS);
+    setUsers([]);
     setCurrentUser(null);
     setCart([]);
     setCustomPages(INITIAL_CUSTOM_PAGES);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { doesOrderBelongToUser } from '../utils/orderUtils';
+import { sqliteApi } from '../services/api';
 import { 
   Search, 
   Package, 
@@ -46,6 +47,7 @@ export default function OrderTrackingPage() {
 
   // Sync if trackingOrderNumber state changed from outside
   useEffect(() => {
+    let cancelled = false;
     if (trackingOrderNumber) {
       setSearchInput(trackingOrderNumber);
       // Allow tracking any order by direct ID search (even if not the user's own)
@@ -53,6 +55,10 @@ export default function OrderTrackingPage() {
       if (match) {
         setActiveOrder(match);
         setSearched(true);
+      } else {
+        sqliteApi.getOrder(trackingOrderNumber).then(order => {
+          if (!cancelled) { setActiveOrder(order); setSearched(true); }
+        }).catch(() => { if (!cancelled) { setActiveOrder(null); setSearched(true); } });
       }
     } else if (myOrders.length > 0 && !activeOrder) {
       // Default to user's own most recent order
@@ -60,20 +66,24 @@ export default function OrderTrackingPage() {
       setSearchInput(myOrders[0].id);
       setSearched(true);
     }
+    return () => { cancelled = true; };
   }, [trackingOrderNumber, orders, myOrders]);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     setSearched(true);
     const query = searchInput.trim().toUpperCase();
     const match = orders.find(o => o.id.toUpperCase() === query);
-    setActiveOrder(match || null);
+    if (match) { setActiveOrder(match); return; }
+    try { setActiveOrder(await sqliteApi.getOrder(searchInput.trim())); }
+    catch { setActiveOrder(null); }
   };
 
-  const loadOrder = (id) => {
+  const loadOrder = async (id) => {
     setSearchInput(id);
     const match = orders.find(o => o.id.toUpperCase() === id.toUpperCase());
-    setActiveOrder(match || null);
+    if (match) setActiveOrder(match);
+    else { try { setActiveOrder(await sqliteApi.getOrder(id)); } catch { setActiveOrder(null); } }
     setSearched(true);
   };
 

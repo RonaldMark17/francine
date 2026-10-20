@@ -17,7 +17,7 @@ export default function ProtectedRoute({
   const handledUnauthorizedAccess = useRef(false);
 
   useEffect(() => {
-    if (currentUser || handledUnauthorizedAccess.current) return;
+    if (currentUser?.sessionToken || handledUnauthorizedAccess.current) return;
 
     handledUnauthorizedAccess.current = true;
     showToast(message, 'info');
@@ -28,7 +28,7 @@ export default function ProtectedRoute({
     navigateTo(redirectTo);
   }, [currentUser, message, navigateTo, openLogin, redirectTo, setAuthModalMode, setIsAuthModalOpen, showToast]);
 
-  if (!currentUser) return null;
+  if (!currentUser?.sessionToken) return null;
 
   return children;
 }

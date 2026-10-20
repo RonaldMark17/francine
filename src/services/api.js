@@ -1,23 +1,27 @@
-// SQLite Client API Service
-// Connects React frontend directly to the SQLite backend
+// Same-origin API client for local development and Vercel Functions.
 
 const API_BASE = '/api';
 
 async function fetchJson(url, options = {}) {
   try {
+    let sessionToken = '';
+    try { sessionToken = JSON.parse(localStorage.getItem('mm_current_user_v1') || 'null')?.sessionToken || ''; } catch {}
     const res = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
+        ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
         ...options.headers
       },
       ...options
     });
     if (!res.ok) {
-      throw new Error(`API error: ${res.status} ${res.statusText}`);
+      let detail = '';
+      try { detail = (await res.clone().json()).message || (await res.clone().json()).error || ''; } catch {}
+      throw new Error(detail || `API error: ${res.status} ${res.statusText}`);
     }
     return await res.json();
   } catch (err) {
-    console.warn(`SQLite API request to ${url} failed:`, err.message);
+    console.warn(`API request to ${url} failed:`, err.message);
     throw err;
   }
 }
@@ -46,6 +50,10 @@ export const sqliteApi = {
       method: 'PUT',
       body: JSON.stringify({ status, notes })
     });
+  },
+
+  async getOrder(orderId) {
+    return await fetchJson(`${API_BASE}/orders/${encodeURIComponent(orderId)}`);
   },
 
   // Products
