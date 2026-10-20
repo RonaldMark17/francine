@@ -29,8 +29,7 @@ export default function AuthModal() {
     currentUser,
     logout,
     updateUserProfile,
-    orders = [],
-    navigateTo
+    orders = []
   } = useApp();
 
   const [isRegister, setIsRegister] = useState(false);
@@ -286,21 +285,6 @@ export default function AuthModal() {
                   }} className="px-4 py-2 border border-neutral-300 text-black text-xs uppercase tracking-wider font-medium hover:border-black transition-colors">
                     Edit Profile
                   </button>
-                  <button
-                    onClick={() => {
-                      handleClose();
-                      navigateTo('transactions');
-                    }}
-                    className="px-4 py-2 border border-neutral-300 text-black text-xs uppercase tracking-wider font-medium hover:border-black transition-colors"
-                  >
-                    All Transactions
-                  </button>
-                  <button
-                    onClick={handleClose}
-                    className="px-4 py-2 bg-black text-white text-xs uppercase tracking-wider font-medium hover:bg-neutral-800 transition-colors"
-                  >
-                    Done
-                  </button>
                 </div>
               </div>
                 </>
@@ -476,13 +460,14 @@ export default function AuthModal() {
 
                   <div>
                     <label className="block font-medium text-neutral-700 mb-1">
-                      School / Organization / Affiliation <span className="text-neutral-400 font-normal">(Optional)</span>
+                      Address <span className="text-neutral-400 font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"
                       value={regData.affiliation}
                       onChange={(e) => setRegData({ ...regData, affiliation: e.target.value })}
-                      placeholder="e.g. University of Santo Tomas, St. Jude, or Company"
+                      placeholder="e.g. Street, Barangay, City / Municipality, Province"
+                      autoComplete="street-address"
                       className="w-full px-3 py-2 border border-neutral-300 focus:outline-none focus:border-black transition-colors"
                     />
                   </div>

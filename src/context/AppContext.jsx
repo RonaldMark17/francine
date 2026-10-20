@@ -468,6 +468,8 @@ export function AppProvider({ children }) {
       sqliteApi.logout(currentUser.sessionToken).catch(() => {});
     }
     setCurrentUser(null);
+    clearCart();
+    setIsCartOpen(false);
     showToast('Signed out from your account.', 'info');
     if (activeTab === 'admin' || activeTab === 'transactions') {
       setActiveTab('home');

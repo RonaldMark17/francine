@@ -788,6 +788,11 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               if (field) {
                 setSelectedCompId('native-content');
                 setSelectedField(field.dataset.coreField);
+                if (field.getAttribute('role') === 'button' && field.dataset.coreField.endsWith('-image')) {
+                  const id = field.dataset.coreField;
+                  setActiveMediaTargetField(() => url => setNativeContent(values => ({ ...values, [id]: url })));
+                  setIsMediaPickerOpen(true);
+                }
               } else {
                 const section = event.target.closest('[data-component-id]');
                 if (section) { setSelectedField(null); handleSelectComponent(section.dataset.componentId); }
@@ -806,7 +811,14 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                   return;
                 }
                 const field = event.target.closest('[data-core-field]');
-                if (field) { event.preventDefault(); event.stopPropagation(); setSelectedCompId('native-content'); setSelectedField(field.dataset.coreField); }
+                if (field) {
+                  event.preventDefault(); event.stopPropagation(); setSelectedCompId('native-content'); setSelectedField(field.dataset.coreField);
+                  if (field.getAttribute('role') === 'button' && field.dataset.coreField.endsWith('-image')) {
+                    const id = field.dataset.coreField;
+                    setActiveMediaTargetField(() => url => setNativeContent(values => ({ ...values, [id]: url })));
+                    setIsMediaPickerOpen(true);
+                  }
+                }
               }
             }}>
             <DynamicPageRenderer
