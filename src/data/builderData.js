@@ -66,7 +66,7 @@ export const INITIAL_CUSTOM_PAGES = [
           description: 'Located in Purok 5, Barangay Banago, Nagcarlan, Laguna along Nagcarlan–Rizal Road, Mama Mo provides rapid same-day pickup for urgent project materials, graphing pads, and clean spiral-bound lecture notes.',
           buttonText: 'View Store Location',
           buttonLink: 'contact',
-          imageUrl: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=800&q=80',
+          imageUrl: '/images/paper_one_ream.jpg',
           imagePosition: 'right'
         }
       },
@@ -156,7 +156,7 @@ export const INITIAL_MEDIA_LIBRARY = [
   {
     id: 'med-2',
     name: 'Pilot G-Tec Black Pen Tray',
-    url: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=800&q=80',
+    url: '/images/pilot_gtec_pens.jpg',
     category: 'Products',
     size: '310 KB',
     type: 'image/jpeg',

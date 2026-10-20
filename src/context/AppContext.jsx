@@ -241,7 +241,7 @@ export function AppProvider({ children }) {
         if (Array.isArray(data.serviceInquiries) && data.serviceInquiries.length > 0) {
           setServiceInquiries(data.serviceInquiries);
         }
-        if (Array.isArray(data.promotionsList) && data.promotionsList.length > 0) {
+        if (Array.isArray(data.promotionsList)) {
           setPromotionsList(data.promotionsList);
         }
         if (Array.isArray(data.customPages) && data.customPages.length > 0) {
@@ -250,7 +250,7 @@ export function AppProvider({ children }) {
         if (data.navigationConfig && (data.navigationConfig.headerNav || data.navigationConfig.footerNav)) {
           setNavigationConfig(data.navigationConfig);
         }
-        if (Array.isArray(data.mediaLibrary) && data.mediaLibrary.length > 0) {
+        if (Array.isArray(data.mediaLibrary)) {
           setMediaLibrary(data.mediaLibrary);
         }
         if (Array.isArray(data.inventoryLedger) && data.inventoryLedger.length > 0) {
@@ -587,6 +587,20 @@ export function AppProvider({ children }) {
     // Check dynamic promotionsList first
     const dynamicPromo = promotionsList.find(p => p.code === trimmed && p.active);
     if (dynamicPromo) {
+      // Redemption limit validation
+      const limit = dynamicPromo.usage_limit ?? dynamicPromo.usageLimit;
+      const count = dynamicPromo.times_used ?? dynamicPromo.usageCount ?? 0;
+      if (limit !== null && limit !== undefined && limit > 0) {
+        if (count >= limit) {
+          showToast('This promo code has reached its maximum usage limit.', 'error');
+          return { success: false, message: 'This promo code has reached its maximum usage limit.' };
+        }
+      }
+      // Min spend validation
+      if (dynamicPromo.minSpend && cartSubtotal < dynamicPromo.minSpend) {
+        showToast(`Minimum spend of ₱${dynamicPromo.minSpend} required for this code.`, 'error');
+        return { success: false, message: `Minimum spend of ₱${dynamicPromo.minSpend} required for this code.` };
+      }
       setAppliedPromo(dynamicPromo);
       showToast(`Promo code "${trimmed}" applied: ${dynamicPromo.title}!`, 'success');
       return { success: true, promo: dynamicPromo };
@@ -677,7 +691,17 @@ export function AppProvider({ children }) {
     if (appliedPromo) {
       setPromotionsList(prev => prev.map(p => {
         if (p.code === appliedPromo.code) {
-          return { ...p, usageCount: (p.usageCount || 0) + 1 };
+          const newTimesUsed = (p.times_used ?? p.usageCount ?? 0) + 1;
+          const updated = { 
+            ...p, 
+            times_used: newTimesUsed,
+            usageCount: newTimesUsed 
+          };
+          // Persist usage increment to SQLite
+          if (p.id) {
+            sqliteApi.incrementPromoUsage(p.id).catch(err => console.warn('SQLite promo usage increment:', err.message));
+          }
+          return updated;
         }
         return p;
       }));
@@ -920,22 +944,77 @@ export function AppProvider({ children }) {
     });
   };
 
-  const addMediaItem = (mediaItem) => {
-    setMediaLibrary(prev => [mediaItem, ...prev]);
-    showToast(`Asset "${mediaItem.name}" uploaded to Media Library!`, 'success');
+  const addMediaItem = async (mediaItem) => {
+    try {
+      await sqliteApi.saveMediaItem(mediaItem);
+      setMediaLibrary(prev => {
+        const next = [mediaItem, ...prev];
+        try {
+          localStorage.setItem('mm_media_library_v1', JSON.stringify(next));
+        } catch (e) {
+          console.error(e);
+        }
+        return next;
+      });
+      showToast(`Asset "${mediaItem.name}" uploaded to Media Library!`, 'success');
+      return true;
+    } catch (err) {
+      console.warn('SQLite media save notice:', err.message);
+      setMediaLibrary(prev => {
+        const next = [mediaItem, ...prev];
+        try {
+          localStorage.setItem('mm_media_library_v1', JSON.stringify(next));
+        } catch (e) {
+          console.error(e);
+        }
+        return next;
+      });
+      showToast(`Asset "${mediaItem.name}" uploaded to Media Library!`, 'success');
+      return false;
+    }
   };
 
-  const deleteMediaItem = (mediaId) => {
-    setMediaLibrary(prev => prev.filter(m => m.id !== mediaId));
-    showToast('Asset removed from Media Library.', 'info');
+  const deleteMediaItem = async (mediaId) => {
+    try {
+      await sqliteApi.deleteMediaItem(mediaId);
+      setMediaLibrary(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        try {
+          localStorage.setItem('mm_media_library_v1', JSON.stringify(next));
+        } catch (e) {
+          console.error(e);
+        }
+        return next;
+      });
+      showToast('Asset removed from Media Library.', 'info');
+      return true;
+    } catch (err) {
+      console.warn('SQLite media delete notice:', err.message);
+      setMediaLibrary(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        try {
+          localStorage.setItem('mm_media_library_v1', JSON.stringify(next));
+        } catch (e) {
+          console.error(e);
+        }
+        return next;
+      });
+      showToast('Asset removed from Media Library.', 'info');
+      return false;
+    }
   };
 
   // Promotions Management (Section 8)
   const addPromotion = (promo) => {
+    const rawLimit = promo.usage_limit ?? promo.usageLimit ?? promo.redemptionLimit;
+    const limit = (rawLimit !== undefined && rawLimit !== null && rawLimit !== '') ? Number(rawLimit) : null;
     const newPromo = {
       ...promo,
       id: `promo-${Date.now()}`,
       code: promo.code.trim().toUpperCase(),
+      usage_limit: limit,
+      usageLimit: limit,
+      times_used: 0,
       usageCount: 0
     };
     setPromotionsList(prev => [newPromo, ...prev]);

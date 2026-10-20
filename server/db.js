@@ -138,12 +138,26 @@ export function initDatabase(initialData = {}) {
       endDate TEXT,
       active INTEGER DEFAULT 1,
       usageCount INTEGER DEFAULT 0,
+      usageLimit INTEGER,
+      usage_limit INTEGER,
+      times_used INTEGER DEFAULT 0,
       tagline TEXT,
       condition TEXT,
       badge TEXT,
       accentColor TEXT
     );
   `);
+
+  // Add usageLimit, usage_limit, and times_used columns if missing (migration for existing databases)
+  try {
+    db.exec(`ALTER TABLE promotions ADD COLUMN usageLimit INTEGER`);
+  } catch { /* column already exists */ }
+  try {
+    db.exec(`ALTER TABLE promotions ADD COLUMN usage_limit INTEGER`);
+  } catch { /* column already exists */ }
+  try {
+    db.exec(`ALTER TABLE promotions ADD COLUMN times_used INTEGER DEFAULT 0`);
+  } catch { /* column already exists */ }
 
   // 7. Inventory Ledger Table
   db.exec(`
@@ -195,9 +209,15 @@ export function initDatabase(initialData = {}) {
       type TEXT,
       size TEXT,
       uploadDate TEXT,
-      alt TEXT
+      alt TEXT,
+      category TEXT
     );
   `);
+
+  // Add category column if missing (migration for existing databases)
+  try {
+    db.exec(`ALTER TABLE media_library ADD COLUMN category TEXT`);
+  } catch { /* column already exists */ }
 
   // 11. Store Info Table
   db.exec(`
@@ -681,8 +701,8 @@ function seedInitialData({
   const mediaCount = db.prepare('SELECT COUNT(*) AS count FROM media_library').get().count;
   if (mediaCount === 0 && mediaLibrary.length > 0) {
     const insertMedia = db.prepare(`
-      INSERT INTO media_library (id, name, url, type, size, uploadDate, alt)
-      VALUES (@id, @name, @url, @type, @size, @uploadDate, @alt)
+      INSERT INTO media_library (id, name, url, type, size, uploadDate, alt, category)
+      VALUES (@id, @name, @url, @type, @size, @uploadDate, @alt, @category)
     `);
     const insertMany = db.transaction((rows) => {
       for (const row of rows) {
@@ -692,8 +712,9 @@ function seedInitialData({
           url: row.url,
           type: row.type || 'image',
           size: row.size || '100 KB',
-          uploadDate: row.uploadDate || new Date().toISOString().split('T')[0],
-          alt: row.alt || ''
+          uploadDate: row.uploadDate || row.uploadedAt || new Date().toISOString().split('T')[0],
+          alt: row.alt || '',
+          category: row.category || 'Uploads'
         });
       }
     });
@@ -790,10 +811,18 @@ export function getAllData() {
   const inquiries = db.prepare('SELECT * FROM service_inquiries ORDER BY date DESC').all();
   
   const promosRaw = db.prepare('SELECT * FROM promotions').all();
-  const promotionsList = promosRaw.map(p => ({
-    ...p,
-    active: Boolean(p.active)
-  }));
+  const promotionsList = promosRaw.map(p => {
+    const lim = p.usage_limit !== undefined && p.usage_limit !== null ? Number(p.usage_limit) : (p.usageLimit !== null && p.usageLimit !== undefined ? Number(p.usageLimit) : null);
+    const used = p.times_used !== undefined && p.times_used !== null ? Number(p.times_used) : (p.usageCount || 0);
+    return {
+      ...p,
+      active: Boolean(p.active),
+      usage_limit: lim,
+      usageLimit: lim,
+      times_used: used,
+      usageCount: used
+    };
+  });
 
   const inventoryLedger = db.prepare('SELECT * FROM inventory_ledger ORDER BY id DESC').all();
 
@@ -815,7 +844,12 @@ export function getAllData() {
     if (r.navKey === 'footerNav') navigationConfig.footerNav = JSON.parse(r.items);
   }
 
-  const mediaLibrary = db.prepare('SELECT * FROM media_library ORDER BY id DESC').all();
+  const mediaRows = db.prepare('SELECT * FROM media_library ORDER BY id DESC').all();
+  const mediaLibrary = mediaRows.map(m => ({
+    ...m,
+    category: m.category || 'Uploads',
+    uploadedAt: m.uploadDate || m.uploadedAt || new Date().toISOString().split('T')[0]
+  }));
 
   const storeInfoRow = db.prepare('SELECT data FROM store_info WHERE id = 1').get();
   const storeInfo = storeInfoRow ? JSON.parse(storeInfoRow.data) : null;
@@ -1336,9 +1370,16 @@ export function verifySessionToken(token) {
 }
 
 export function savePromotionToDb(promo) {
+  const limit = (promo.usage_limit !== undefined && promo.usage_limit !== null && promo.usage_limit !== '')
+    ? Number(promo.usage_limit)
+    : ((promo.usageLimit !== undefined && promo.usageLimit !== null && promo.usageLimit !== '') ? Number(promo.usageLimit) : null);
+  const used = (promo.times_used !== undefined && promo.times_used !== null)
+    ? Number(promo.times_used)
+    : (promo.usageCount || 0);
+
   db.prepare(`
-    INSERT OR REPLACE INTO promotions (id, code, title, description, discountType, discountValue, minSpend, startDate, endDate, active, usageCount, tagline, condition, badge, accentColor)
-    VALUES (@id, @code, @title, @description, @discountType, @discountValue, @minSpend, @startDate, @endDate, @active, @usageCount, @tagline, @condition, @badge, @accentColor)
+    INSERT OR REPLACE INTO promotions (id, code, title, description, discountType, discountValue, minSpend, startDate, endDate, active, usageCount, usageLimit, usage_limit, times_used, tagline, condition, badge, accentColor)
+    VALUES (@id, @code, @title, @description, @discountType, @discountValue, @minSpend, @startDate, @endDate, @active, @usageCount, @usageLimit, @usage_limit, @times_used, @tagline, @condition, @badge, @accentColor)
   `).run({
     id: promo.id || `promo-${Date.now()}`,
     code: promo.code.trim().toUpperCase(),
@@ -1350,12 +1391,40 @@ export function savePromotionToDb(promo) {
     startDate: promo.startDate || new Date().toISOString().split('T')[0],
     endDate: promo.endDate || '2026-12-31',
     active: promo.active !== false ? 1 : 0,
-    usageCount: promo.usageCount || 0,
+    usageCount: used,
+    times_used: used,
+    usageLimit: limit,
+    usage_limit: limit,
     tagline: promo.tagline || '',
     condition: promo.condition || '',
     badge: promo.badge || '',
     accentColor: promo.accentColor || '#121212'
   });
+}
+
+export function incrementPromoUsageInDb(promoId) {
+  db.prepare('UPDATE promotions SET usageCount = COALESCE(usageCount, 0) + 1, times_used = COALESCE(times_used, 0) + 1 WHERE id = ?').run(promoId);
+}
+
+// Media Library CRUD
+export function saveMediaItemToDb(mediaItem) {
+  db.prepare(`
+    INSERT OR REPLACE INTO media_library (id, name, url, type, size, uploadDate, alt, category)
+    VALUES (@id, @name, @url, @type, @size, @uploadDate, @alt, @category)
+  `).run({
+    id: mediaItem.id,
+    name: mediaItem.name,
+    url: mediaItem.url,
+    type: mediaItem.type || 'image',
+    size: mediaItem.size || '100 KB',
+    uploadDate: mediaItem.uploadDate || mediaItem.uploadedAt || new Date().toISOString().split('T')[0],
+    alt: mediaItem.alt || '',
+    category: mediaItem.category || 'Uploads'
+  });
+}
+
+export function deleteMediaItemFromDb(mediaId) {
+  db.prepare('DELETE FROM media_library WHERE id = ?').run(mediaId);
 }
 
 export function deletePromotionFromDb(id) {

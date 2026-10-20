@@ -56,6 +56,16 @@ export default function AuthModal() {
     }
   }, [isAuthModalOpen, authModalMode]);
 
+  // Lock background body scroll when auth modal is open
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isAuthModalOpen]);
+
   // Close on Escape key
   useEffect(() => {
     const handleEsc = (e) => {
@@ -124,11 +134,11 @@ export default function AuthModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-6 animate-fade-in"
       onClick={handleClose}
     >
       <div 
-        className="relative bg-white max-w-lg w-full border border-neutral-300 shadow-2xl overflow-hidden my-6 animate-modal-pop max-h-[90vh] overflow-y-auto"
+        className="relative bg-white max-w-lg w-full border border-neutral-300 shadow-2xl overflow-hidden my-auto sm:my-6 animate-modal-pop max-h-[92vh] sm:max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

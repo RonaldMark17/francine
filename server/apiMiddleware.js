@@ -13,10 +13,13 @@ import {
   getSecurityAuditLogs,
   savePromotionToDb, 
   deletePromotionFromDb, 
-  togglePromotionInDb, 
+  togglePromotionInDb,
+  incrementPromoUsageInDb,
   saveCustomPageToDb, 
   deleteCustomPageFromDb, 
-  saveNavigationToDb, 
+  saveNavigationToDb,
+  saveMediaItemToDb,
+  deleteMediaItemFromDb,
   saveInquiryToDb, 
   updateInquiryStatusInDb,
   resetDatabase,
@@ -254,6 +257,28 @@ export function sqliteApiMiddleware() {
         const body = await parseBody(req);
         updateInquiryStatusInDb(id, body.status);
         return sendJson(res, 200, { success: true, id, status: body.status });
+      }
+
+      // 10. Media Library
+      if (pathname === '/api/media' && req.method === 'POST') {
+        const body = await parseBody(req);
+        saveMediaItemToDb(body);
+        return sendJson(res, 201, body);
+      }
+
+      if (pathname.startsWith('/api/media/') && req.method === 'DELETE') {
+        const parts = pathname.split('/');
+        const id = decodeURIComponent(parts[3] || '');
+        deleteMediaItemFromDb(id);
+        return sendJson(res, 200, { success: true, deletedId: id });
+      }
+
+      // 11. Increment Promotion Usage
+      if (pathname.startsWith('/api/promotions/') && pathname.endsWith('/increment-usage') && req.method === 'POST') {
+        const parts = pathname.split('/');
+        const id = parts[3];
+        incrementPromoUsageInDb(id);
+        return sendJson(res, 200, { success: true, incrementedId: id });
       }
 
       // 10. Database Reset

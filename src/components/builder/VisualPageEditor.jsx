@@ -194,7 +194,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         description: 'Explore curated student stationery, notebooks, and certified printing paper at student-friendly rates.',
         buttonText: 'Read Store Story',
         buttonLink: 'about',
-        imageUrl: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=800&q=80',
+        imageUrl: '/images/paper_one_ream.jpg',
         imagePosition: 'right'
       }
     },
@@ -1090,14 +1090,15 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       {/* MODAL: ADD COMPONENT PICKER */}
       {isAddComponentOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-fade-in"
           onClick={() => setIsAddComponentOpen(false)}
         >
           <div 
-            className="bg-neutral-900 border border-neutral-700 max-w-2xl w-full p-6 space-y-5 animate-modal-pop shadow-2xl"
+            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+            {/* Modal Header: Keep fixed at top */}
+            <div className="flex-shrink-0 p-5 border-b border-neutral-800 flex items-center justify-between bg-neutral-900">
               <div>
                 <h3 className="font-editorial text-lg text-white font-light">
                   Add Page Section Component
@@ -1108,18 +1109,19 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               </div>
               <button
                 onClick={() => setIsAddComponentOpen(false)}
-                className="text-neutral-400 hover:text-white"
+                className="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+            {/* Modal Body: Enable vertical scroll */}
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {COMPONENT_TYPES.map(comp => (
                 <div
                   key={comp.type}
                   onClick={() => handleAddComponent(comp.type)}
-                  className="p-4 border border-neutral-800 hover:border-white bg-neutral-950 cursor-pointer transition-all space-y-1.5 group"
+                  className="p-4 border border-neutral-800 hover:border-white bg-neutral-950 cursor-pointer transition-all space-y-1.5 group rounded-lg"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-white text-xs group-hover:text-amber-300">
@@ -1132,6 +1134,17 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Modal Footer: Keep fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-neutral-800 bg-neutral-950 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsAddComponentOpen(false)}
+                className="px-4 py-2 border border-neutral-700 text-neutral-300 rounded-lg hover:text-white hover:border-neutral-500 transition-colors font-medium"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

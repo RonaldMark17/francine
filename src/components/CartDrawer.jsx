@@ -60,7 +60,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
     if (!promoInput.trim()) return;
     const res = applyPromoCode(promoInput);
     if (!res.success) {
-      setPromoError('Invalid coupon code. Try STUDENT15');
+      setPromoError(res.message || 'Invalid coupon code. Try STUDENT15');
     } else {
       setPromoInput('');
     }
@@ -87,8 +87,8 @@ export default function CartDrawer({ onProceedToCheckout }) {
         className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white border-l border-neutral-300 shadow-2xl flex flex-col justify-between animate-slide-in-right">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
+        <div className="w-screen max-w-md h-full h-[100dvh] bg-white border-l border-neutral-300 shadow-2xl flex flex-col justify-between animate-slide-in-right pb-[env(safe-area-inset-bottom)]">
           
           {/* Header */}
           <div className="p-6 border-b border-neutral-200 flex items-center justify-between bg-[#FAF9F5]">

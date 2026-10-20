@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { 
   ShoppingBag, 
@@ -180,30 +181,30 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-[#FAF9F5]/95 backdrop-blur-md border-b border-[#E7E5E0] transition-all">
       {/* Top Announcement Bar */}
-      <div className="bg-[#121212] text-[#EFEFEF] text-[11px] uppercase tracking-widest py-2 px-4 text-center border-b border-black flex flex-wrap items-center justify-center gap-4">
+      <div className="bg-[#121212] text-[#EFEFEF] text-[10px] sm:text-[11px] uppercase tracking-wider sm:tracking-widest py-1.5 sm:py-2 px-3 sm:px-4 text-center border-b border-black flex flex-wrap items-center justify-center gap-2 sm:gap-4 leading-normal">
         <span className="flex items-center gap-1.5 font-light">
-          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-          Official Omnichannel Store • Purok 5, Banago, Nagcarlan, Laguna 4002
+          <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+          <span>Purok 5, Banago, Nagcarlan, Laguna</span>
         </span>
         <span className="hidden md:inline text-neutral-500">•</span>
         <span className="hidden md:inline font-light">
           Same-Day In-Store Pickup &amp; Local Courier Delivery
         </span>
-        <span className="hidden md:inline text-neutral-500">•</span>
-        <span className="text-amber-200 font-medium">
-          Use Code <span className="underline tracking-wider">STUDENT15</span> for 15% Off
+        <span className="text-neutral-500">•</span>
+        <span className="text-amber-200 font-medium whitespace-nowrap">
+          Use Code <span className="underline tracking-wider font-mono font-bold">STUDENT15</span> for 15% Off
         </span>
       </div>
 
       {/* Main Navigation Container */}
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-20">
+      <div className="w-full px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center h-16 sm:h-20">
           
           {/* Mobile Menu Button */}
           <div className="flex items-center lg:hidden mr-1 sm:mr-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 text-neutral-800 hover:text-black focus:outline-none"
+              className="p-1.5 sm:p-2 text-neutral-800 hover:text-black focus:outline-none rounded-lg hover:bg-neutral-200/50 transition-colors"
               aria-label="Open navigation menu"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-store-navigation"
@@ -221,13 +222,13 @@ export default function Navbar() {
               <img 
                 src="/images/mama_mo_logo.png" 
                 alt="Mama Mo Ink Print & Supplies" 
-                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-neutral-200 transition-transform duration-300 group-hover:scale-105"
+                className="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover shadow-xs border border-neutral-200 transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="hidden sm:block">
-                <div className="text-xl sm:text-2xl font-light font-editorial tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80">
+              <div className="block">
+                <div className="text-base sm:text-2xl font-light font-editorial tracking-[0.16em] sm:tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80 leading-none">
                   MAMA MO
                 </div>
-                <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.32em] text-neutral-500 -mt-1 font-sans whitespace-nowrap">
+                <div className="text-[7px] sm:text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.32em] text-neutral-500 mt-0.5 sm:-mt-1 font-sans whitespace-nowrap">
                   INK PRINT &amp; SUPPLIES
                 </div>
               </div>
@@ -346,11 +347,11 @@ export default function Navbar() {
                 <>
                   {/* Backdrop */}
                   <div 
-                    className="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs animate-fade-in" 
+                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs animate-fade-in" 
                     onClick={() => setShowSearchInput(false)} 
                   />
                   {/* Floating search panel */}
-                  <div className="absolute right-0 top-full mt-3 z-50 w-[min(20rem,calc(100vw-2rem))] sm:w-96 bg-white/95 backdrop-blur-md border border-black shadow-2xl p-1.5 animate-pop-in">
+                  <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-18 sm:top-full sm:mt-3 z-50 sm:w-96 bg-white/98 backdrop-blur-md border border-neutral-800 shadow-2xl p-2 animate-pop-in">
                     <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                       <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -359,7 +360,7 @@ export default function Navbar() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search papers, pens, ink, supplies..."
                         autoFocus
-                        className="w-full text-xs pl-9 pr-14 py-2.5 bg-neutral-50/80 border border-neutral-200 focus:bg-white focus:outline-none focus:border-black font-sans transition-all"
+                        className="w-full text-xs pl-9 pr-16 py-2.5 bg-neutral-50 border border-neutral-200 focus:bg-white focus:outline-none focus:border-black font-sans transition-all"
                       />
                       <button
                         type="submit"
@@ -398,7 +399,7 @@ export default function Navbar() {
                   setAuthModalMode('login');
                   setIsAuthModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-3 py-1.5 border border-neutral-300 hover:border-black text-neutral-700 hover:text-black transition-all bg-white"
+                className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2 sm:px-3 py-1.5 border border-neutral-300 hover:border-black text-neutral-700 hover:text-black transition-all bg-white"
                 title="Customer Sign In"
               >
                 <User className="w-3.5 h-3.5" />
@@ -410,7 +411,7 @@ export default function Navbar() {
             {currentUser?.role === 'admin' && (
               <button
                 onClick={() => handleNavClick('admin')}
-                className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2.5 py-1 transition-all ${
+                className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2 sm:px-2.5 py-1 transition-all ${
                   activeTab === 'admin'
                     ? 'bg-black text-white'
                     : 'bg-neutral-900 text-neutral-100 hover:bg-black'
@@ -439,42 +440,48 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Store navigation">
-          <button
-            type="button"
-            className="absolute inset-0 h-full w-full bg-black/45 backdrop-blur-[1px] animate-fade-in"
+      {/* Mobile Drawer Navigation Menu rendered at root level */}
+      {mobileMenuOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] lg:hidden" role="dialog" aria-modal="true" aria-label="Store navigation">
+          {/* Full Screen Dim Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close navigation menu"
           />
+          {/* Full Height Animated Drawer */}
           <aside
             id="mobile-store-navigation"
-            className="mobile-nav-drawer absolute inset-y-0 left-0 flex h-full w-[min(88vw,360px)] flex-col border-r border-neutral-200 bg-[#FAF9F5] shadow-2xl"
+            className="mobile-nav-drawer fixed inset-y-0 left-0 z-10 flex h-full h-[100dvh] w-[min(88vw,360px)] flex-col border-r border-neutral-200 bg-[#FAF9F5] shadow-2xl"
           >
-            <div className="flex h-20 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+            {/* Drawer Header */}
+            <div className="flex h-20 shrink-0 items-center justify-between border-b border-neutral-200 px-5 pt-[env(safe-area-inset-top)]">
               <button
                 onClick={() => handleNavClick('home')}
-                className="inline-flex items-center gap-3 text-left"
+                className="inline-flex items-center gap-3 text-left focus:outline-none"
               >
                 <img
                   src="/images/mama_mo_logo.png"
-                  alt=""
-                  className="h-10 w-10 rounded-full border border-neutral-200 object-cover"
+                  alt="Mama Mo Logo"
+                  className="h-10 w-10 rounded-full border border-neutral-200 object-cover shadow-2xs"
                 />
-                <span className="font-editorial text-lg tracking-[0.18em] text-black">MAMA MO</span>
+                <div>
+                  <span className="font-editorial text-lg tracking-[0.18em] text-black font-semibold block leading-tight">MAMA MO</span>
+                  <span className="text-[8px] uppercase tracking-[0.25em] text-neutral-500 font-sans block">INK PRINT &amp; SUPPLIES</span>
+                </div>
               </button>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 text-neutral-600 transition-colors hover:text-black"
+                className="p-2 text-neutral-600 transition-colors hover:text-black rounded-lg hover:bg-neutral-200/50"
                 aria-label="Close navigation menu"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+            {/* Drawer Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
               {currentUser ? (
                 <button
                   type="button"
@@ -482,10 +489,10 @@ export default function Navbar() {
                     setIsAuthModalOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="mb-5 flex w-full items-center justify-between border border-neutral-300 bg-white p-3 text-left"
+                  className="mb-5 flex w-full items-center justify-between border border-neutral-300 bg-white p-3 text-left shadow-2xs hover:border-black transition-colors"
                 >
                   <span className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-bold text-white shadow-2xs">
                       {currentUser.name.charAt(0)}
                     </span>
                     <span>
@@ -495,7 +502,7 @@ export default function Navbar() {
                       </span>
                     </span>
                   </span>
-                  <span className="text-[11px] text-neutral-400 underline">Manage</span>
+                  <span className="text-[11px] text-neutral-500 underline font-medium">Manage</span>
                 </button>
               ) : (
                 <button
@@ -504,12 +511,13 @@ export default function Navbar() {
                     setIsAuthModalOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="mb-5 w-full bg-black py-2.5 text-center text-xs font-medium uppercase tracking-widest text-white"
+                  className="mb-5 w-full bg-black py-3 text-center text-xs font-medium uppercase tracking-widest text-white hover:bg-neutral-800 transition-colors shadow-2xs active:scale-[0.99]"
                 >
                   Sign In to Account
                 </button>
               )}
 
+              {/* Navigation Links List */}
               <nav className="flex flex-col" aria-label="Mobile store navigation">
                 {navLinks.map((link) => {
                   const target = link.path || link.id;
@@ -518,21 +526,23 @@ export default function Navbar() {
                     <button
                       key={link.id}
                       onClick={() => handleNavClick(target)}
-                      className={`border-b border-neutral-200/70 py-3.5 text-left text-sm uppercase tracking-[0.18em] transition-colors ${
-                        isActive ? 'font-semibold text-black' : 'text-neutral-600 hover:text-black'
+                      className={`flex items-center justify-between border-b border-neutral-200/70 py-3.5 text-left text-xs uppercase tracking-[0.2em] transition-colors ${
+                        isActive ? 'font-semibold text-black bg-neutral-100/40 -mx-2 px-2' : 'text-neutral-600 hover:text-black'
                       }`}
                     >
-                      {link.label}
+                      <span>{link.label}</span>
+                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-black" />}
                     </button>
                   );
                 })}
               </nav>
 
+              {/* Action Buttons & Store Footer Info */}
               <div className="flex flex-col gap-3 pt-6">
                 {currentUser?.role === 'admin' ? (
                   <button
                     onClick={() => handleNavClick('admin')}
-                    className="w-full bg-black py-2.5 text-center text-xs uppercase tracking-widest text-white"
+                    className="w-full bg-black py-2.5 text-center text-xs uppercase tracking-widest text-white shadow-2xs hover:bg-neutral-800 transition-colors"
                   >
                     Access Store Admin
                   </button>
@@ -543,15 +553,29 @@ export default function Navbar() {
                       setIsAuthModalOpen(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full border border-neutral-300 py-2.5 text-center text-xs uppercase tracking-widest text-neutral-700"
+                    className="flex items-center justify-center gap-2 border border-neutral-300 bg-white py-2.5 text-center text-xs uppercase tracking-widest text-neutral-700 hover:border-black hover:text-black transition-colors"
                   >
-                    Switch Role / Admin Login
+                    <ShieldCheck className="h-4 w-4 text-neutral-500" />
+                    <span>Admin Portal</span>
                   </button>
                 )}
+
+                <div className="border-t border-neutral-200/70 pt-5 text-center space-y-1">
+                  <p className="font-editorial text-xs italic text-neutral-600">
+                    &ldquo;Plumang abot kaya, dito lang yan kay Mama&rdquo;
+                  </p>
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">
+                    Purok 5, Banago, Nagcarlan, Laguna
+                  </p>
+                  <p className="font-sans text-[10px] text-neutral-500">
+                    Mon - Sat: 7:30 AM - 6:30 PM
+                  </p>
+                </div>
               </div>
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

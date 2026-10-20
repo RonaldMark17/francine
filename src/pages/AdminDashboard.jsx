@@ -195,7 +195,7 @@ export default function AdminDashboard() {
     isFeatured: true,
     isDiscounted: true,
     description: '',
-    image: 'https://images.unsplash.com/photo-1585336261026-40742f15923b?auto=format&fit=crop&w=600&q=80',
+    image: '/images/paper_one_ream.jpg',
     sku: ''
   });
 
@@ -401,7 +401,16 @@ export default function AdminDashboard() {
   const handleSavePromo = (e) => {
     e.preventDefault();
     if (!promoForm.code.trim()) return;
-    addPromotion(promoForm);
+    const limitNum = (promoForm.usage_limit !== '' && promoForm.usage_limit !== null && promoForm.usage_limit !== undefined)
+      ? Number(promoForm.usage_limit)
+      : ((promoForm.usageLimit !== '' && promoForm.usageLimit !== null && promoForm.usageLimit !== undefined) ? Number(promoForm.usageLimit) : null);
+    addPromotion({
+      ...promoForm,
+      usage_limit: limitNum,
+      usageLimit: limitNum,
+      times_used: 0,
+      usageCount: 0
+    });
     setIsAddPromoOpen(false);
     setPromoForm({
       code: '',
@@ -410,6 +419,8 @@ export default function AdminDashboard() {
       discountType: 'percentage',
       discountValue: 15,
       minSpend: 0,
+      usage_limit: null,
+      usageLimit: '',
       startDate: new Date().toISOString().split('T')[0],
       endDate: '2026-12-31',
       active: true
@@ -421,6 +432,19 @@ export default function AdminDashboard() {
     setCopiedPromoCode(code);
     setTimeout(() => setCopiedPromoCode(null), 2000);
   };
+
+  // Lock background body scroll while any modal is open in Admin
+  const isAnyAdminModalOpen = isAddProductModalOpen || Boolean(selectedOrderPreview) || isAddPromoOpen || isMediaLibraryOpen || isNavManagerOpen || isStockModalOpen || isVisualEditorOpen;
+  
+  useEffect(() => {
+    if (isAnyAdminModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isAnyAdminModalOpen]);
 
   // Filtered orders
   const filteredOrders = orders.filter(o => {
@@ -1364,7 +1388,7 @@ export default function AdminDashboard() {
                         <div className="flex justify-between items-center">
                           <span className="text-neutral-500">Redemptions:</span>
                           <span className="font-mono font-semibold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-[10px]">
-                            {promo.usageCount || 0} times
+                            {promo.times_used ?? promo.usageCount ?? 0} {promo.usage_limit || promo.usageLimit ? `/ ${promo.usage_limit || promo.usageLimit} max` : 'times'}
                           </span>
                         </div>
                       </div>
@@ -1646,15 +1670,15 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {isAddProductModalOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
           onClick={() => setIsAddProductModalOpen(false)}
         >
           <div 
-            className="bg-white max-w-xl w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs overflow-hidden"
+            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Pinned Header */}
-            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
+            {/* Modal Header: Keep fixed at top */}
+            <div className="flex-shrink-0 p-5 border-b border-neutral-200 bg-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <Package className="w-4 h-4" />
@@ -1678,12 +1702,12 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Scrollable Form Body */}
+            {/* Modal Body: Enable vertical scroll */}
             <form 
               id="admin-product-form"
               onSubmit={handleSaveProduct} 
               ref={productModalBodyRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4"
+              className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
             >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Product Title *</label>
@@ -1827,12 +1851,12 @@ export default function AdminDashboard() {
               </div>
             </form>
 
-            {/* Pinned Footer */}
-            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-between shrink-0 bg-neutral-50/70">
+            {/* Modal Footer: Keep fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between gap-3">
               <span className="text-[11px] text-neutral-400 font-mono hidden sm:inline">
                 {editingProduct ? 'Saving updates live store catalog' : 'Item will be appended to live inventory'}
               </span>
-              <div className="flex items-center gap-2.5 ml-auto">
+              <div className="flex justify-end gap-3 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsAddProductModalOpen(false)}
@@ -1846,7 +1870,7 @@ export default function AdminDashboard() {
                   className="px-5 py-2 rounded-lg bg-black text-white text-xs uppercase tracking-wider font-semibold hover:bg-neutral-800 transition-colors shadow-xs flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>Save Product</span>
+                  <span>{editingProduct ? 'Save Changes' : 'Save Product'}</span>
                 </button>
               </div>
             </div>
@@ -1859,15 +1883,15 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {selectedOrderPreview && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
           onClick={() => setSelectedOrderPreview(null)}
         >
           <div 
-            className="bg-white max-w-xl w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs text-neutral-800 overflow-hidden"
+            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Pinned Header */}
-            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
+            {/* Modal Header: Keep fixed at top */}
+            <div className="flex-shrink-0 p-5 border-b border-neutral-200 bg-white flex items-center justify-between">
               <div>
                 <span className="text-[10px] uppercase font-mono text-neutral-400">Order Verification</span>
                 <h3 className="font-editorial text-xl text-black font-semibold">{selectedOrderPreview.id}</h3>
@@ -1880,8 +1904,8 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* Modal Body: Enable vertical scroll */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
                 <div>
                   <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Customer</span>
@@ -1924,8 +1948,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Pinned Footer */}
-            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-end gap-2 shrink-0 bg-neutral-50/70">
+            {/* Modal Footer: Keep fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end gap-3">
               <button
                 onClick={() => window.print()}
                 className="px-3.5 py-2 rounded-lg border border-neutral-200 hover:border-black text-neutral-700 hover:text-black font-medium text-xs transition-colors flex items-center gap-1.5 bg-white"
@@ -1954,15 +1978,15 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {isAddPromoOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
           onClick={() => setIsAddPromoOpen(false)}
         >
           <div 
-            className="bg-white max-w-md w-full rounded-2xl border border-neutral-200 shadow-2xl flex flex-col my-auto max-h-[92vh] sm:max-h-[86vh] animate-modal-pop text-xs overflow-hidden"
+            className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Pinned Header */}
-            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between shrink-0 bg-white">
+            {/* Modal Header: Keep fixed at top */}
+            <div className="flex-shrink-0 p-5 border-b border-neutral-200 bg-white flex items-center justify-between">
               <h3 className="font-editorial text-lg text-black uppercase tracking-wider font-semibold">
                 Create Promotion Voucher
               </h3>
@@ -1974,11 +1998,11 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Scrollable Form Body */}
+            {/* Modal Body: Enable vertical scroll */}
             <form 
               id="admin-promo-form"
               onSubmit={handleSavePromo} 
-              className="flex-1 overflow-y-auto p-6 space-y-3.5"
+              className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
             >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Coupon Code *</label>
@@ -2037,10 +2061,30 @@ export default function AdminDashboard() {
                   className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
                 />
               </div>
+
+              <div>
+                <label className="block font-medium text-neutral-700 mb-1">Redemption Limit (Optional)</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 50 (Leave blank for unlimited)"
+                  value={promoForm.usage_limit ?? promoForm.usageLimit ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1);
+                    setPromoForm({
+                      ...promoForm,
+                      usageLimit: val,
+                      usage_limit: val === '' ? null : val
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 font-mono focus:outline-none focus:border-black transition-colors"
+                />
+                <p className="text-[10px] text-neutral-400 mt-1">Maximum number of times this code can be redeemed. Leave empty for unlimited usage.</p>
+              </div>
             </form>
 
-            {/* Pinned Footer */}
-            <div className="px-6 py-3.5 border-t border-neutral-100 flex items-center justify-end gap-2.5 shrink-0 bg-neutral-50/70">
+            {/* Modal Footer: Keep fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setIsAddPromoOpen(false)}

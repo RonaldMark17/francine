@@ -164,6 +164,27 @@ export const sqliteApi = {
     });
   },
 
+  // Media Library
+  async saveMediaItem(mediaItem) {
+    return await fetchJson(`${API_BASE}/media`, {
+      method: 'POST',
+      body: JSON.stringify(mediaItem)
+    });
+  },
+
+  async deleteMediaItem(mediaId) {
+    return await fetchJson(`${API_BASE}/media/${encodeURIComponent(mediaId)}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Promotion Usage Tracking
+  async incrementPromoUsage(promoId) {
+    return await fetchJson(`${API_BASE}/promotions/${encodeURIComponent(promoId)}/increment-usage`, {
+      method: 'POST'
+    });
+  },
+
   // Database Reset
   async resetDatabase() {
     return await fetchJson(`${API_BASE}/reset`, {

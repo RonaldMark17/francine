@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   X, 
@@ -23,6 +23,16 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
   } = useApp();
 
   const [activeMenuTab, setActiveMenuTab] = useState('headerNav'); // 'headerNav' | 'footerNav'
+
+  // Lock background body scroll when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
   const [items, setItems] = useState(() => {
     return JSON.parse(JSON.stringify(navigationConfig[activeMenuTab] || []));
   });
@@ -108,15 +118,15 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
       onClick={onClose}
     >
       <div 
-        className="bg-white max-w-2xl w-full border border-neutral-300 shadow-2xl p-6 space-y-5 animate-modal-pop text-xs text-neutral-800"
+        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+        {/* Modal Header: Fixed at top */}
+        <div className="flex-shrink-0 p-5 border-b border-neutral-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
             <Layers className="w-5 h-5 text-black" />
             <div>
@@ -128,33 +138,34 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-neutral-400 hover:text-black">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher: Header Nav vs Footer Nav */}
-        <div className="flex border-b border-neutral-200">
+        <div className="flex-shrink-0 flex border-b border-neutral-200 bg-neutral-50/60 px-5">
           <button
             onClick={() => handleSwitchTab('headerNav')}
-            className={`py-2 px-4 uppercase tracking-wider text-[11px] font-semibold border-b-2 transition-all ${
-              activeMenuTab === 'headerNav' ? 'border-black text-black' : 'border-transparent text-neutral-400 hover:text-black'
+            className={`py-2.5 px-4 uppercase tracking-wider text-[11px] font-semibold border-b-2 transition-all ${
+              activeMenuTab === 'headerNav' ? 'border-black text-black bg-white' : 'border-transparent text-neutral-500 hover:text-black'
             }`}
           >
             Main Header Navigation
           </button>
           <button
             onClick={() => handleSwitchTab('footerNav')}
-            className={`py-2 px-4 uppercase tracking-wider text-[11px] font-semibold border-b-2 transition-all ${
-              activeMenuTab === 'footerNav' ? 'border-black text-black' : 'border-transparent text-neutral-400 hover:text-black'
+            className={`py-2.5 px-4 uppercase tracking-wider text-[11px] font-semibold border-b-2 transition-all ${
+              activeMenuTab === 'footerNav' ? 'border-black text-black bg-white' : 'border-transparent text-neutral-500 hover:text-black'
             }`}
           >
             Footer Links Menu
           </button>
         </div>
 
-        {/* Navigation Items List */}
-        <div className="space-y-2 max-h-[48vh] overflow-y-auto pr-1">
+        {/* Modal Body: flex-1 overflow-y-auto overscroll-contain p-6 space-y-4 */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
+          <div className="space-y-2">
           {items.map((item, idx) => (
             <div
               key={item.id}
@@ -307,21 +318,23 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
           </form>
         )}
 
-        {/* Footer Actions */}
-        <div className="pt-3 border-t border-neutral-200 flex items-center justify-between">
-          <span className="text-[11px] text-neutral-400">
+        </div>
+
+        {/* Modal Footer: Keep fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between gap-3">
+          <span className="text-[11px] text-neutral-400 hidden sm:inline">
             Changes will immediately update the live store header and footer.
           </span>
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-3 ml-auto">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+              className="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-100 font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveAndApply}
-              className="px-5 py-2 bg-black text-white uppercase tracking-wider text-xs font-semibold hover:bg-neutral-800 shadow-sm"
+              className="px-5 py-2 bg-black text-white uppercase tracking-wider text-xs font-semibold hover:bg-neutral-800 shadow-sm rounded-lg transition-colors"
             >
               Save &amp; Apply Navigation
             </button>

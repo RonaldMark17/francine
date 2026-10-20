@@ -315,6 +315,10 @@ export default function DynamicPageRenderer({ page }) {
                           <img
                             src={data.imageUrl}
                             alt={data.title || 'Feature'}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/images/paper_one_ream.jpg';
+                            }}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             loading="lazy"
                           />
