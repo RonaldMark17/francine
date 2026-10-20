@@ -506,7 +506,8 @@ export function AppProvider({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Listen for browser back/forward navigation
+  // Listen for browser back/forward navigation. `navigateTo` uses pushState,
+  // so popstate is needed in addition to direct hash changes.
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').split('?')[0];
@@ -522,7 +523,11 @@ export function AppProvider({ children }) {
       }
     };
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
   }, []);
 
   // ==========================================

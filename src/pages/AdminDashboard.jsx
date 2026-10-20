@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/initialData';
+import { DEFAULT_SECTION_SETTINGS } from '../data/sectionSettings';
 import VisualPageEditor from '../components/builder/VisualPageEditor';
 import MediaLibraryModal from '../components/builder/MediaLibraryModal';
 import NavigationManagerModal from '../components/builder/NavigationManagerModal';
 import StockAdjustmentModal from '../components/inventory/StockAdjustmentModal';
+import { loadPageBuilderDraft } from '../utils/pageBuilderDraft';
 import { 
   Package, 
   ShoppingBag, 
@@ -64,6 +66,34 @@ const LOCAL_PRODUCT_IMAGES = {
   'prod-12': '/images/spiral_notebooks.jpg',
 };
 
+const ADMIN_TAB_IDS = new Set([
+  'orders',
+  'inventory',
+  'pages',
+  'promotions',
+  'inquiries',
+  'analytics',
+  'settings'
+]);
+
+const getAdminTabFromUrl = () => {
+  const [, query = ''] = window.location.hash.split('?');
+  const requestedTab = new URLSearchParams(query).get('tab');
+  return ADMIN_TAB_IDS.has(requestedTab) ? requestedTab : 'orders';
+};
+
+const getEditorPageIdFromUrl = () => {
+  const [, query = ''] = window.location.hash.split('?');
+  return new URLSearchParams(query).get('editPageId');
+};
+
+const updateAdminUrl = (tabId, editPageId = null, { replace = false } = {}) => {
+  const params = new URLSearchParams({ tab: tabId });
+  if (editPageId) params.set('editPageId', editPageId);
+  const url = `#admin?${params.toString()}`;
+  window.history[replace ? 'replaceState' : 'pushState'](null, '', url);
+};
+
 export default function AdminDashboard() {
   const { 
     products, 
@@ -96,8 +126,55 @@ export default function AdminDashboard() {
   } = useApp();
 
   // Active admin tab: 'orders' | 'inventory' | 'pages' | 'promotions' | 'inquiries' | 'analytics' | 'settings'
-  const [activeAdminTab, setActiveAdminTab] = useState('orders');
+  const [activeAdminTab, setActiveAdminTab] = useState(getAdminTabFromUrl);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Website Builder route-controlled states
+  const [editingCustomPage, setEditingCustomPage] = useState(null);
+  const [isVisualEditorOpen, setIsVisualEditorOpen] = useState(false);
+
+  const handleAdminTabChange = (tabId) => {
+    if (!ADMIN_TAB_IDS.has(tabId)) return;
+
+    setActiveAdminTab(tabId);
+    setIsMobileSidebarOpen(false);
+    updateAdminUrl(tabId);
+  };
+
+  useEffect(() => {
+    const syncAdminViewFromUrl = () => {
+      const adminRoute = window.location.hash.slice(1).split('?')[0];
+      if (adminRoute === 'admin') {
+        const tabId = getAdminTabFromUrl();
+        const editorPageId = getEditorPageIdFromUrl();
+        setActiveAdminTab(tabId);
+
+        if (tabId === 'pages' && editorPageId) {
+          const savedPage = customPages.find(page => page.id === editorPageId || page.slug === editorPageId);
+          const recoveredDraft = loadPageBuilderDraft(editorPageId);
+          const openPage = editingCustomPage?.id === editorPageId ? editingCustomPage : null;
+          const requestedPage = savedPage || recoveredDraft?.page || openPage;
+
+          if (requestedPage) {
+            setEditingCustomPage(requestedPage);
+            setIsVisualEditorOpen(true);
+            return;
+          }
+        }
+
+        setEditingCustomPage(null);
+        setIsVisualEditorOpen(false);
+      }
+    };
+
+    syncAdminViewFromUrl();
+    window.addEventListener('hashchange', syncAdminViewFromUrl);
+    window.addEventListener('popstate', syncAdminViewFromUrl);
+    return () => {
+      window.removeEventListener('hashchange', syncAdminViewFromUrl);
+      window.removeEventListener('popstate', syncAdminViewFromUrl);
+    };
+  }, [customPages, editingCustomPage]);
 
   // Product management modal states
   const [editingProduct, setEditingProduct] = useState(null);
@@ -122,9 +199,7 @@ export default function AdminDashboard() {
     sku: ''
   });
 
-  // Website Builder modal states
-  const [editingCustomPage, setEditingCustomPage] = useState(null);
-  const [isVisualEditorOpen, setIsVisualEditorOpen] = useState(false);
+  // Website Builder supporting modal states
   const [isNavManagerOpen, setIsNavManagerOpen] = useState(false);
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
 
@@ -279,7 +354,7 @@ export default function AdminDashboard() {
 
   // Website Builder Handlers
   const handleOpenCreatePage = () => {
-    setEditingCustomPage({
+    const newPage = {
       id: `page-${Date.now()}`,
       title: 'New Store Campaign',
       slug: `campaign-${Math.floor(100 + Math.random() * 900)}`,
@@ -299,17 +374,27 @@ export default function AdminDashboard() {
             buttonLink: 'shop',
             imageUrl: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=1600&q=80',
             align: 'center',
-            theme: 'dark'
+            theme: 'dark',
+            settings: { ...DEFAULT_SECTION_SETTINGS, headlineSize: 'h1', verticalPadding: 'large' }
           }
         }
       ]
-    });
+    };
+    setEditingCustomPage(newPage);
     setIsVisualEditorOpen(true);
+    updateAdminUrl('pages', newPage.id);
   };
 
   const handleEditCustomPage = (page) => {
     setEditingCustomPage(page);
     setIsVisualEditorOpen(true);
+    updateAdminUrl('pages', page.id);
+  };
+
+  const handleCloseVisualEditor = () => {
+    setIsVisualEditorOpen(false);
+    setEditingCustomPage(null);
+    updateAdminUrl('pages', null, { replace: true });
   };
 
   // Promotions Handlers
@@ -430,10 +515,7 @@ export default function AdminDashboard() {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  setActiveAdminTab(item.id);
-                  setIsMobileSidebarOpen(false);
-                }}
+                onClick={() => handleAdminTabChange(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all ${
                   isActive 
                     ? 'bg-white text-black font-semibold shadow-xs' 
@@ -1983,15 +2065,13 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {isVisualEditorOpen && (
         <VisualPageEditor
+          key={editingCustomPage.id}
           page={editingCustomPage}
-          onClose={() => {
-            setIsVisualEditorOpen(false);
-            setEditingCustomPage(null);
-          }}
+          isNewPage={!customPages.some(page => page.id === editingCustomPage.id)}
+          onClose={handleCloseVisualEditor}
           onSave={(updatedPage) => {
             saveCustomPage(updatedPage);
-            setIsVisualEditorOpen(false);
-            setEditingCustomPage(null);
+            handleCloseVisualEditor();
           }}
         />
       )}

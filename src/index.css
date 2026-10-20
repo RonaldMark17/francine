@@ -258,3 +258,99 @@
   background: #888;
 }
 
+/* Website Builder section-level design controls */
+.builder-container-full > section > div {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.builder-container-standard > section > div {
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.builder-container-narrow > section > div {
+  width: 100% !important;
+  max-width: 800px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.builder-headline-h1 .builder-section-headline {
+  font-size: clamp(2.75rem, 7vw, 5.5rem) !important;
+  line-height: 1.02 !important;
+}
+
+.builder-headline-h2 .builder-section-headline {
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+  line-height: 1.12 !important;
+}
+
+.builder-headline-h3 .builder-section-headline {
+  font-size: clamp(1.35rem, 2.5vw, 2rem) !important;
+  line-height: 1.2 !important;
+}
+
+.builder-text-light :is(.builder-section-headline, .builder-section-copy) {
+  color: #fff !important;
+}
+
+.builder-text-dark :is(.builder-section-headline, .builder-section-copy) {
+  color: #121212 !important;
+}
+
+.builder-text-custom :is(.builder-section-headline, .builder-section-copy) {
+  color: var(--builder-text-color) !important;
+}
+
+@keyframes builderFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes builderSlideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes builderZoomIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.builder-animate-fade { animation: builderFadeIn 700ms ease both; }
+.builder-animate-slide { animation: builderSlideUp 700ms ease both; }
+.builder-animate-zoom { animation: builderZoomIn 700ms ease both; }
+.builder-animation-pending { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .builder-animate-fade,
+  .builder-animate-slide,
+  .builder-animate-zoom,
+  .builder-animation-pending {
+    animation: none;
+    opacity: 1;
+  }
+}
+@keyframes mobile-nav-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.mobile-nav-drawer {
+  animation: mobile-nav-slide-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-drawer {
+    animation: none;
+  }
+}

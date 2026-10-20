@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   ShoppingBag, 
   Search, 
   Menu, 
   X, 
-  Clock, 
   ShieldCheck, 
   Sparkles,
   User,
-  GraduationCap,
-  BookOpen,
-  LogOut
+  ChevronDown
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -26,13 +23,17 @@ export default function Navbar() {
     currentUser,
     setIsAuthModalOpen,
     setAuthModalMode,
-    navigationConfig,
-    logout
+    navigationConfig
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [visibleDesktopCount, setVisibleDesktopCount] = useState(0);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [badgeBouncing, setBadgeBouncing] = useState(false);
+  const desktopNavRef = useRef(null);
+  const navMeasurementRef = useRef(null);
+  const moreMenuRef = useRef(null);
 
   useEffect(() => {
     if (cartCount > 0) {
@@ -42,40 +43,132 @@ export default function Navbar() {
     }
   }, [cartCount]);
 
-  const dynamicHeaderLinks = (navigationConfig?.headerNav || [])
-    .filter(item => item.visible !== false)
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const navLinks = useMemo(() => {
+    const fallbackLinks = [
+      { id: 'home', label: 'Home', path: 'home' },
+      { id: 'shop', label: 'Shop', path: 'shop' },
+      { id: 'promotions', label: 'Promotions', path: 'promotions' },
+      { id: 'services', label: 'Printing Services', path: 'services' },
+      { id: 'transactions', label: 'Transactions', path: 'transactions' },
+      { id: 'about', label: 'About Us', path: 'about' },
+      { id: 'contact', label: 'Contact', path: 'contact' }
+    ];
+    const hasSavedHeaderNavigation = Array.isArray(navigationConfig?.headerNav);
+    const configuredLinks = (navigationConfig?.headerNav || [])
+      .filter((item) => item.visible !== false)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    const rawLinks = hasSavedHeaderNavigation ? configuredLinks : fallbackLinks;
 
-  const fallbackLinks = [
-    { id: 'home', label: 'Home', path: 'home' },
-    { id: 'shop', label: 'Shop', path: 'shop' },
-    { id: 'promotions', label: 'Promotions', path: 'promotions' },
-    { id: 'services', label: 'Printing Services', path: 'services' },
-    { id: 'transactions', label: 'Transactions', path: 'transactions' },
-    { id: 'about', label: 'About Us', path: 'about' },
-    { id: 'contact', label: 'Contact', path: 'contact' }
-  ];
+    return rawLinks.filter((item) => {
+      const target = (item.path || item.id || '').toLowerCase();
+      const label = (item.label || '').toLowerCase();
+      if (target === 'tracking' || item.id === 'nav-tracking' || label.includes('track order')) {
+        return false;
+      }
+      if (target === 'transactions' || item.id === 'nav-transactions' || label.includes('transaction')) {
+        return Boolean(currentUser);
+      }
+      return true;
+    });
+  }, [navigationConfig?.headerNav, currentUser]);
 
-  const rawLinks = dynamicHeaderLinks.length > 0 ? dynamicHeaderLinks : fallbackLinks;
+  const isLinkActive = (link) => {
+    const target = link.path || link.id;
+    return activeTab === target || (activeTab === 'custom_page' && activeCustomPageSlug === target);
+  };
 
-  // 1. Remove 'Track Order' in navbar
-  // 2. Make 'Transactions' appear only when an account is logged in
-  const navLinks = rawLinks.filter(item => {
-    const target = (item.path || item.id || '').toLowerCase();
-    const label = (item.label || '').toLowerCase();
-    if (target === 'tracking' || item.id === 'nav-tracking' || label.includes('track order')) {
-      return false;
-    }
-    if (target === 'transactions' || item.id === 'nav-transactions' || label.includes('transaction')) {
-      return Boolean(currentUser);
-    }
-    return true;
-  });
+  const navigationSignature = navLinks.map((link) => `${link.id}:${link.label}:${link.path}`).join('|');
+
+  useLayoutEffect(() => {
+    const calculateVisibleLinks = () => {
+      const container = desktopNavRef.current;
+      const measurement = navMeasurementRef.current;
+      if (!container || !measurement || container.clientWidth === 0) return;
+
+      const linkWidths = Array.from(measurement.querySelectorAll('[data-nav-measure]'))
+        .map((element) => element.getBoundingClientRect().width);
+      const moreWidth = measurement.querySelector('[data-more-measure]')?.getBoundingClientRect().width || 0;
+      const availableWidth = container.clientWidth;
+      const gap = 24;
+      const allLinksWidth = linkWidths.reduce((total, width) => total + width, 0)
+        + Math.max(0, linkWidths.length - 1) * gap;
+
+      if (allLinksWidth <= availableWidth) {
+        setVisibleDesktopCount(linkWidths.length);
+        return;
+      }
+
+      let usedWidth = 0;
+      let count = 0;
+      for (const width of linkWidths) {
+        const nextWidth = usedWidth + (count > 0 ? gap : 0) + width;
+        const reservedMoreWidth = (count >= 0 ? gap : 0) + moreWidth;
+        if (nextWidth + reservedMoreWidth > availableWidth) break;
+        usedWidth = nextWidth;
+        count += 1;
+      }
+      setVisibleDesktopCount(count);
+    };
+
+    calculateVisibleLinks();
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(calculateVisibleLinks)
+      : null;
+    if (desktopNavRef.current && resizeObserver) resizeObserver.observe(desktopNavRef.current);
+    window.addEventListener('resize', calculateVisibleLinks);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', calculateVisibleLinks);
+    };
+  }, [navigationSignature]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const desktopBreakpoint = window.matchMedia('(min-width: 1024px)');
+    const closeDrawerOnDesktop = (event) => {
+      if (event.matches) setMobileMenuOpen(false);
+    };
+    desktopBreakpoint.addEventListener('change', closeDrawerOnDesktop);
+    return () => desktopBreakpoint.removeEventListener('change', closeDrawerOnDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (!moreMenuOpen) return undefined;
+    const closeMoreMenu = (event) => {
+      if (!moreMenuRef.current?.contains(event.target)) setMoreMenuOpen(false);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setMoreMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeMoreMenu);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeMoreMenu);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [moreMenuOpen]);
 
   const handleNavClick = (tabId) => {
     navigateTo(tabId);
     setMobileMenuOpen(false);
+    setMoreMenuOpen(false);
   };
+
+  const visibleDesktopLinks = navLinks.slice(0, visibleDesktopCount);
+  const overflowDesktopLinks = navLinks.slice(visibleDesktopCount);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -107,28 +200,30 @@ export default function Navbar() {
         <div className="flex items-center h-20">
           
           {/* Mobile Menu Button */}
-          <div className="flex items-center lg:hidden mr-3">
+          <div className="flex items-center lg:hidden mr-1 sm:mr-3">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(true)}
               className="p-2 text-neutral-800 hover:text-black focus:outline-none"
-              aria-label="Toggle menu"
+              aria-label="Open navigation menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-store-navigation"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <Menu className="w-6 h-6" />
             </button>
           </div>
 
           {/* Brand Logo */}
-          <div className="shrink-0">
+          <div className="shrink-0 min-w-0">
             <button 
               onClick={() => handleNavClick('home')}
-              className="group text-left inline-flex items-center gap-3 focus:outline-none"
+              className="group text-left inline-flex min-w-0 items-center gap-2 sm:gap-3 focus:outline-none"
             >
               <img 
                 src="/images/mama_mo_logo.png" 
                 alt="Mama Mo Ink Print & Supplies" 
                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm border border-neutral-200 transition-transform duration-300 group-hover:scale-105"
               />
-              <div>
+              <div className="hidden sm:block">
                 <div className="text-xl sm:text-2xl font-light font-editorial tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80">
                   MAMA MO
                 </div>
@@ -140,31 +235,101 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 ml-8 xl:ml-12">
-            {navLinks.map((link) => {
-              const target = link.path || link.id;
-              const isActive = activeTab === target || (activeTab === 'custom_page' && activeCustomPageSlug === target);
-              return (
-                <button
+          <nav
+            ref={desktopNavRef}
+            className="relative hidden lg:block flex-1 min-w-0 ml-8 xl:ml-12"
+            aria-label="Store navigation"
+          >
+            <div className="flex flex-nowrap items-center gap-6 whitespace-nowrap">
+              {visibleDesktopLinks.map((link) => {
+                const target = link.path || link.id;
+                const isActive = isLinkActive(link);
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => handleNavClick(target)}
+                    className={`shrink-0 text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] whitespace-nowrap transition-all relative py-1 ${
+                      isActive
+                        ? 'text-black font-semibold'
+                        : 'text-neutral-500 hover:text-black font-medium'
+                    }`}
+                  >
+                    {link.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-black animate-fade-in" />
+                    )}
+                  </button>
+                );
+              })}
+
+              {overflowDesktopLinks.length > 0 && (
+                <div ref={moreMenuRef} className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setMoreMenuOpen((open) => !open)}
+                    className={`flex items-center gap-1 py-1 text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] transition-colors ${
+                      overflowDesktopLinks.some(isLinkActive) || moreMenuOpen
+                        ? 'text-black font-semibold'
+                        : 'text-neutral-500 hover:text-black font-medium'
+                    }`}
+                    aria-haspopup="menu"
+                    aria-expanded={moreMenuOpen}
+                  >
+                    More
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {moreMenuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute left-0 top-full z-50 mt-3 min-w-56 border border-neutral-200 bg-[#FAF9F5] p-2 shadow-xl animate-pop-in"
+                    >
+                      {overflowDesktopLinks.map((link) => {
+                        const target = link.path || link.id;
+                        const isActive = isLinkActive(link);
+                        return (
+                          <button
+                            key={link.id}
+                            role="menuitem"
+                            onClick={() => handleNavClick(target)}
+                            className={`block w-full whitespace-nowrap px-3 py-2.5 text-left text-[11px] uppercase tracking-[0.16em] transition-colors ${
+                              isActive ? 'bg-black text-white' : 'text-neutral-600 hover:bg-neutral-100 hover:text-black'
+                            }`}
+                          >
+                            {link.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div
+              ref={navMeasurementRef}
+              className="pointer-events-none invisible absolute left-0 top-0 flex flex-nowrap items-center gap-6 whitespace-nowrap"
+              aria-hidden="true"
+            >
+              {navLinks.map((link) => (
+                <span
                   key={link.id}
-                  onClick={() => handleNavClick(target)}
-                  className={`text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] whitespace-nowrap transition-all relative py-1 ${
-                    isActive 
-                      ? 'text-black font-semibold' 
-                      : 'text-neutral-500 hover:text-black font-medium'
-                  }`}
+                  data-nav-measure
+                  className="shrink-0 text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] font-semibold"
                 >
                   {link.label}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-black animate-fade-in" />
-                  )}
-                </button>
-              );
-            })}
+                </span>
+              ))}
+              <span
+                data-more-measure
+                className="flex shrink-0 items-center gap-1 text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] font-semibold"
+              >
+                More <ChevronDown className="h-3.5 w-3.5" />
+              </span>
+            </div>
           </nav>
 
           {/* Right Action Icons */}
-          <div className="ml-auto shrink-0 flex items-center space-x-2 sm:space-x-4 pl-4">
+          <div className="ml-auto shrink-0 flex items-center space-x-1 sm:space-x-4 pl-1 sm:pl-4">
             
             {/* Search Toggle / Floating Overlay */}
             <div className="relative">
@@ -185,7 +350,7 @@ export default function Navbar() {
                     onClick={() => setShowSearchInput(false)} 
                   />
                   {/* Floating search panel */}
-                  <div className="absolute right-0 top-full mt-3 z-50 w-80 sm:w-96 bg-white/95 backdrop-blur-md border border-black shadow-2xl p-1.5 animate-pop-in">
+                  <div className="absolute right-0 top-full mt-3 z-50 w-[min(20rem,calc(100vw-2rem))] sm:w-96 bg-white/95 backdrop-blur-md border border-black shadow-2xl p-1.5 animate-pop-in">
                     <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                       <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -276,65 +441,61 @@ export default function Navbar() {
 
       {/* Mobile Drawer Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-neutral-200 bg-[#FAF9F5] px-6 py-6 animate-fade-in">
-          <nav className="flex flex-col space-y-4">
-            {/* User status in mobile */}
-            {currentUser ? (
-              <div 
-                onClick={() => {
-                  setIsAuthModalOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="p-3 bg-white border border-neutral-300 flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-xs">
-                    {currentUser.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-black">{currentUser.name}</h4>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono">
-                      Role: {currentUser.role}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[11px] text-neutral-400 underline">Manage</span>
-              </div>
-            ) : (
+        <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Store navigation">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full bg-black/45 backdrop-blur-[1px] animate-fade-in"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close navigation menu"
+          />
+          <aside
+            id="mobile-store-navigation"
+            className="mobile-nav-drawer absolute inset-y-0 left-0 flex h-full w-[min(88vw,360px)] flex-col border-r border-neutral-200 bg-[#FAF9F5] shadow-2xl"
+          >
+            <div className="flex h-20 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
               <button
-                onClick={() => {
-                  setIsAuthModalOpen(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-center py-2.5 text-xs uppercase tracking-widest bg-black text-white font-medium"
+                onClick={() => handleNavClick('home')}
+                className="inline-flex items-center gap-3 text-left"
               >
-                Sign In to Account
+                <img
+                  src="/images/mama_mo_logo.png"
+                  alt=""
+                  className="h-10 w-10 rounded-full border border-neutral-200 object-cover"
+                />
+                <span className="font-editorial text-lg tracking-[0.18em] text-black">MAMA MO</span>
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 text-neutral-600 transition-colors hover:text-black"
+                aria-label="Close navigation menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
 
-            {navLinks.map((link) => {
-              const target = link.path || link.id;
-              const isActive = activeTab === target || (activeTab === 'custom_page' && activeCustomPageSlug === target);
-              return (
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+              {currentUser ? (
                 <button
-                  key={link.id}
-                  onClick={() => handleNavClick(target)}
-                  className={`text-left text-sm uppercase tracking-[0.2em] py-2 border-b border-neutral-200/50 ${
-                    isActive ? 'font-semibold text-black' : 'text-neutral-600'
-                  }`}
+                  type="button"
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="mb-5 flex w-full items-center justify-between border border-neutral-300 bg-white p-3 text-left"
                 >
-                  {link.label}
-                </button>
-              );
-            })}
-            
-            <div className="pt-4 flex flex-col gap-3">
-              {currentUser?.role === 'admin' ? (
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className="w-full text-center py-2.5 text-xs uppercase tracking-widest bg-black text-white"
-                >
-                  Access Store Admin
+                  <span className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
+                      {currentUser.name.charAt(0)}
+                    </span>
+                    <span>
+                      <span className="block text-xs font-semibold text-black">{currentUser.name}</span>
+                      <span className="block font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+                        Role: {currentUser.role}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="text-[11px] text-neutral-400 underline">Manage</span>
                 </button>
               ) : (
                 <button
@@ -343,13 +504,53 @@ export default function Navbar() {
                     setIsAuthModalOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-center py-2.5 text-xs uppercase tracking-widest border border-neutral-300 text-neutral-700"
+                  className="mb-5 w-full bg-black py-2.5 text-center text-xs font-medium uppercase tracking-widest text-white"
                 >
-                  Switch Role / Admin Login
+                  Sign In to Account
                 </button>
               )}
+
+              <nav className="flex flex-col" aria-label="Mobile store navigation">
+                {navLinks.map((link) => {
+                  const target = link.path || link.id;
+                  const isActive = isLinkActive(link);
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => handleNavClick(target)}
+                      className={`border-b border-neutral-200/70 py-3.5 text-left text-sm uppercase tracking-[0.18em] transition-colors ${
+                        isActive ? 'font-semibold text-black' : 'text-neutral-600 hover:text-black'
+                      }`}
+                    >
+                      {link.label}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="flex flex-col gap-3 pt-6">
+                {currentUser?.role === 'admin' ? (
+                  <button
+                    onClick={() => handleNavClick('admin')}
+                    className="w-full bg-black py-2.5 text-center text-xs uppercase tracking-widest text-white"
+                  >
+                    Access Store Admin
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setAuthModalMode('login');
+                      setIsAuthModalOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full border border-neutral-300 py-2.5 text-center text-xs uppercase tracking-widest text-neutral-700"
+                  >
+                    Switch Role / Admin Login
+                  </button>
+                )}
+              </div>
             </div>
-          </nav>
+          </aside>
         </div>
       )}
     </header>

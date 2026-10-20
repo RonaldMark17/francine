@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import DynamicPageRenderer from './DynamicPageRenderer';
 import MediaLibraryModal from './MediaLibraryModal';
+import ExtendedSectionInspector from './ExtendedSectionInspector';
+import InspectorAccordion from './InspectorAccordion';
+import SectionDesignInspector from './SectionDesignInspector';
+import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
+import {
+  clearPageBuilderDraft,
+  loadPageBuilderDraft,
+  savePageBuilderDraft
+} from '../../utils/pageBuilderDraft';
 import { 
   X, 
   Save, 
   Send, 
-  Eye, 
   Smartphone, 
   Tablet, 
   Monitor, 
@@ -15,27 +23,47 @@ import {
   ArrowDown, 
   Trash2, 
   Copy, 
-  Layout, 
   Sliders, 
   Image as ImageIcon, 
-  Check, 
-  AlertCircle,
   Settings
 } from 'lucide-react';
 
-export default function VisualPageEditor({ page, onClose, onSave }) {
-  const { products, showToast } = useApp();
+const serializeEditorPage = (pageData) => JSON.stringify({
+  title: pageData?.title || 'New Custom Page',
+  slug: pageData?.slug || 'new-page',
+  description: pageData?.description || '',
+  showInNav: pageData?.showInNav ?? false,
+  showInFooter: pageData?.showInFooter ?? true,
+  components: pageData?.components || []
+});
+
+export default function VisualPageEditor({ page, isNewPage = false, onClose, onSave }) {
+  const { showToast } = useApp();
+  const previewScrollRef = useRef(null);
+  const recoveryNoticeShownRef = useRef(false);
+  const [initialEditorData] = useState(() => {
+    const recoveredDraft = loadPageBuilderDraft(page?.id);
+    return {
+      page: recoveredDraft?.page || page || {},
+      recovered: Boolean(recoveredDraft)
+    };
+  });
+
+  const initialPage = initialEditorData.page;
 
   // Page basic metadata
-  const [pageTitle, setPageTitle] = useState(page?.title || 'New Custom Page');
-  const [pageSlug, setPageSlug] = useState(page?.slug || 'new-page');
-  const [pageDesc, setPageDesc] = useState(page?.description || '');
-  const [showInNav, setShowInNav] = useState(page?.showInNav ?? false);
-  const [showInFooter, setShowInFooter] = useState(page?.showInFooter ?? true);
+  const [pageTitle, setPageTitle] = useState(initialPage.title || 'New Custom Page');
+  const [pageSlug, setPageSlug] = useState(initialPage.slug || 'new-page');
+  const [pageDesc, setPageDesc] = useState(initialPage.description || '');
+  const [showInNav, setShowInNav] = useState(initialPage.showInNav ?? false);
+  const [showInFooter, setShowInFooter] = useState(initialPage.showInFooter ?? true);
 
   // Components state
-  const [components, setComponents] = useState(page?.components ? JSON.parse(JSON.stringify(page.components)) : []);
+  const [components, setComponents] = useState(initialPage.components ? JSON.parse(JSON.stringify(initialPage.components)) : []);
   const [selectedCompId, setSelectedCompId] = useState(components[0]?.id || null);
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    initialEditorData.recovered || isNewPage ? null : serializeEditorPage(page)
+  );
 
   // Viewport mode: 'desktop' | 'tablet' | 'mobile'
   const [viewport, setViewport] = useState('desktop');
@@ -47,6 +75,86 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
 
   // Active selected component
   const selectedComponent = components.find(c => c.id === selectedCompId);
+  const componentOrderKey = components.map(component => component.id).join('|');
+  const editorSnapshot = serializeEditorPage({
+    title: pageTitle,
+    slug: pageSlug,
+    description: pageDesc,
+    showInNav,
+    showInFooter,
+    components
+  });
+  const hasUnsavedChanges = editorSnapshot !== savedSnapshot;
+  const draftPage = useMemo(() => ({
+    ...page,
+    id: page?.id || initialPage.id,
+    title: pageTitle,
+    slug: pageSlug,
+    description: pageDesc,
+    showInNav,
+    showInFooter,
+    components
+  }), [page, initialPage.id, pageTitle, pageSlug, pageDesc, showInNav, showInFooter, components]);
+
+  useEffect(() => {
+    if (initialEditorData.recovered && !recoveryNoticeShownRef.current) {
+      recoveryNoticeShownRef.current = true;
+      showToast('Recovered your unsaved page builder draft.', 'info');
+    }
+  }, [initialEditorData.recovered, showToast]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (hasUnsavedChanges) {
+        savePageBuilderDraft(draftPage);
+      } else {
+        clearPageBuilderDraft(draftPage.id);
+      }
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [draftPage, hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return undefined;
+
+    const warnAboutUnsavedChanges = (event) => {
+      savePageBuilderDraft(draftPage);
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', warnAboutUnsavedChanges);
+    return () => window.removeEventListener('beforeunload', warnAboutUnsavedChanges);
+  }, [draftPage, hasUnsavedChanges]);
+
+  const scrollPreviewToComponent = useCallback((componentId) => {
+    const preview = previewScrollRef.current;
+    if (!preview || !componentId) return;
+
+    const target = Array.from(preview.querySelectorAll('[data-component-id]'))
+      .find(element => element.dataset.componentId === componentId);
+
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+  }, []);
+
+  // Keep the canvas aligned after selecting, adding, or reordering sections.
+  useEffect(() => {
+    scrollPreviewToComponent(selectedCompId);
+  }, [selectedCompId, componentOrderKey, scrollPreviewToComponent]);
+
+  const handleSelectComponent = (componentId) => {
+    // React will not rerun the selection effect when the same item is clicked,
+    // so explicitly refocus it in that case.
+    if (componentId === selectedCompId) {
+      scrollPreviewToComponent(componentId);
+    }
+    setSelectedCompId(componentId);
+  };
 
   // Component templates for adding
   const COMPONENT_TYPES = [
@@ -62,7 +170,8 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
         buttonLink: 'shop',
         imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80',
         align: 'center',
-        theme: 'dark'
+        theme: 'dark',
+        settings: { headlineSize: 'h1', verticalPadding: 'large' }
       }
     },
     {
@@ -71,7 +180,8 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
       desc: 'Slim high-priority alert or coupon notice',
       defaultData: {
         badge: 'Notice',
-        text: 'Extended store hours today until 8:30 PM for campus thesis printing.'
+        text: 'Extended store hours today until 8:30 PM for campus thesis printing.',
+        settings: { headlineSize: 'h3', verticalPadding: 'small', containerWidth: 'full' }
       }
     },
     {
@@ -130,6 +240,94 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
         buttonText: 'Submit Print Request',
         buttonLink: 'services'
       }
+    },
+    {
+      type: 'features_grid',
+      label: 'Value Proposition / Features Grid',
+      desc: 'Icon cards highlighting store benefits and service promises',
+      defaultData: {
+        title: 'Why Customers Choose Mama Mo',
+        columns: 4,
+        items: [
+          { icon: 'printer', title: 'Same-Day Printing', description: 'Fast production for urgent school and business requirements.' },
+          { icon: 'graduation-cap', title: 'Student Discounts', description: 'Accessible pricing for students, teachers, and campus groups.' },
+          { icon: 'timer', title: 'Rush Processing', description: 'Priority service when every minute matters.' },
+          { icon: 'shield-check', title: 'Quality Guarantee', description: 'Carefully checked output before every order leaves the store.' }
+        ]
+      }
+    },
+    {
+      type: 'testimonials',
+      label: 'Testimonials / Reviews',
+      desc: 'Customer quotes, roles, and star ratings in cards or a carousel',
+      defaultData: {
+        title: 'Trusted By Our Community',
+        layout: 'grid',
+        items: [
+          { name: 'Angela Reyes', role: 'College Student', quote: 'My thesis copies were clean, complete, and ready ahead of schedule.', rating: 5 },
+          { name: 'Mr. Santos', role: 'Local Teacher', quote: 'Reliable service for classroom handouts and examination materials.', rating: 5 },
+          { name: 'Mae Villanueva', role: 'Small Business Owner', quote: 'The team consistently delivers professional prints at fair prices.', rating: 4 }
+        ]
+      }
+    },
+    {
+      type: 'pricing_table',
+      label: 'Services & Pricing Matrix',
+      desc: 'Structured printing and binding rates with sizes and turnaround notes',
+      defaultData: {
+        title: 'Printing & Binding Rates',
+        subtitle: 'Transparent starting rates for our most requested services.',
+        items: [
+          { service: 'Black & White Printing', spec: 'A4 / Short / Long', price: 'From ₱2/page', notes: 'Same-day' },
+          { service: 'Full Color Printing', spec: 'A4, high quality', price: 'From ₱10/page', notes: 'Same-day' },
+          { service: 'Soft Binding', spec: 'Up to 200 pages', price: 'From ₱60', notes: '30–60 minutes' },
+          { service: 'Hard Binding', spec: 'Thesis with gold stamp', price: 'From ₱450', notes: '2–3 working days' }
+        ]
+      }
+    },
+    {
+      type: 'category_grid',
+      label: 'Category Quick Links',
+      desc: 'Image cards that take shoppers directly to product categories',
+      defaultData: {
+        title: 'Shop By Category',
+        columns: 4,
+        items: [
+          { category: 'School Supplies', title: 'Stationery', imageUrl: '/images/mongol_pencils.jpg', buttonText: 'Shop Stationery' },
+          { category: 'Printing Materials', title: 'Inks & Toners', imageUrl: '/images/epson_003_ink.jpg', buttonText: 'Browse Inks' },
+          { category: 'Paper Products', title: 'Paper Reams', imageUrl: '/images/paper_one_ream.jpg', buttonText: 'View Paper' },
+          { category: 'Office Supplies', title: 'Office Essentials', imageUrl: '/images/deli_stapler.jpg', buttonText: 'Shop Office' }
+        ]
+      }
+    },
+    {
+      type: 'gallery',
+      label: 'Image Gallery / Project Showcase',
+      desc: 'Responsive project gallery with captions and optional lightbox viewing',
+      defaultData: {
+        title: 'Recent Print Projects',
+        layout: 'grid',
+        aspectRatio: 'landscape',
+        lightbox: true,
+        images: [
+          { url: '/images/sterling_record_book.jpg', caption: 'Custom academic record materials' },
+          { url: '/images/laminating_film_pouches.jpg', caption: 'Protected and laminated documents' },
+          { url: '/images/wire_binding_spines.jpg', caption: 'Professional wire-bound reports' }
+        ]
+      }
+    },
+    {
+      type: 'location_map',
+      label: 'Store Location & Hours',
+      desc: 'Store address, contact information, opening hours, and map',
+      defaultData: {
+        storeName: 'Mama Mo Ink Print and Supplies',
+        address: 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002',
+        phone: 'Contact our Banago store for current service inquiries',
+        email: '',
+        hours: 'Monday–Saturday: 8:00 AM–7:00 PM\nSunday: 9:00 AM–5:00 PM',
+        mapEmbedUrl: ''
+      }
     }
   ];
 
@@ -141,7 +339,13 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
     const newComp = {
       id: `comp-${Date.now()}`,
       type: compType,
-      data: { ...template.defaultData }
+      data: {
+        ...template.defaultData,
+        settings: {
+          ...DEFAULT_SECTION_SETTINGS,
+          ...(template.defaultData.settings || {})
+        }
+      }
     };
 
     setComponents([...components, newComp]);
@@ -219,6 +423,8 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
       components,
       updatedAt: new Date().toISOString().split('T')[0]
     };
+    setSavedSnapshot(serializeEditorPage(updatedPage));
+    clearPageBuilderDraft(updatedPage.id);
     onSave(updatedPage);
   };
 
@@ -241,7 +447,17 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
       updatedAt: new Date().toISOString().split('T')[0],
       publishedAt: page?.publishedAt || new Date().toISOString().split('T')[0]
     };
+    setSavedSnapshot(serializeEditorPage(updatedPage));
+    clearPageBuilderDraft(updatedPage.id);
     onSave(updatedPage);
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges && !window.confirm('You have unsaved page changes. Exit the editor and keep them as a local draft?')) {
+      return;
+    }
+    if (hasUnsavedChanges) savePageBuilderDraft(draftPage);
+    onClose();
   };
 
   // Preview Page Object
@@ -252,7 +468,7 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 z-50 h-screen min-h-0 bg-[#121212] text-white flex flex-col overflow-hidden animate-fade-in">
       
       {/* Top Application Bar */}
       <header className="h-14 border-b border-neutral-800 bg-neutral-900 px-4 sm:px-6 flex items-center justify-between shrink-0">
@@ -307,7 +523,7 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
         {/* Top Actions: Close, Save Draft, Publish */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-3 py-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
           >
             Exit Editor
@@ -330,10 +546,10 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
       </header>
 
       {/* Main Workspace: Left Sections List, Center Canvas, Right Inspector */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         
         {/* LEFT COLUMN: Page Settings & Section Tree */}
-        <aside className="w-72 bg-neutral-900 border-r border-neutral-800 flex flex-col shrink-0">
+        <aside className="w-72 min-h-0 bg-neutral-900 border-r border-neutral-800 flex flex-col shrink-0">
           
           {/* Page Meta Settings Collapsible */}
           <div className="p-4 border-b border-neutral-800 space-y-3 text-xs">
@@ -408,7 +624,7 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
               return (
                 <div
                   key={comp.id}
-                  onClick={() => setSelectedCompId(comp.id)}
+                  onClick={() => handleSelectComponent(comp.id)}
                   className={`p-2.5 border text-xs cursor-pointer transition-all flex items-center justify-between ${
                     isSelected 
                       ? 'border-white bg-neutral-800 text-white font-medium' 
@@ -465,10 +681,13 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
         </aside>
 
         {/* CENTER COLUMN: Live Interactive Visual Canvas */}
-        <main className="flex-1 bg-neutral-950 flex flex-col items-center overflow-y-auto p-4 sm:p-8">
+        <main
+          ref={previewScrollRef}
+          className="flex-1 h-full min-h-0 bg-neutral-950 flex flex-col items-center overflow-y-auto overscroll-contain p-4 sm:p-8"
+        >
           
           <div 
-            className={`transition-all duration-300 shadow-2xl overflow-hidden bg-[#FAF9F5] text-neutral-900 border border-neutral-700 ${
+            className={`shrink-0 transition-all duration-300 shadow-2xl overflow-hidden bg-[#FAF9F5] text-neutral-900 border border-neutral-700 ${
               viewport === 'desktop' ? 'w-full max-w-5xl' : viewport === 'tablet' ? 'w-[768px]' : 'w-[375px]'
             }`}
           >
@@ -494,7 +713,7 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
         </main>
 
         {/* RIGHT COLUMN: Component Property Inspector */}
-        <aside className="w-80 bg-neutral-900 border-l border-neutral-800 flex flex-col shrink-0">
+        <aside className="w-80 min-h-0 bg-neutral-900 border-l border-neutral-800 flex flex-col shrink-0">
           <div className="p-3.5 px-5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sliders className="w-4 h-4 text-neutral-400" />
@@ -516,6 +735,7 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
               </div>
             ) : (
               <>
+                <InspectorAccordion title="Content" defaultOpen>
                 {/* Hero Fields */}
                 {selectedComponent.type === 'hero' && (
                   <div className="space-y-4">
@@ -847,6 +1067,18 @@ export default function VisualPageEditor({ page, onClose, onSave }) {
                     </div>
                   </div>
                 )}
+
+                <ExtendedSectionInspector
+                  type={selectedComponent.type}
+                  data={selectedComponent.data}
+                  onChange={handleUpdateComponentData}
+                />
+                </InspectorAccordion>
+
+                <SectionDesignInspector
+                  data={selectedComponent.data}
+                  onChange={handleUpdateComponentData}
+                />
 
               </>
             )}
