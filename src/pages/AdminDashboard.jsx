@@ -1,4 +1,5 @@
 import ModalOverlay from '../components/ModalOverlay';
+import Pagination from '../components/Pagination';
 import { isPromotionExpired, storeDate } from '../utils/promotionDates';
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -224,6 +225,9 @@ export default function AdminDashboard() {
   const [inventorySubTab, setInventorySubTab] = useState('catalog'); // 'catalog' | 'ledger'
   const [productSearch, setProductSearch] = useState('');
   const [lowStockFilterOnly, setLowStockFilterOnly] = useState(false);
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [inventoryPageSize, setInventoryPageSize] = useState(10);
 
   // Promotions modal state
   const [isAddPromoOpen, setIsAddPromoOpen] = useState(false);
@@ -478,6 +482,11 @@ export default function AdminDashboard() {
   });
 
   // Get status color styles for orders
+  const currentCatalogPage = Math.min(catalogPage, Math.max(1, Math.ceil(filteredProducts.length / inventoryPageSize)));
+  const currentLedgerPage = Math.min(ledgerPage, Math.max(1, Math.ceil(inventoryLedger.length / inventoryPageSize)));
+  const pagedProducts = filteredProducts.slice((currentCatalogPage - 1) * inventoryPageSize, currentCatalogPage * inventoryPageSize);
+  const pagedLedger = inventoryLedger.slice((currentLedgerPage - 1) * inventoryPageSize, currentLedgerPage * inventoryPageSize);
+
   const getStatusBadge = (status) => {
     switch(status) {
       case 'Completed':
@@ -1013,7 +1022,7 @@ export default function AdminDashboard() {
                     <span>Warning: <strong>{lowStockProductsCount} products</strong> have reached low-stock threshold (≤ 15 units).</span>
                   </div>
                   <button
-                    onClick={() => setLowStockFilterOnly(!lowStockFilterOnly)}
+                    onClick={() => { setLowStockFilterOnly(!lowStockFilterOnly); setCatalogPage(1); }}
                     className="px-2.5 py-1 rounded bg-rose-200/60 hover:bg-rose-200 text-rose-900 font-semibold text-[11px] transition-colors"
                   >
                     {lowStockFilterOnly ? 'Show All Products' : 'Filter Low Stock Only'}
@@ -1029,7 +1038,7 @@ export default function AdminDashboard() {
                       type="text"
                       placeholder="Search product title or SKU..."
                       value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
+                      onChange={(e) => { setProductSearch(e.target.value); setCatalogPage(1); }}
                       className="w-full pl-9 pr-3 py-2 rounded-lg border border-neutral-200 bg-white text-xs focus:outline-none focus:border-black shadow-xs transition-all"
                     />
                   </div>
@@ -1049,7 +1058,10 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-100">
-                          {filteredProducts.map((product) => {
+                          {pagedProducts.length === 0 && (
+                            <tr><td colSpan={7} className="p-8 text-center text-neutral-500">No products match your filters.</td></tr>
+                          )}
+                          {pagedProducts.map((product) => {
                             const isLowStock = product.stock <= 15;
                             const isOutOfStock = product.stock === 0;
                             const stockPercent = Math.min(100, (product.stock / 50) * 100);
@@ -1171,7 +1183,10 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-100">
-                          {inventoryLedger.map((item) => (
+                          {pagedLedger.length === 0 && (
+                            <tr><td colSpan={6} className="p-8 text-center text-neutral-500">No stock movements recorded.</td></tr>
+                          )}
+                          {pagedLedger.map((item) => (
                             <tr key={item.id} className="hover:bg-neutral-50/70 transition-colors">
                               <td className="py-3.5 px-4 font-mono text-[11px] text-neutral-500 whitespace-nowrap">{item.date}</td>
                               <td className="py-3.5 px-4 font-semibold text-black max-w-xs">{item.productName}</td>
@@ -1199,6 +1214,20 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+              <div className="bg-white rounded-xl border border-neutral-200/90 shadow-xs">
+                <Pagination
+                  total={inventorySubTab === 'catalog' ? filteredProducts.length : inventoryLedger.length}
+                  page={inventorySubTab === 'catalog' ? currentCatalogPage : currentLedgerPage}
+                  pageSize={inventoryPageSize}
+                  onPageChange={inventorySubTab === 'catalog' ? setCatalogPage : setLedgerPage}
+                  onPageSizeChange={(size) => {
+                    setInventoryPageSize(size);
+                    setCatalogPage(1);
+                    setLedgerPage(1);
+                  }}
+                />
+              </div>
+
 
             </div>
           )}
