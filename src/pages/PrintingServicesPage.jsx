@@ -1,3 +1,4 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
@@ -131,6 +132,7 @@ export default function PrintingServicesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Page Header */}
       <div className="border-b border-neutral-200 pb-8 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">{coreContent.text("content-1", "Ground Floor Printing Counter • Banago, Nagcarlan")}</span>
@@ -138,6 +140,7 @@ export default function PrintingServicesPage() {
         <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-2xl leading-relaxed">{coreContent.text("content-3", "Fast, reliable, and high-quality printing services tailored for students and educators in Banago, Nagcarlan (steps from Plaridel Elementary and Plaridel Integrated National High School). Upload your file online for express queueing, or visit our ground floor computer station.")}</p>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Services Showcase Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up delay-100">
         {PRINTING_SERVICES.map((srv, idx) => (
@@ -187,6 +190,7 @@ export default function PrintingServicesPage() {
         ))}
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* INTERACTIVE PRICE ESTIMATOR & INQUIRY FORM */}
       <div className="bg-[#FAF9F5] border border-neutral-300 p-6 sm:p-10">
         <div className="max-w-3xl mb-8">

@@ -1,3 +1,4 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState, useMemo } from 'react';
 import { doesOrderBelongToUser } from '../utils/orderUtils';
@@ -191,6 +192,7 @@ export default function TransactionsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Page Header */}
       <div className="border-b border-neutral-200 pb-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -251,6 +253,7 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Filter & Search Bar */}
       <div className="bg-white border border-neutral-200 p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-xs">
         
@@ -296,6 +299,7 @@ export default function TransactionsPage() {
 
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* Transactions List */}
       {filteredOrders.length === 0 ? (
         <div className="bg-[#FAF9F5] border border-neutral-300 p-12 text-center space-y-4">
@@ -633,6 +637,7 @@ export default function TransactionsPage() {
         </div>
       )}
 
+      <CoreSectionSlot placement="before:3" />
       {/* Footer Info Banner */}
       <div className="bg-[#FAF9F5] border border-neutral-300 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-600">
         <div className="flex items-center gap-3 text-center sm:text-left">

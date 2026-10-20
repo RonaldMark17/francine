@@ -1,3 +1,5 @@
+import { CORE_COLLECTIONS, getCoreFields } from '../../data/coreCollections';
+import CoreCollectionInspector from './CoreCollectionInspector';
 import { useState } from 'react';
 import { Image, Search, Type, RotateCcw } from 'lucide-react';
 import { CORE_CONTENT_FIELDS } from '../../data/coreContentFields';
@@ -5,7 +7,7 @@ import { CORE_CONTENT_FIELDS } from '../../data/coreContentFields';
 export default function NativeContentInspector({ route, title, values, onChange, onChooseImage, selectedField }) {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('text');
-  const fields = (CORE_CONTENT_FIELDS[route] || []).filter(field =>
+  const fields = getCoreFields(route, values, CORE_CONTENT_FIELDS[route] || []).filter(field =>
     (!selectedField || field.id === selectedField) &&
     (selectedField || (tab === 'images' ? field.kind === 'image' : field.kind !== 'image')) &&
     (selectedField || `${field.label || ''} ${field.defaultValue} ${values[field.id] ?? ''}`.toLowerCase().includes(query.toLowerCase()))
@@ -22,6 +24,7 @@ export default function NativeContentInspector({ route, title, values, onChange,
         <h2 className="text-lg text-white font-medium">{title}</h2>
         <p className="mt-2 text-xs text-neutral-400 leading-relaxed">Click text in the preview to type directly, or select an image to replace it here. Publish when ready.</p>
       </div>
+      {(CORE_COLLECTIONS[route] || []).map(definition => <CoreCollectionInspector key={definition.id} definition={definition} values={values} onChange={onChange} />)}
       <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-950 p-1 border border-neutral-800" role="group" aria-label="Content type">
         {[['text', Type, 'Text'], ['images', Image, 'Images']].map(([id, Icon, label]) => (
           <button key={id} type="button" aria-pressed={tab === id} onClick={() => setTab(id)} className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs transition-colors ${tab === id ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}><Icon className="w-3.5 h-3.5" />{label}</button>

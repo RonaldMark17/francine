@@ -1,4 +1,5 @@
-import { ABOUT_TEAM } from '../data/aboutTeam';
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
+import { CORE_COLLECTIONS } from '../data/coreCollections';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React from 'react';
 import { useApp } from '../context/AppContext';
@@ -29,6 +30,7 @@ export default function AboutPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20 animate-fade-in text-[#121212]">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Editorial Hero */}
       <div className="text-center max-w-3xl mx-auto space-y-4 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.3em] text-amber-700 font-semibold font-mono bg-amber-50 border border-amber-200 px-3 py-1 rounded-full inline-block animate-pulse-subtle">{coreContent.text("content-1", "Established 2026 • Nagcarlan, Laguna")}</span>
@@ -37,6 +39,7 @@ export default function AboutPage() {
         <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed max-w-2xl mx-auto">{coreContent.text("content-4", "A dedicated one-stop retail hub located along Nagcarlan–Rizal Road, Barangay Banago, Nagcarlan, Laguna. Created to eliminate the hassle of visiting multiple shops by providing affordable student supplies and fast printing services under one roof.")}</p>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Feature Story Image & Text Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 shadow-xs card-interactive hover-lift animate-fade-up delay-100">
         <div className="space-y-6">
@@ -71,6 +74,7 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* Mission & Vision Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up delay-150">
         
@@ -96,6 +100,7 @@ export default function AboutPage() {
 
       </div>
 
+      <CoreSectionSlot placement="before:3" />
       {/* Two-Floor Store Layout Breakdown (From PDF Page 4) */}
       <div className="bg-white border border-neutral-200 rounded-2xl p-8 sm:p-10 shadow-xs space-y-8">
         <div className="text-center max-w-xl mx-auto space-y-2">
@@ -167,6 +172,7 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:4" />
       {/* Unique Selling Proposition (USP) Grid */}
       <div className="space-y-8">
         <div className="text-center max-w-xl mx-auto space-y-2">
@@ -196,6 +202,7 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:5" />
       {/* Team / Founders Section (From PDF Page 1) */}
       <div className="bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 space-y-8 shadow-xs animate-fade-up delay-150">
         <div className="text-center max-w-xl mx-auto space-y-2">
@@ -205,22 +212,23 @@ export default function AboutPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {ABOUT_TEAM.map((member, idx) => (
-            <div key={idx} data-core-field={`team-${idx}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
-              <div data-core-field={`team-${idx}-image`} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
-                {coreContent(`team-${idx}-image`, '') ? (
-                  <img src={coreContent(`team-${idx}-image`, '')} alt={coreContent(`team-${idx}-name`, member.name)} className="w-full h-full object-cover" />
-                ) : coreContent.text(`team-${idx}-initials`, member.initials)}
+          {coreContent.collection(CORE_COLLECTIONS['/about'][0]).map((member) => (
+            <div key={member.id} data-core-field={`team-${member.id}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
+              <div data-core-field={`team-${member.id}-image`} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
+                {coreContent(`team-${member.id}-image`, '') ? (
+                  <img src={coreContent(`team-${member.id}-image`, '')} alt={coreContent(`team-${member.id}-name`, member.name)} className="w-full h-full object-cover" />
+                ) : coreContent.text(`team-${member.id}-initials`, member.initials)}
               </div>
               <div>
-                <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{coreContent.text(`team-${idx}-name`, member.name)}</h4>
-                <p className="text-[10px] text-neutral-500 mt-0.5 leading-snug">{coreContent.text(`team-${idx}-role`, member.role)}</p>
+                <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{coreContent.text(`team-${member.id}-name`, member.name)}</h4>
+                <p className="text-[10px] text-neutral-500 mt-0.5 leading-snug">{coreContent.text(`team-${member.id}-role`, member.role)}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:6" />
       {/* Call to Action */}
       <div className="p-10 bg-[#161616] text-white text-center space-y-4 rounded-2xl shadow-md">
         <h3 className="font-editorial text-2xl sm:text-3xl uppercase tracking-wide">{coreContent.text("content-62", "Ready to Experience Convenient School Shopping?")}</h3>

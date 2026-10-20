@@ -1,4 +1,5 @@
 import NativeContentInspector from './NativeContentInspector';
+import { CORE_SECTION_POSITIONS } from '../../data/coreSectionPositions';
 import { CoreSelectionContext } from './CoreContentContext';
 import PreviewFrame from './PreviewFrame';
 import Navbar from '../Navbar';
@@ -85,6 +86,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
 
   // Modals & Panels
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
+  const [insertPlacement, setInsertPlacement] = useState('bottom');
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [activeMediaTargetField, setActiveMediaTargetField] = useState(null); // callback target
 
@@ -372,6 +374,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       type: compType,
       data: {
         ...template.defaultData,
+        ...(page.systemRoute ? { placement: insertPlacement } : {}),
         settings: {
           ...DEFAULT_SECTION_SETTINGS,
           ...(template.defaultData.settings || {})
@@ -411,14 +414,14 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   };
 
   const handleDeleteComponent = (id) => {
-    if (components.length <= 1) {
+    if (components.length <= 1 && !page.systemRoute) {
       alert('A page must contain at least one content section.');
       return;
     }
     const updated = components.filter(c => c.id !== id);
     setComponents(updated);
     if (selectedCompId === id) {
-      setSelectedCompId(updated[0]?.id || null);
+      setSelectedCompId(updated[0]?.id || (page.systemRoute ? 'native-content' : null));
     }
   };
 
@@ -763,7 +766,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             {/* Use the storefront design within the selected device viewport. */}
             <PreviewFrame>
             {page.systemRoute && <div inert><Navbar previewTab={page.systemRoute === '/' ? 'home' : page.systemRoute.slice(1)} /></div>}
-            <CoreSelectionContext.Provider value={{ onChange: (id, value) => setNativeContent(previous => ({ ...previous, [id]: value })) }}>
+            <CoreSelectionContext.Provider value={{ onChange: (id, value) => setNativeContent(previous => ({ ...previous, [id]: value })), onAddSection: true }}>
             <style>{`
               [data-editor-preview] [data-core-field] { cursor: pointer; }
               [data-editor-preview] [data-core-field]:hover,
@@ -771,6 +774,14 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               ${selectedField ? `[data-editor-preview] [data-core-field="${selectedField}"] { outline: 2px solid #d97706; outline-offset: 4px; background-color: #fbbf241a; }` : ''}
             `}</style>
             <div data-editor-preview onClickCapture={event => {
+              const insertion = event.target.closest('[data-insert-placement]');
+              if (insertion) {
+                event.preventDefault();
+                event.stopPropagation();
+                setInsertPlacement(insertion.dataset.insertPlacement);
+                setIsAddComponentOpen(true);
+                return;
+              }
               if (!event.target.closest('[contenteditable="true"]')) event.preventDefault();
               event.stopPropagation();
               const field = event.target.closest('[data-core-field]');
@@ -787,6 +798,13 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 return;
               }
               if (event.key === 'Enter' || event.key === ' ') {
+                const insertion = event.target.closest('[data-insert-placement]');
+                if (insertion) {
+                  event.preventDefault(); event.stopPropagation();
+                  setInsertPlacement(insertion.dataset.insertPlacement);
+                  setIsAddComponentOpen(true);
+                  return;
+                }
                 const field = event.target.closest('[data-core-field]');
                 if (field) { event.preventDefault(); event.stopPropagation(); setSelectedCompId('native-content'); setSelectedField(field.dataset.coreField); }
               }
@@ -834,15 +852,16 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               </div>
             ) : (
               <>
-                {page.hybrid && (
+                {page.systemRoute && (
                   <div>
                     <label className="block text-neutral-400 mb-1 font-medium">Section Position</label>
                     <select
-                      value={selectedComponent.data.placement === 'bottom' ? 'bottom' : 'top'}
+                      value={selectedComponent.data.placement || 'top'}
                       onChange={(event) => handleUpdateComponentData('placement', event.target.value)}
                       className="w-full bg-neutral-950 border border-neutral-800 px-3 py-2 text-white focus:outline-none"
                     >
                       <option value="top">Above the native {page.title} component</option>
+                      {(CORE_SECTION_POSITIONS[page.systemRoute] || []).map(position => <option key={position.value} value={position.value}>{position.label}</option>)}
                       <option value="bottom">Below the native {page.title} component</option>
                     </select>
                   </div>
@@ -1227,12 +1246,21 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             </div>
 
             {/* Modal Body: Enable vertical scroll */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
+              {page.systemRoute && <label className="block mb-4 text-neutral-300">
+                Insert section
+                <select value={insertPlacement} onChange={event => setInsertPlacement(event.target.value)} className="mt-2 block w-full rounded border border-neutral-700 bg-neutral-950 p-2 text-white">
+                  <option value="top">At the top of the page</option>
+                  {(CORE_SECTION_POSITIONS[page.systemRoute] || []).map(position => <option key={position.value} value={position.value}>{position.label}</option>)}
+                  <option value="bottom">At the bottom of the page</option>
+                </select>
+              </label>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {COMPONENT_TYPES.map(comp => (
-                <div
+                <button type="button"
                   key={comp.type}
                   onClick={() => handleAddComponent(comp.type)}
-                  className="p-4 border border-neutral-800 hover:border-white bg-neutral-950 cursor-pointer transition-all space-y-1.5 group rounded-lg"
+                  className="text-left p-4 border border-neutral-800 hover:border-white bg-neutral-950 cursor-pointer transition-all space-y-1.5 group rounded-lg"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-white text-xs group-hover:text-amber-300">
@@ -1243,8 +1271,9 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                   <p className="text-[11px] text-neutral-400 font-light leading-relaxed">
                     {comp.desc}
                   </p>
-                </div>
+                </button>
               ))}
+              </div>
             </div>
 
             {/* Modal Footer: Keep fixed at bottom */}

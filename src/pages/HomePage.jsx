@@ -1,3 +1,4 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
@@ -69,6 +70,7 @@ export default function HomePage() {
   return (
     <div className="space-y-24 pb-24">
       
+      <CoreSectionSlot placement="before:0" />
       {/* 1. HERO SECTION - Celine Minimalist High-End Aesthetic */}
       <section className="relative min-h-[82vh] flex items-center justify-center bg-[#FAF9F5] border-b border-[#E7E5E0] px-4 sm:px-6 lg:px-8 overflow-hidden">
         
@@ -136,6 +138,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:1" />
       {/* 2. CATEGORY SPOTLIGHTS - Celine Editorial Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-neutral-200">
@@ -191,6 +194,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:2" />
       {/* 3. FEATURED PRODUCTS COLLECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-neutral-200">
@@ -214,6 +218,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:3" />
       {/* 4. PROMOTIONS BANNER - Luxury Minimalist Callout */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#161616] text-white p-8 sm:p-12 lg:p-16 border border-black relative overflow-hidden">
@@ -247,6 +252,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:4" />
       {/* 5. DEDICATED PRINTING SERVICES SPOTLIGHT */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#FAF9F5] border border-neutral-300 p-8 sm:p-12">
@@ -303,6 +309,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:5" />
       {/* 6. SPECIAL OFFERS & DISCOUNTED PRODUCTS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-neutral-200">
@@ -326,6 +333,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CoreSectionSlot placement="before:6" />
       {/* 7. TARGET CUSTOMER AUDIENCES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">

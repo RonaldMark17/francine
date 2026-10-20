@@ -1,3 +1,4 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
@@ -72,6 +73,7 @@ export default function ShopPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Header Banner */}
       <div className="border-b border-neutral-200 pb-8 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">{coreContent.text("content-1", "Retail Collection")}</span>
@@ -79,6 +81,7 @@ export default function ShopPage() {
         <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-xl">{coreContent.text("content-3", "Curated everyday essentials for students, teachers, and offices. All products are in stock at our Banago, Nagcarlan store ready for immediate pickup or delivery.")}</p>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Category Pills Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none animate-fade-up delay-75">
         {CATEGORIES.map((cat) => (
@@ -96,6 +99,7 @@ export default function ShopPage() {
         ))}
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* Filter and Control Bar */}
       <div className="p-4 sm:p-6 bg-[#FAF9F5] border border-neutral-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-center animate-fade-up delay-150 card-interactive">
         
@@ -141,6 +145,7 @@ export default function ShopPage() {
 
       </div>
 
+      <CoreSectionSlot placement="before:3" />
       {/* Secondary Filter Toggles: Price Slider & Badges */}
       <div className="flex flex-wrap items-center justify-between gap-6 py-2 px-1 text-xs animate-fade-up delay-200">
         
@@ -184,6 +189,7 @@ export default function ShopPage() {
 
       </div>
 
+      <CoreSectionSlot placement="before:4" />
       {/* Product Grid with Smooth Transition */}
       {filteredProducts.length > 0 ? (
         <div 

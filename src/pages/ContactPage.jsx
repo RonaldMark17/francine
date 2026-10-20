@@ -1,3 +1,5 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
+import { CORE_COLLECTIONS } from '../data/coreCollections';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
@@ -28,28 +30,12 @@ export default function ContactPage() {
     showToast('Your message has been sent to our customer desk!', 'success');
   };
 
-  const faqs = [
-    {
-      q: 'How fast is the In-Store Pickup after placing an online order?',
-      a: 'Standard orders are packaged and ready for collection at Counter 2 within 15 to 30 minutes during operating store hours.'
-    },
-    {
-      q: 'Can I request rush thesis hardbound printing?',
-      a: 'Yes, our regular thesis turnaround is 2 to 3 days, but we offer a 24-hour rush service for urgent defense requirements.'
-    },
-    {
-      q: 'How do I avail of the 15% student discount?',
-      a: 'Enter promo code STUDENT15 at checkout, and present any valid school ID upon in-store pickup or rider delivery inspection.'
-    },
-    {
-      q: 'What file formats are accepted for digital printing?',
-      a: 'We accept high-resolution PDF, Microsoft Word (.docx), PowerPoint (.pptx), and vector image files (.jpg, .png).'
-    }
-  ];
+  const faqs = coreContent.collection(CORE_COLLECTIONS['/contact'][0]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Header */}
       <div className="border-b border-neutral-200 pb-8 text-center max-w-2xl mx-auto animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">{coreContent.text("content-1", "Get in Touch")}</span>
@@ -57,6 +43,7 @@ export default function ContactPage() {
         <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2">{coreContent.text("content-3", "Have an inquiry regarding bulk orders, custom bookbinding, or school supplies? Reach out to our campus team.")}</p>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Main Grid: Store Info Cards + Contact Form */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         
@@ -235,6 +222,7 @@ export default function ContactPage() {
 
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* Frequently Asked Questions */}
       <div className="pt-8 border-t border-neutral-200 animate-fade-up delay-200">
         <div className="text-center max-w-xl mx-auto mb-10">
@@ -243,13 +231,13 @@ export default function ContactPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {faqs.map((faq, idx) => (
-            <div key={idx} className="p-6 bg-white border border-neutral-200 space-y-2 card-interactive hover-lift">
+          {faqs.map((faq) => (
+            <div key={faq.id} className="p-6 bg-white border border-neutral-200 space-y-2 card-interactive hover-lift">
               <h4 className="text-xs font-semibold text-black leading-snug">
-                {faq.q}
+                {coreContent.text(`faq-${faq.id}-q`, faq.q || '')}
               </h4>
               <p className="text-xs text-neutral-600 font-light leading-relaxed">
-                {faq.a}
+                {coreContent.text(`faq-${faq.id}-a`, faq.a || '')}
               </p>
             </div>
           ))}

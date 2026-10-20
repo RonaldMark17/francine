@@ -1,7 +1,9 @@
+import { getCollectionItems } from '../../data/coreCollections';
 import { createContext, useContext } from 'react';
 
 export const CoreContentContext = createContext({});
 export const CoreSelectionContext = createContext(false);
+export const CoreSectionsContext = createContext(null);
 
 export function useCoreContent() {
   const values = useContext(CoreContentContext);
@@ -26,8 +28,10 @@ export function useCoreContent() {
             range.insertNode(node);
             range.setStartAfter(node);
             range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
           }
         }}>{content(id, fallback) || '\u200b'}</span>
     : content(id, fallback);
-  return Object.assign(content, { text });
+  return Object.assign(content, { text, collection: definition => getCollectionItems(values, definition) });
 }

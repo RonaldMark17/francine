@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CoreContentContext } from './CoreContentContext';
+import { CoreContentContext, CoreSectionsContext } from './CoreContentContext';
 import { useApp } from '../../context/AppContext';
 import ProductCard from '../ProductCard';
 import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
@@ -193,7 +193,7 @@ export default function DynamicPageRenderer({ page, asFragment = false, coreCont
   const PageContainer = asFragment ? 'div' : 'article';
   const componentsToRender = coreContent
     ? [
-        ...page.components.filter(component => component.data?.placement !== 'bottom'),
+        ...page.components.filter(component => component.data?.placement !== 'bottom' && !component.data?.placement?.startsWith('before:')),
         { id: 'system-core-content', type: 'system-core-content', data: {} },
         ...page.components.filter(component => component.data?.placement === 'bottom')
       ]
@@ -210,7 +210,12 @@ export default function DynamicPageRenderer({ page, asFragment = false, coreCont
       {componentsToRender.map((comp) => {
         const { id, type, data = {} } = comp;
         if (type === 'system-core-content') {
-          return <CoreContentContext.Provider key={id} value={page.nativeContent || {}}>{coreContent}</CoreContentContext.Provider>;
+          return <CoreContentContext.Provider key={id} value={page.nativeContent || {}}>
+            <CoreSectionsContext.Provider value={placement => {
+              const sections = page.components.filter(component => component.data?.placement === placement);
+              return sections.length ? <DynamicPageRenderer page={{ ...page, components: sections }} asFragment /> : null;
+            }}>{coreContent}</CoreSectionsContext.Provider>
+          </CoreContentContext.Provider>;
         }
 
         return (

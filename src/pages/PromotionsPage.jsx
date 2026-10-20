@@ -1,3 +1,4 @@
+import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
@@ -33,6 +34,7 @@ export default function PromotionsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
+      <CoreSectionSlot placement="before:0" />
       {/* Header */}
       <div className="border-b border-neutral-200 pb-8 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">{coreContent.text("content-1", "Balik-Eskwela & Academic Bundles")}</span>
@@ -40,6 +42,7 @@ export default function PromotionsPage() {
         <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-xl leading-relaxed">{coreContent.text("content-3", "Seasonal discounts, bundle corners, and educator perks for in-demand periods like Balik-Eskwela, enrollment, research, and examinations at Plaridel Elementary, PINHS, and Banago, Nagcarlan.")}</p>
       </div>
 
+      <CoreSectionSlot placement="before:1" />
       {/* Promotional Cards Banner Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-up delay-100">
         {promotions.map((promo, idx) => (
@@ -103,6 +106,7 @@ export default function PromotionsPage() {
         ))}
       </div>
 
+      <CoreSectionSlot placement="before:2" />
       {/* Featured Deals Products Grid */}
       <div className="space-y-8 animate-fade-up delay-200">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200 pb-4">
@@ -121,6 +125,7 @@ export default function PromotionsPage() {
         </div>
       </div>
 
+      <CoreSectionSlot placement="before:3" />
       {/* Campus Perks Featurette */}
       <div className="bg-[#161616] text-white p-8 sm:p-12 border border-black hover-glow transition-all duration-500 animate-fade-up delay-300">
         <div className="max-w-3xl space-y-4">
