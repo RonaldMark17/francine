@@ -63,13 +63,13 @@ export default function ProductDetailModal() {
     : 0;
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    if (!addToCart(product, quantity)) return;
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
+    if (!addToCart(product, quantity)) return;
     setQuickViewProduct(null);
     setIsCartOpen(true);
   };

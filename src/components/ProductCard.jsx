@@ -31,7 +31,7 @@ export default function ProductCard({ product }) {
 
   const handleAdd = (e) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    if (!addToCart(product, 1)) return;
     setAddedAnim(true);
     setTimeout(() => setAddedAnim(false), 1200);
   };

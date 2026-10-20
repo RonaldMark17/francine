@@ -114,7 +114,7 @@ export default function Navbar({ previewTab } = {}) {
         .map((element) => element.getBoundingClientRect().width);
       const moreWidth = measurement.querySelector('[data-more-measure]')?.getBoundingClientRect().width || 0;
       const availableWidth = container.clientWidth;
-      const gap = 24;
+      const gap = parseFloat(getComputedStyle(container.querySelector('[data-desktop-links]')).columnGap) || 24;
       const allLinksWidth = linkWidths.reduce((total, width) => total + width, 0)
         + Math.max(0, linkWidths.length - 1) * gap;
 
@@ -201,7 +201,7 @@ export default function Navbar({ previewTab } = {}) {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF9F5]/95 backdrop-blur-md border-b border-[#E7E5E0] transition-all">
+    <header className="store-header sticky top-0 z-40 bg-[#FAF9F5]/95 backdrop-blur-md border-b border-[#E7E5E0] transition-all">
       {/* Top Announcement Bar */}
       <div className="bg-[#121212] text-[#EFEFEF] text-[10px] sm:text-[11px] uppercase tracking-wider sm:tracking-widest py-1.5 sm:py-2 px-3 sm:px-4 text-center border-b border-black flex flex-wrap items-center justify-center gap-2 sm:gap-4 leading-normal">
         <span className="flex items-center gap-1.5 font-light">
@@ -219,8 +219,8 @@ export default function Navbar({ previewTab } = {}) {
       </div>
 
       {/* Main Navigation Container */}
-      <div className="w-full px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 sm:h-20">
+      <div className="store-header-container w-full px-3 sm:px-6 lg:px-8">
+        <div className="store-header-row flex items-center h-16 sm:h-20">
           
           {/* Mobile Menu Button */}
           <div className="flex items-center lg:hidden mr-1 sm:mr-3">
@@ -239,7 +239,7 @@ export default function Navbar({ previewTab } = {}) {
           <div className="shrink-0 min-w-0">
             <button 
               onClick={() => handleNavClick('home')}
-              className="group text-left inline-flex min-w-0 items-center gap-2 sm:gap-3 focus:outline-none"
+              className="store-brand group text-left inline-flex min-w-0 items-center gap-2 sm:gap-3 focus:outline-none"
             >
               <img 
                 src="/images/mama_mo_logo.jpg" 
@@ -250,7 +250,7 @@ export default function Navbar({ previewTab } = {}) {
                 <div className="text-base sm:text-2xl font-light font-editorial tracking-[0.16em] sm:tracking-[0.22em] text-[#121212] uppercase transition-all duration-300 group-hover:opacity-80 leading-none">
                   MAMA MO
                 </div>
-                <div className="text-[7px] sm:text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.32em] text-neutral-500 mt-0.5 sm:-mt-1 font-sans whitespace-nowrap">
+                <div className="text-[7px] sm:text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.32em] text-neutral-500 mt-1 sm:mt-1.5 font-sans whitespace-nowrap">
                   INK PRINT &amp; SUPPLIES
                 </div>
               </div>
@@ -260,10 +260,10 @@ export default function Navbar({ previewTab } = {}) {
           {/* Desktop Navigation Links */}
           <nav
             ref={desktopNavRef}
-            className="relative hidden lg:block flex-1 min-w-0 ml-8 xl:ml-12"
+            className="store-desktop-nav relative hidden lg:block flex-1 min-w-0 ml-8 xl:ml-12"
             aria-label="Store navigation"
           >
-            <div className="flex flex-nowrap items-center gap-6 whitespace-nowrap">
+            <div data-desktop-links className="flex flex-nowrap items-center justify-center gap-6 whitespace-nowrap">
               {visibleDesktopLinks.map((link) => {
                 const target = link.path || link.id;
                 const isActive = isLinkActive(link);
@@ -271,6 +271,7 @@ export default function Navbar({ previewTab } = {}) {
                   <button
                     key={link.id}
                     onClick={() => handleNavClick(target)}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`shrink-0 text-[11px] xl:text-[12px] uppercase tracking-[0.14em] xl:tracking-[0.18em] whitespace-nowrap transition-all relative py-1 ${
                       isActive
                         ? 'text-black font-semibold'
@@ -352,7 +353,7 @@ export default function Navbar({ previewTab } = {}) {
           </nav>
 
           {/* Right Action Icons */}
-          <div className="ml-auto shrink-0 flex items-center space-x-1 sm:space-x-4 pl-1 sm:pl-4">
+          <div className="store-header-actions ml-auto shrink-0 flex items-center space-x-1 sm:space-x-4 pl-1 sm:pl-4">
             
             {/* Search Toggle / Floating Overlay */}
             <div ref={searchPanelRef} className="relative">
@@ -421,6 +422,7 @@ export default function Navbar({ previewTab } = {}) {
                 }}
                 className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider px-2 sm:px-3 py-1.5 border border-neutral-300 hover:border-black text-neutral-700 hover:text-black transition-all bg-white"
                 title="Customer Sign In"
+                aria-label="Sign in to your account"
               >
                 <User className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Sign In</span>

@@ -354,3 +354,69 @@
     animation: none;
   }
 }
+
+/* Store navigation: balanced branding, links and account controls. */
+.store-header-container {
+  max-width: 1600px;
+  margin-inline: auto;
+}
+.store-header-row {
+  gap: 12px;
+}
+.store-header button:focus-visible {
+  outline: 2px solid #9b7b32;
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+.store-header-actions {
+  gap: 6px;
+  padding-left: 0;
+}
+.store-header-actions > *,
+.store-header-actions > div > button {
+  margin-left: 0;
+}
+.store-header-actions > button,
+.store-header-actions > div > button {
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+  border-radius: 6px;
+}
+.store-header-actions > div > button:hover,
+.store-header-actions > button:last-child:hover {
+  background: #eeece5;
+}
+@media (min-width: 1024px) {
+  .store-header-row {
+    height: 88px;
+    gap: 28px;
+  }
+  .store-desktop-nav {
+    margin-left: 0;
+  }
+  .store-desktop-nav [data-desktop-links] {
+    gap: 24px;
+  }
+  .store-desktop-nav [data-desktop-links] > button,
+  .store-desktop-nav [data-desktop-links] > div > button {
+    padding-block: 12px;
+    letter-spacing: 0.12em;
+  }
+  .store-header-actions {
+    margin-left: 0;
+    gap: 10px;
+    padding-left: 20px;
+    border-left: 1px solid #e7e5e0;
+  }
+}
+@media (max-width: 380px) {
+  .store-header-row { gap: 4px; }
+  .store-brand { gap: 6px; }
+  .store-brand img { width: 30px; height: 30px; }
+  .store-brand .font-editorial { font-size: 14px; }
+  .store-brand .font-sans { font-size: 6px; letter-spacing: 0.16em; }
+  .store-header-actions { gap: 0; }
+  .store-header-actions > button,
+  .store-header-actions > div > button { min-width: 36px; padding-inline: 7px; }
+}

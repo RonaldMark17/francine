@@ -548,6 +548,15 @@ export function AppProvider({ children }) {
   // CART OPERATIONS
   // ==========================================
   const addToCart = (product, quantity = 1) => {
+    if (!currentUser) {
+      setQuickViewProduct(null);
+      setIsCartOpen(false);
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please log in before adding items to your shopping bag.', 'info');
+      return false;
+    }
+
     setCart(prevCart => {
       const existing = prevCart.find(item => item.id === product.id);
       if (existing) {
@@ -560,6 +569,7 @@ export function AppProvider({ children }) {
       return [...prevCart, { ...product, quantity: Math.min(quantity, product.stock) }];
     });
     showToast(`Added "${product.name}" to bag`, 'success');
+    return true;
   };
 
   const updateQuantity = (productId, delta) => {
