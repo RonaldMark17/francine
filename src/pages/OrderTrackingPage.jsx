@@ -108,7 +108,7 @@ export default function OrderTrackingPage() {
   const timelineData = activeOrder ? getTimelineSteps(activeOrder) : null;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
       
       {/* Header */}
       <div className="border-b border-neutral-200 pb-8 text-center max-w-2xl mx-auto">
@@ -123,20 +123,21 @@ export default function OrderTrackingPage() {
         </p>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mt-8 flex gap-2 max-w-md mx-auto">
-          <div className="relative flex-1">
+        <form onSubmit={handleSearch} className="mt-6 flex gap-2 max-w-md mx-auto">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              aria-label="Order reference number"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Enter Order Reference (e.g. MM-2026-1038)"
-              className="w-full text-xs pl-9 pr-4 py-3 bg-white border border-neutral-300 focus:outline-none focus:border-black uppercase font-mono"
+              className="w-full text-xs pl-9 pr-3 py-3 rounded-lg bg-white border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-900/15 focus:border-black uppercase font-mono"
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-3 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
+            className="px-5 py-3 rounded-lg bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
           >
             Track
           </button>
@@ -177,16 +178,16 @@ export default function OrderTrackingPage() {
 
       {/* Tracking Result View */}
       {activeOrder ? (
-        <div className="bg-[#FAF9F5] border border-neutral-300 p-6 sm:p-10 space-y-8 animate-fade-in">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-5 sm:p-8 space-y-6 shadow-sm animate-fade-in">
           
           {/* Top Status Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-medium">Order Number:</span>
                 <span className="text-lg font-mono font-bold text-black">{activeOrder.id}</span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-neutral-500 font-light mt-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-600 mt-2 leading-relaxed">
                 <span>Placed on {new Date(activeOrder.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <span>•</span>
                 <span>Customer: {activeOrder.customer.name} ({activeOrder.customer.type})</span>
@@ -194,7 +195,7 @@ export default function OrderTrackingPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="bg-black text-white text-xs uppercase tracking-widest px-3 py-1 font-medium">
+              <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs tracking-wide px-3 py-1.5 font-medium">
                 {activeOrder.status}
               </span>
             </div>
@@ -206,7 +207,7 @@ export default function OrderTrackingPage() {
               Fulfillment Progress Timeline
             </h3>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative">
               {timelineData.steps.map((step, idx) => {
                 const isPassed = idx <= timelineData.activeIdx;
                 const isCurrent = idx === timelineData.activeIdx;
@@ -214,20 +215,15 @@ export default function OrderTrackingPage() {
                 return (
                   <div 
                     key={step.key} 
-                    className={`p-4 border transition-all duration-300 relative card-interactive ${
+                    aria-current={isCurrent ? 'step' : undefined}
+                    className={`p-4 rounded-xl border relative ${
                       isCurrent 
-                        ? 'border-black bg-white shadow-md ring-2 ring-black/80 scale-[1.02]' 
+                        ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600'
                         : isPassed 
-                        ? 'border-neutral-300 bg-white hover-lift' 
-                        : 'border-neutral-200 bg-neutral-100 opacity-60'
+                        ? 'border-neutral-200 bg-white'
+                        : 'border-neutral-200 bg-neutral-50'
                     }`}
                   >
-                    {isCurrent && (
-                      <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                      </span>
-                    )}
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-mono font-bold text-neutral-400">
                         0{idx + 1}
@@ -242,7 +238,7 @@ export default function OrderTrackingPage() {
                       <span>{step.label}</span>
                       {isCurrent && <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>}
                     </h4>
-                    <p className="text-[11px] text-neutral-500 font-light mt-1">
+                    <p className="text-xs text-neutral-600 leading-relaxed mt-2">
                       {step.desc}
                     </p>
                   </div>
@@ -251,7 +247,7 @@ export default function OrderTrackingPage() {
             </div>
 
             {/* Current Status Explanation Note */}
-            <div className="mt-6 p-4 bg-white border border-neutral-200 text-xs text-neutral-700 flex items-start gap-3">
+            <div className="mt-5 p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-sm leading-relaxed text-neutral-700 flex items-start gap-3">
               <ShieldCheck className="w-4 h-4 text-neutral-800 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-black">Latest Update: </span>
@@ -264,13 +260,13 @@ export default function OrderTrackingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-200">
             
             {/* Fulfillment & Contact info */}
-            <div className="bg-white p-5 border border-neutral-200 space-y-3">
+            <div className="min-w-0 bg-white rounded-xl p-5 border border-neutral-200 space-y-4">
               <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-black flex items-center gap-2">
                 {activeOrder.fulfillment === 'pickup' ? <Store className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
                 <span>{activeOrder.fulfillment === 'pickup' ? 'In-Store Pickup Details' : 'Delivery Address'}</span>
               </h4>
 
-              <div className="text-xs space-y-2 text-neutral-600 font-light">
+              <div className="text-sm leading-relaxed space-y-3 text-neutral-600 break-words">
                 {activeOrder.fulfillment === 'pickup' ? (
                   <>
                     <p><strong className="text-black font-medium">Pickup Branch:</strong> {activeOrder.pickupLocation || 'Mama Mo Ink Main Store (Purok 5, Banago, Nagcarlan, Laguna)'}</p>
@@ -292,8 +288,8 @@ export default function OrderTrackingPage() {
             </div>
 
             {/* Itemized Order Receipt */}
-            <div className="bg-white p-5 border border-neutral-200 space-y-3">
-              <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+            <div className="min-w-0 bg-white rounded-xl p-5 border border-neutral-200 space-y-4">
+              <div className="flex flex-wrap gap-3 items-center justify-between border-b border-neutral-200 pb-3">
                 <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-black flex items-center gap-2">
                   <Receipt className="w-4 h-4" />
                   <span>Checked Out Items ({activeOrder.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 0})</span>

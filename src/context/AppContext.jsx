@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { collectMediaAssets } from '../utils/mediaAssets';
 import {
   INITIAL_PRODUCTS,
   INITIAL_ORDERS,
@@ -1077,6 +1078,10 @@ export function AppProvider({ children }) {
     setActiveCustomPageSlug(null);
   };
 
+  const availableMediaAssets = useMemo(() => collectMediaAssets({
+    mediaLibrary, products, pages: customPages, storeInfo: STORE_INFO
+  }), [mediaLibrary, products, customPages]);
+
   return (
     <AppContext.Provider
       value={{
@@ -1095,7 +1100,7 @@ export function AppProvider({ children }) {
         activeCustomPageSlug,
         customPages,
         navigationConfig,
-        mediaLibrary,
+        mediaLibrary: availableMediaAssets,
         inventoryLedger,
         selectedCategory,
         searchQuery,

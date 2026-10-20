@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { CoreContentContext } from './CoreContentContext';
 import { useApp } from '../../context/AppContext';
 import ProductCard from '../ProductCard';
 import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
@@ -209,7 +210,7 @@ export default function DynamicPageRenderer({ page, asFragment = false, coreCont
       {componentsToRender.map((comp) => {
         const { id, type, data = {} } = comp;
         if (type === 'system-core-content') {
-          return <React.Fragment key={id}>{coreContent}</React.Fragment>;
+          return <CoreContentContext.Provider key={id} value={page.nativeContent || {}}>{coreContent}</CoreContentContext.Provider>;
         }
 
         return (

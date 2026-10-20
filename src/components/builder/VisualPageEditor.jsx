@@ -1,3 +1,5 @@
+import NativeContentInspector from './NativeContentInspector';
+import { CoreSelectionContext } from './CoreContentContext';
 import PreviewFrame from './PreviewFrame';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
@@ -32,7 +34,8 @@ import {
   Copy, 
   Sliders, 
   Image as ImageIcon, 
-  Settings
+  Settings,
+  Type
 } from 'lucide-react';
 
 const serializeEditorPage = (pageData) => JSON.stringify({
@@ -41,6 +44,7 @@ const serializeEditorPage = (pageData) => JSON.stringify({
   description: pageData?.description || '',
   showInNav: pageData?.showInNav ?? false,
   showInFooter: pageData?.showInFooter ?? true,
+  nativeContent: pageData?.nativeContent || {},
   components: pageData?.components || []
 });
 
@@ -66,9 +70,12 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   const [showInNav, setShowInNav] = useState(initialPage.showInNav ?? false);
   const [showInFooter, setShowInFooter] = useState(initialPage.showInFooter ?? true);
 
+  const [nativeContent, setNativeContent] = useState(initialPage.nativeContent || {});
+  const [selectedField, setSelectedField] = useState(null);
+
   // Components state
   const [components, setComponents] = useState(initialPage.components ? JSON.parse(JSON.stringify(initialPage.components)) : []);
-  const [selectedCompId, setSelectedCompId] = useState(components[0]?.id || null);
+  const [selectedCompId, setSelectedCompId] = useState(page.systemRoute ? 'native-content' : components[0]?.id || null);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     initialEditorData.recovered || isNewPage ? null : serializeEditorPage(page)
   );
@@ -90,6 +97,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     description: pageDesc,
     showInNav,
     showInFooter,
+    nativeContent,
     components
   });
   const hasUnsavedChanges = editorSnapshot !== savedSnapshot;
@@ -101,8 +109,9 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     description: pageDesc,
     showInNav,
     showInFooter,
+    nativeContent,
     components
-  }), [page, initialPage, pageTitle, pageSlug, pageDesc, showInNav, showInFooter, components]);
+  }), [page, initialPage, pageTitle, pageSlug, pageDesc, showInNav, showInFooter, nativeContent, components]);
 
   useEffect(() => {
     if (initialEditorData.recovered && !recoveryNoticeShownRef.current) {
@@ -442,6 +451,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       status: 'draft',
       showInNav,
       showInFooter,
+      nativeContent,
       components,
       updatedAt: new Date().toISOString().split('T')[0]
     };
@@ -465,6 +475,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       status: 'published',
       showInNav,
       showInFooter,
+      nativeContent,
       components,
       updatedAt: new Date().toISOString().split('T')[0],
       publishedAt: page?.publishedAt || new Date().toISOString().split('T')[0]
@@ -486,6 +497,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   const previewPageObject = {
     title: pageTitle,
     description: pageDesc,
+    nativeContent,
     components
   };
   const pagePath = page.systemRoute || `/${pageSlug}`;
@@ -572,7 +584,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       <div className="flex-1 min-h-0 flex overflow-hidden">
         
         {/* LEFT COLUMN: Page Settings & Section Tree */}
-        <aside className="w-72 min-h-0 bg-neutral-900 border-r border-neutral-800 flex flex-col shrink-0">
+        <aside className="w-56 xl:w-60 min-h-0 bg-neutral-900 border-r border-neutral-800 flex flex-col shrink-0">
           
           {/* Page Meta Settings Collapsible */}
           <div className="p-4 border-b border-neutral-800 space-y-3 text-xs">
@@ -637,7 +649,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           {/* Section Tree Header */}
           <div className="p-3 px-4 bg-neutral-950/60 border-b border-neutral-800 flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">
-              Page Sections ({components.length})
+              Page Sections ({components.length + (page.systemRoute ? 1 : 0)})
             </span>
             <button
               onClick={() => setIsAddComponentOpen(true)}
@@ -651,10 +663,10 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           {/* Sections List */}
           <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
             {page.systemRoute && (
-              <div className="p-3 border border-neutral-700 bg-neutral-800 text-xs text-neutral-300 space-y-2">
-                <strong className="block text-white">Original {page.title} design</strong>
-                <p>The preview uses the live storefront layout and data. Add sections above or below this page. Manage products, promotions, and store information in their admin tabs.</p>
-              </div>
+              <button type="button" onClick={() => { setSelectedCompId('native-content'); setSelectedField(null); }} className={`w-full rounded-lg p-3 text-left border transition-colors ${selectedCompId === 'native-content' ? 'border-amber-300/60 bg-amber-300/5' : 'border-neutral-700 hover:bg-neutral-800'}`}>
+                <span className="flex items-center gap-2 text-xs text-white font-medium"><Type className="w-4 h-4 text-amber-300" />{page.title} content</span>
+                <span className="block mt-1.5 pl-6 text-[11px] text-neutral-400">Text, images & page details</span>
+              </button>
             )}
             {components.map((comp, idx) => {
               const isSelected = selectedCompId === comp.id;
@@ -725,12 +737,12 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         {/* CENTER COLUMN: Live Interactive Visual Canvas */}
         <main
           ref={previewScrollRef}
-          className="flex-1 h-full min-h-0 bg-neutral-950 flex flex-col items-center overflow-y-auto overscroll-contain p-4 sm:p-8"
+          className="flex-1 min-w-0 h-full min-h-0 bg-[#202020] flex flex-col items-center overflow-auto overscroll-contain p-3 xl:p-5"
         >
           
           <div 
-            className={`shrink-0 transition-all duration-300 shadow-2xl overflow-hidden bg-[#FAF9F5] text-neutral-900 border border-neutral-700 ${
-              viewport === 'desktop' ? 'w-full max-w-5xl' : viewport === 'tablet' ? 'w-[768px]' : 'w-[375px]'
+            className={`shrink-0 flex flex-col h-full min-h-0 rounded-lg transition-all duration-300 shadow-2xl overflow-hidden bg-[#FAF9F5] text-neutral-900 border border-neutral-700 ${
+              viewport === 'desktop' ? 'w-full' : viewport === 'tablet' ? 'w-[768px]' : 'w-[375px]'
             }`}
           >
             {/* Mock browser header frame for aesthetic Celine preview */}
@@ -751,12 +763,36 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             {/* Use the storefront design within the selected device viewport. */}
             <PreviewFrame>
             {page.systemRoute && <div inert><Navbar previewTab={page.systemRoute === '/' ? 'home' : page.systemRoute.slice(1)} /></div>}
-            <div inert={page.systemRoute ? true : undefined}>
+            <CoreSelectionContext.Provider value={true}>
+            <style>{`
+              [data-editor-preview] [data-core-field] { cursor: pointer; }
+              [data-editor-preview] [data-core-field]:hover,
+              [data-editor-preview] [data-core-field]:focus-visible { outline: 2px dashed #d97706; outline-offset: 4px; }
+              ${selectedField ? `[data-editor-preview] [data-core-field="${selectedField}"] { outline: 2px solid #d97706; outline-offset: 4px; background-color: #fbbf241a; }` : ''}
+            `}</style>
+            <div data-editor-preview onClickCapture={event => {
+              event.preventDefault();
+              event.stopPropagation();
+              const field = event.target.closest('[data-core-field]');
+              if (field) {
+                setSelectedCompId('native-content');
+                setSelectedField(field.dataset.coreField);
+              } else {
+                const section = event.target.closest('[data-component-id]');
+                if (section) { setSelectedField(null); handleSelectComponent(section.dataset.componentId); }
+              }
+            }} onKeyDownCapture={event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                const field = event.target.closest('[data-core-field]');
+                if (field) { event.preventDefault(); event.stopPropagation(); setSelectedCompId('native-content'); setSelectedField(field.dataset.coreField); }
+              }
+            }}>
             <DynamicPageRenderer
               page={previewPageObject}
               coreContent={page.systemRoute ? <CorePageContent route={page.systemRoute} /> : null}
             />
             </div>
+            </CoreSelectionContext.Provider>
             {page.systemRoute && <div inert><Footer /></div>}
             </PreviewFrame>
           </div>
@@ -764,12 +800,12 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         </main>
 
         {/* RIGHT COLUMN: Component Property Inspector */}
-        <aside className="w-80 min-h-0 bg-neutral-900 border-l border-neutral-800 flex flex-col shrink-0">
+        <aside className="w-72 2xl:w-80 min-h-0 bg-neutral-900 border-l border-neutral-800 flex flex-col shrink-0">
           <div className="p-3.5 px-5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sliders className="w-4 h-4 text-neutral-400" />
               <span className="text-xs font-semibold uppercase tracking-wider text-white">
-                Section Inspector
+                {selectedCompId === 'native-content' ? 'Page Inspector' : 'Section Inspector'}
               </span>
             </div>
             {selectedComponent && (
@@ -780,7 +816,15 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5 text-xs">
-            {!selectedComponent ? (
+            {selectedCompId === 'native-content' && page.systemRoute ? (
+              <>
+              {selectedField && <button type="button" onClick={() => setSelectedField(null)} className="text-xs text-amber-300 hover:text-white">? All page content</button>}
+              <NativeContentInspector key={selectedField || 'all'} selectedField={selectedField} route={page.systemRoute} title={pageTitle} values={nativeContent} onChange={setNativeContent} onChooseImage={id => {
+                setActiveMediaTargetField(() => url => setNativeContent(values => ({ ...values, [id]: url })));
+                setIsMediaPickerOpen(true);
+              }} />
+              </>
+            ) : !selectedComponent ? (
               <div className="py-12 text-center text-neutral-500 text-xs">
                 Select a section from the left tree to inspect and customize its content.
               </div>
@@ -1218,9 +1262,12 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         isOpen={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
         onSelectImage={(url) => {
-          if (activeMediaTargetField) {
+          if (typeof activeMediaTargetField === 'function') {
+            activeMediaTargetField(url);
+          } else if (activeMediaTargetField) {
             handleUpdateComponentData(activeMediaTargetField, url);
           }
+          setIsMediaPickerOpen(false);
         }}
       />
 

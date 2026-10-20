@@ -1,3 +1,4 @@
+import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState, useMemo } from 'react';
 import { doesOrderBelongToUser } from '../utils/orderUtils';
 import { useApp } from '../context/AppContext';
@@ -41,6 +42,7 @@ const LOCAL_PRODUCT_IMAGES = {
 };
 
 export default function TransactionsPage() {
+  const coreContent = useCoreContent();
   const { 
     orders = [], 
     currentUser, 
@@ -195,14 +197,10 @@ export default function TransactionsPage() {
           <div>
             <div className="inline-flex items-center gap-2 text-[10px] uppercase font-mono tracking-[0.25em] text-neutral-400 mb-2">
               <Receipt className="w-3.5 h-3.5 text-neutral-600" />
-              <span>Purchase History &amp; Fulfillment</span>
+              <span>{coreContent.text("content-1", "Purchase History & Fulfillment")}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide uppercase">
-              Transactions &amp; Checked Out Items
-            </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 font-light mt-1.5 max-w-2xl leading-relaxed">
-              Detailed record of all checked-out orders, items breakdown, payment receipts, and real-time fulfillment tracking.
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide uppercase">{coreContent.text("content-2", "Transactions & Checked Out Items")}</h1>
+            <p className="text-xs sm:text-sm text-neutral-500 font-light mt-1.5 max-w-2xl leading-relaxed">{coreContent.text("content-3", "Detailed record of all checked-out orders, items breakdown, payment receipts, and real-time fulfillment tracking.")}</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -211,14 +209,14 @@ export default function TransactionsPage() {
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-neutral-300 hover:border-black text-xs uppercase tracking-widest font-medium transition-all shadow-xs"
             >
               <Truck className="w-4 h-4 text-neutral-600" />
-              <span>Track Order Portal</span>
+              <span>{coreContent.text("content-4", "Track Order Portal")}</span>
             </button>
             <button
               onClick={() => navigateTo('shop')}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-black text-white hover:bg-neutral-800 text-xs uppercase tracking-widest font-medium transition-all shadow-xs"
             >
               <ShoppingBag className="w-4 h-4 text-white" />
-              <span>Continue Shopping</span>
+              <span>{coreContent.text("content-5", "Continue Shopping")}</span>
             </button>
           </div>
         </div>
@@ -226,33 +224,29 @@ export default function TransactionsPage() {
         {/* Metric Cards Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 animate-fade-up delay-75">
           <div className="p-4 bg-white border border-neutral-200/90 rounded-none shadow-xs space-y-1 hover-lift card-interactive group">
-            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono">Total Transactions</span>
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono">{coreContent.text("content-6", "Total Transactions")}</span>
             <div className="text-2xl font-editorial font-bold text-black group-hover:scale-105 origin-left transition-transform duration-300">{stats.totalTransactions}</div>
-            <div className="text-[10px] text-neutral-500 font-light">Registered in system</div>
+            <div className="text-[10px] text-neutral-500 font-light">{coreContent.text("content-7", "Registered in system")}</div>
           </div>
 
           <div className="p-4 bg-white border border-neutral-200/90 rounded-none shadow-xs space-y-1 hover-lift card-interactive group">
             <span className="text-[10px] uppercase tracking-wider text-amber-600 font-mono flex items-center gap-1">
-              <Clock className="w-3 h-3 group-hover:rotate-45 transition-transform duration-300" />
-              Active Fulfillment
-            </span>
+              <Clock className="w-3 h-3 group-hover:rotate-45 transition-transform duration-300" />{coreContent.text("content-8", "Active Fulfillment")}</span>
             <div className="text-2xl font-editorial font-bold text-amber-900 group-hover:scale-105 origin-left transition-transform duration-300">{stats.activeCount}</div>
-            <div className="text-[10px] text-neutral-500 font-light">Processing or out for delivery</div>
+            <div className="text-[10px] text-neutral-500 font-light">{coreContent.text("content-9", "Processing or out for delivery")}</div>
           </div>
 
           <div className="p-4 bg-white border border-neutral-200/90 rounded-none shadow-xs space-y-1 hover-lift card-interactive group">
             <span className="text-[10px] uppercase tracking-wider text-emerald-600 font-mono flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 group-hover:scale-110 transition-transform duration-300 text-emerald-600" />
-              Completed Orders
-            </span>
+              <CheckCircle2 className="w-3 h-3 group-hover:scale-110 transition-transform duration-300 text-emerald-600" />{coreContent.text("content-10", "Completed Orders")}</span>
             <div className="text-2xl font-editorial font-bold text-emerald-900 group-hover:scale-105 origin-left transition-transform duration-300">{stats.completedCount}</div>
-            <div className="text-[10px] text-neutral-500 font-light">Successfully collected / delivered</div>
+            <div className="text-[10px] text-neutral-500 font-light">{coreContent.text("content-11", "Successfully collected / delivered")}</div>
           </div>
 
           <div className="p-4 bg-white border border-neutral-200/90 rounded-none shadow-xs space-y-1 hover-lift card-interactive group">
-            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono">Total Value</span>
-            <div className="text-2xl font-editorial font-bold text-black group-hover:scale-105 origin-left transition-transform duration-300">₱{stats.totalSpent.toLocaleString()}</div>
-            <div className="text-[10px] text-neutral-500 font-light">Total checkout revenue</div>
+            <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono">{coreContent.text("content-12", "Total Value")}</span>
+            <div className="text-2xl font-editorial font-bold text-black group-hover:scale-105 origin-left transition-transform duration-300">{coreContent.text("content-13", "₱")}{stats.totalSpent.toLocaleString()}</div>
+            <div className="text-[10px] text-neutral-500 font-light">{coreContent.text("content-14", "Total checkout revenue")}</div>
           </div>
         </div>
       </div>
@@ -294,7 +288,7 @@ export default function TransactionsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search reference, item name, buyer..."
+              placeholder={coreContent("content-15", "Search reference, item name, buyer...")}
               className="w-full text-xs pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-300 focus:outline-none focus:border-black focus:bg-white transition-all font-mono"
             />
           </div>
@@ -306,7 +300,7 @@ export default function TransactionsPage() {
       {filteredOrders.length === 0 ? (
         <div className="bg-[#FAF9F5] border border-neutral-300 p-12 text-center space-y-4">
           <Receipt className="w-12 h-12 text-neutral-300 mx-auto stroke-[1]" />
-          <h3 className="font-editorial text-2xl text-black">No Transactions Found</h3>
+          <h3 className="font-editorial text-2xl text-black">{coreContent.text("content-16", "No Transactions Found")}</h3>
           <p className="text-xs text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
             {searchQuery || statusFilter !== 'All' 
               ? 'No transactions matched your search or filter settings. Try clearing the filters.' 
@@ -320,16 +314,12 @@ export default function TransactionsPage() {
                   setStatusFilter('All');
                 }}
                 className="px-5 py-2.5 border border-neutral-300 bg-white text-xs uppercase tracking-widest font-medium hover:border-black transition-colors"
-              >
-                Clear Filters
-              </button>
+              >{coreContent.text("content-17", "Clear Filters")}</button>
             )}
             <button
               onClick={() => navigateTo('shop')}
               className="px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
-            >
-              Browse Catalog
-            </button>
+            >{coreContent.text("content-18", "Browse Catalog")}</button>
           </div>
         </div>
       ) : (
@@ -359,33 +349,29 @@ export default function TransactionsPage() {
                 <div className="bg-[#FAF9F5] border-b border-neutral-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-400">Order ID:</span>
+                      <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-400">{coreContent.text("content-19", "Order ID:")}</span>
                       <span className="font-mono font-bold text-sm sm:text-base text-black px-2 py-0.5 bg-white border border-neutral-300 shadow-2xs">
                         {order.id}
                       </span>
                     </div>
 
-                    <span className="hidden sm:inline text-neutral-300">•</span>
+                    <span className="hidden sm:inline text-neutral-300">{coreContent.text("content-20", "•")}</span>
 
                     <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-light">
                       <Calendar className="w-3.5 h-3.5 text-neutral-400" />
                       <span>{formattedDate}</span>
                     </div>
 
-                    <span className="hidden sm:inline text-neutral-300">•</span>
+                    <span className="hidden sm:inline text-neutral-300">{coreContent.text("content-21", "•")}</span>
 
                     {/* Fulfillment Mode */}
                     <div className="flex items-center gap-1.5 text-xs">
                       {isPickup ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-medium">
-                          <Store className="w-3 h-3" />
-                          In-Store Pickup (Banago Counter 2)
-                        </span>
+                          <Store className="w-3 h-3" />{coreContent.text("content-22", "In-Store Pickup (Banago Counter 2)")}</span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-sky-50 text-sky-900 border border-sky-200 text-[11px] font-medium">
-                          <Truck className="w-3 h-3" />
-                          Local Courier Delivery
-                        </span>
+                          <Truck className="w-3 h-3" />{coreContent.text("content-23", "Local Courier Delivery")}</span>
                       )}
                     </div>
                   </div>
@@ -399,10 +385,10 @@ export default function TransactionsPage() {
                     <button
                       onClick={() => handleTrackOrder(order.id)}
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black text-white hover:bg-neutral-800 text-xs uppercase tracking-widest font-medium transition-all shadow-xs"
-                      title="View real-time delivery status"
+                      title={coreContent("content-24", "View real-time delivery status")}
                     >
                       <Truck className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Track Order</span>
+                      <span>{coreContent.text("content-25", "Track Order")}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -414,10 +400,8 @@ export default function TransactionsPage() {
                   {/* Left Column (2 spans): Checked Out Items Table */}
                   <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-                      <span className="text-xs uppercase tracking-[0.18em] font-semibold text-black">
-                        Checked Out Items ({items.reduce((s, it) => s + (it.quantity || 1), 0)})
-                      </span>
-                      <span className="text-[11px] text-neutral-400 font-mono">Verified Inventory</span>
+                      <span className="text-xs uppercase tracking-[0.18em] font-semibold text-black">{coreContent.text("content-26", "Checked Out Items (")}{items.reduce((s, it) => s + (it.quantity || 1), 0)}{coreContent.text("content-27", ")")}</span>
+                      <span className="text-[11px] text-neutral-400 font-mono">{coreContent.text("content-28", "Verified Inventory")}</span>
                     </div>
 
                     <div className="space-y-3">
@@ -447,19 +431,16 @@ export default function TransactionsPage() {
                                   {item.name}
                                 </h4>
                                 <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                                  {item.sku || 'SKU-INVENTORY'} • ₱{item.price?.toLocaleString()} each
-                                </div>
-                                <div className="text-[11px] text-neutral-700 font-medium mt-1">
-                                  Qty: <span className="font-mono font-bold text-black">{itemQty}</span>
+                                  {item.sku || 'SKU-INVENTORY'}{coreContent.text("content-29", " • ₱")}{item.price?.toLocaleString()}{coreContent.text("content-30", " each")}</div>
+                                <div className="text-[11px] text-neutral-700 font-medium mt-1">{coreContent.text("content-31", "Qty: ")}<span className="font-mono font-bold text-black">{itemQty}</span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="text-right shrink-0">
-                              <div className="font-mono font-bold text-sm text-black">
-                                ₱{lineTotal.toLocaleString()}
+                              <div className="font-mono font-bold text-sm text-black">{coreContent.text("content-32", "₱")}{lineTotal.toLocaleString()}
                               </div>
-                              <span className="text-[10px] text-neutral-400">Total</span>
+                              <span className="text-[10px] text-neutral-400">{coreContent.text("content-33", "Total")}</span>
                             </div>
                           </div>
                         );
@@ -475,12 +456,12 @@ export default function TransactionsPage() {
                         {isTrackerExpanded ? (
                           <>
                             <ChevronUp className="w-4 h-4" />
-                            <span>Hide Live Tracking Timeline</span>
+                            <span>{coreContent.text("content-34", "Hide Live Tracking Timeline")}</span>
                           </>
                         ) : (
                           <>
                             <ChevronDown className="w-4 h-4" />
-                            <span>View Live Order Fulfillment Status &amp; Timeline</span>
+                            <span>{coreContent.text("content-35", "View Live Order Fulfillment Status & Timeline")}</span>
                           </>
                         )}
                       </button>
@@ -490,14 +471,13 @@ export default function TransactionsPage() {
                         <div className="mt-4 p-5 bg-[#FAF9F5] border border-neutral-300 space-y-4 animate-fade-in">
                           <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
                             <span className="text-[11px] uppercase tracking-wider font-semibold text-black flex items-center gap-1.5">
-                              <Truck className="w-3.5 h-3.5 text-neutral-600" />
-                              Fulfillment Timeline • {order.id}
+                              <Truck className="w-3.5 h-3.5 text-neutral-600" />{coreContent.text("content-36", "Fulfillment Timeline • ")}{order.id}
                             </span>
                             <button
                               onClick={() => handleTrackOrder(order.id)}
                               className="text-[10px] uppercase font-mono tracking-wider text-black underline flex items-center gap-1"
                             >
-                              <span>Open Full Tracker</span>
+                              <span>{coreContent.text("content-37", "Open Full Tracker")}</span>
                               <ExternalLink className="w-3 h-3" />
                             </button>
                           </div>
@@ -534,7 +514,7 @@ export default function TransactionsPage() {
 
                           {order.statusNotes && (
                             <div className="p-2.5 bg-white border border-neutral-200 text-xs text-neutral-700 mt-2">
-                              <span className="font-semibold text-black text-[11px]">Latest Dispatch Note: </span>
+                              <span className="font-semibold text-black text-[11px]">{coreContent.text("content-38", "Latest Dispatch Note: ")}</span>
                               {order.statusNotes}
                             </div>
                           )}
@@ -549,12 +529,10 @@ export default function TransactionsPage() {
                     
                     {/* Destination & Customer Info */}
                     <div className="space-y-3">
-                      <div className="text-xs uppercase tracking-[0.18em] font-semibold text-black border-b border-neutral-200 pb-1.5">
-                        Fulfillment &amp; Destination
-                      </div>
+                      <div className="text-xs uppercase tracking-[0.18em] font-semibold text-black border-b border-neutral-200 pb-1.5">{coreContent.text("content-39", "Fulfillment & Destination")}</div>
 
                       <div className="text-xs space-y-1.5">
-                        <div className="text-neutral-400 text-[10px] uppercase font-mono">Recipient:</div>
+                        <div className="text-neutral-400 text-[10px] uppercase font-mono">{coreContent.text("content-40", "Recipient:")}</div>
                         <div className="font-semibold text-black">{customerName}</div>
                         {(customerPhone || customerEmail) && (
                           <div className="text-[11px] text-neutral-500 font-mono">
@@ -578,7 +556,7 @@ export default function TransactionsPage() {
                       </div>
 
                       <div className="text-xs space-y-1 pt-2 border-t border-neutral-200/60">
-                        <div className="text-neutral-400 text-[10px] uppercase font-mono">Payment Mode:</div>
+                        <div className="text-neutral-400 text-[10px] uppercase font-mono">{coreContent.text("content-41", "Payment Mode:")}</div>
                         <div className="font-medium text-black flex items-center gap-1.5">
                           <CreditCard className="w-3.5 h-3.5 text-neutral-500" />
                           <span>{order.paymentMethod || 'Cash on Pickup / COD'}</span>
@@ -589,30 +567,28 @@ export default function TransactionsPage() {
                     {/* Price Breakdown */}
                     <div className="border-t border-neutral-300 pt-3 space-y-1.5 text-xs">
                       <div className="flex justify-between text-neutral-600">
-                        <span>Items Subtotal:</span>
-                        <span className="font-mono">₱{(order.subtotal || order.total || 0).toLocaleString()}</span>
+                        <span>{coreContent.text("content-42", "Items Subtotal:")}</span>
+                        <span className="font-mono">{coreContent.text("content-43", "₱")}{(order.subtotal || order.total || 0).toLocaleString()}</span>
                       </div>
 
                       {order.discountAmount > 0 && (
                         <div className="flex justify-between text-emerald-700 font-medium">
                           <span className="flex items-center gap-1">
-                            <Tag className="w-3 h-3" />
-                            Discount Savings:
-                          </span>
-                          <span className="font-mono">-₱{order.discountAmount.toLocaleString()}</span>
+                            <Tag className="w-3 h-3" />{coreContent.text("content-44", "Discount Savings:")}</span>
+                          <span className="font-mono">{coreContent.text("content-45", "-₱")}{order.discountAmount.toLocaleString()}</span>
                         </div>
                       )}
 
                       <div className="flex justify-between text-neutral-600">
-                        <span>Fulfillment Fee:</span>
+                        <span>{coreContent.text("content-46", "Fulfillment Fee:")}</span>
                         <span className="font-mono">
                           {order.deliveryFee ? `₱${order.deliveryFee}` : 'Free'}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-sm font-bold text-black pt-2 border-t border-neutral-300">
-                        <span>Total Paid / Due:</span>
-                        <span className="font-mono text-base">₱{order.total?.toLocaleString()}</span>
+                        <span>{coreContent.text("content-47", "Total Paid / Due:")}</span>
+                        <span className="font-mono text-base">{coreContent.text("content-48", "₱")}{order.total?.toLocaleString()}</span>
                       </div>
                     </div>
 
@@ -623,26 +599,26 @@ export default function TransactionsPage() {
                         className="w-full py-2.5 bg-black text-white hover:bg-neutral-800 text-xs uppercase tracking-widest font-medium transition-colors flex items-center justify-center gap-2 shadow-xs"
                       >
                         <Truck className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Track This Order</span>
+                        <span>{coreContent.text("content-49", "Track This Order")}</span>
                       </button>
 
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handlePrintSlip(order)}
                           className="py-2 px-3 bg-white border border-neutral-300 hover:border-black text-[11px] uppercase tracking-wider text-neutral-700 hover:text-black font-medium transition-colors flex items-center justify-center gap-1.5"
-                          title="Print official transaction receipt"
+                          title={coreContent("content-50", "Print official transaction receipt")}
                         >
                           <Printer className="w-3.5 h-3.5" />
-                          <span>Receipt</span>
+                          <span>{coreContent.text("content-51", "Receipt")}</span>
                         </button>
 
                         <button
                           onClick={() => handleReorderItems(order)}
                           className="py-2 px-3 bg-white border border-neutral-300 hover:border-black text-[11px] uppercase tracking-wider text-neutral-700 hover:text-black font-medium transition-colors flex items-center justify-center gap-1.5"
-                          title="Reorder these items"
+                          title={coreContent("content-52", "Reorder these items")}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Reorder</span>
+                          <span>{coreContent.text("content-53", "Reorder")}</span>
                         </button>
                       </div>
                     </div>
@@ -662,22 +638,15 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-3 text-center sm:text-left">
           <ShieldCheck className="w-6 h-6 text-emerald-700 shrink-0" />
           <div>
-            <div className="font-semibold text-black uppercase tracking-wider text-[11px]">
-              Omnichannel Order Guarantee
-            </div>
-            <p className="text-[11px] text-neutral-500 font-light mt-0.5">
-              All transactions are logged in Mama Mo's real-time inventory ledger at Banago, Nagcarlan, Laguna. 
-              Present your order reference number at Counter 2 for instant collection.
-            </p>
+            <div className="font-semibold text-black uppercase tracking-wider text-[11px]">{coreContent.text("content-54", "Omnichannel Order Guarantee")}</div>
+            <p className="text-[11px] text-neutral-500 font-light mt-0.5">{coreContent.text("content-55", "All transactions are logged in Mama Mo's real-time inventory ledger at Banago, Nagcarlan, Laguna. Present your order reference number at Counter 2 for instant collection.")}</p>
           </div>
         </div>
 
         <button
           onClick={() => navigateTo('contact')}
           className="shrink-0 px-4 py-2 border border-neutral-300 hover:border-black bg-white text-xs uppercase tracking-wider transition-colors font-medium"
-        >
-          Need Assistance? Contact Us
-        </button>
+        >{coreContent.text("content-56", "Need Assistance? Contact Us")}</button>
       </div>
 
     </div>

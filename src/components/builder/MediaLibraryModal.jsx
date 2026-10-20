@@ -190,7 +190,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
                   </div>
 
                   {/* Delete button on hover */}
-                  <button
+                  {!item.isReferenced && <button
                     onClick={async (e) => {
                       e.stopPropagation();
                       if (confirm(`Delete "${item.name}" from media library?`)) {
@@ -202,7 +202,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
                     title="Delete image"
                   >
                     <Trash2 className="w-3 h-3" />
-                  </button>
+                  </button>}
                 </div>
               );
             })

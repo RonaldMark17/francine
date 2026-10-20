@@ -1,3 +1,4 @@
+import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
@@ -5,6 +6,7 @@ import { CATEGORIES } from '../data/initialData';
 import { Search, SlidersHorizontal, RotateCcw, PackageOpen, Check } from 'lucide-react';
 
 export default function ShopPage() {
+  const coreContent = useCoreContent();
   const { 
     products, 
     selectedCategory, 
@@ -72,15 +74,9 @@ export default function ShopPage() {
       
       {/* Header Banner */}
       <div className="border-b border-neutral-200 pb-8 animate-fade-down">
-        <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
-          Retail Collection
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">
-          Product Catalog
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-xl">
-          Curated everyday essentials for students, teachers, and offices. All products are in stock at our Banago, Nagcarlan store ready for immediate pickup or delivery.
-        </p>
+        <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">{coreContent.text("content-1", "Retail Collection")}</span>
+        <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">{coreContent.text("content-2", "Product Catalog")}</h1>
+        <p className="text-xs sm:text-sm text-neutral-500 font-light mt-2 max-w-xl">{coreContent.text("content-3", "Curated everyday essentials for students, teachers, and offices. All products are in stock at our Banago, Nagcarlan store ready for immediate pickup or delivery.")}</p>
       </div>
 
       {/* Category Pills Bar */}
@@ -110,7 +106,7 @@ export default function ShopPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by product name, SKU, or keyword..."
+            placeholder={coreContent("content-4", "Search by product name, SKU, or keyword...")}
             className="w-full text-xs pl-9 pr-4 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors"
           />
         </div>
@@ -122,26 +118,24 @@ export default function ShopPage() {
             onChange={(e) => setSortBy(e.target.value)}
             className="w-full text-xs px-3 py-2.5 bg-white border border-neutral-300 focus:outline-none focus:border-black transition-colors cursor-pointer"
           >
-            <option value="featured">Sort: Featured &amp; Best Sellers</option>
-            <option value="price-asc">Sort: Price (Low to High)</option>
-            <option value="price-desc">Sort: Price (High to Low)</option>
-            <option value="name">Sort: Product Name (A to Z)</option>
-            <option value="rating">Sort: Highest Rated</option>
+            <option value="featured">{coreContent.text("content-5", "Sort: Featured & Best Sellers")}</option>
+            <option value="price-asc">{coreContent.text("content-6", "Sort: Price (Low to High)")}</option>
+            <option value="price-desc">{coreContent.text("content-7", "Sort: Price (High to Low)")}</option>
+            <option value="name">{coreContent.text("content-8", "Sort: Product Name (A to Z)")}</option>
+            <option value="rating">{coreContent.text("content-9", "Sort: Highest Rated")}</option>
           </select>
         </div>
 
         {/* Reset Filter Action */}
         <div className="flex items-center justify-between md:justify-end gap-3">
-          <span className="text-xs text-neutral-500 font-light">
-            Showing <strong className="text-black font-semibold">{filteredProducts.length}</strong> items
-          </span>
+          <span className="text-xs text-neutral-500 font-light">{coreContent.text("content-10", "Showing ")}<strong className="text-black font-semibold">{filteredProducts.length}</strong>{coreContent.text("content-11", " items")}</span>
           <button
             onClick={handleResetFilters}
             className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-neutral-600 hover:text-black transition-all hover:scale-105 active:scale-95"
-            title="Reset all filters"
+            title={coreContent("content-12", "Reset all filters")}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset</span>
+            <span>{coreContent.text("content-13", "Reset")}</span>
           </button>
         </div>
 
@@ -152,7 +146,7 @@ export default function ShopPage() {
         
         {/* Price Slider */}
         <div className="flex items-center gap-3">
-          <span className="text-neutral-500">Max Price:</span>
+          <span className="text-neutral-500">{coreContent.text("content-14", "Max Price:")}</span>
           <input
             type="range"
             min="100"
@@ -162,7 +156,7 @@ export default function ShopPage() {
             onChange={(e) => setPriceMax(Number(e.target.value))}
             className="w-32 sm:w-48 accent-black cursor-pointer"
           />
-          <span className="font-mono font-medium text-black">₱{priceMax.toLocaleString()}</span>
+          <span className="font-mono font-medium text-black">{coreContent.text("content-15", "₱")}{priceMax.toLocaleString()}</span>
         </div>
 
         {/* Checkbox Toggles */}
@@ -174,7 +168,7 @@ export default function ShopPage() {
               onChange={(e) => setInStockOnly(e.target.checked)}
               className="accent-black w-3.5 h-3.5 cursor-pointer"
             />
-            <span className="text-neutral-700">In Stock Only</span>
+            <span className="text-neutral-700">{coreContent.text("content-16", "In Stock Only")}</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer select-none hover:text-black transition-colors">
@@ -184,7 +178,7 @@ export default function ShopPage() {
               onChange={(e) => setDiscountOnly(e.target.checked)}
               className="accent-black w-3.5 h-3.5 cursor-pointer"
             />
-            <span className="text-neutral-700">Special Discounts Only</span>
+            <span className="text-neutral-700">{coreContent.text("content-17", "Special Discounts Only")}</span>
           </label>
         </div>
 
@@ -203,16 +197,12 @@ export default function ShopPage() {
       ) : (
         <div className="text-center py-20 bg-[#FAF9F5] border border-neutral-200 p-8 space-y-4 animate-pop-in">
           <PackageOpen className="w-12 h-12 text-neutral-400 stroke-[1] mx-auto animate-float" />
-          <h3 className="font-editorial text-xl text-black">No matching products found</h3>
-          <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">
-            We could not find any items matching your selected filters. Try clearing your search term or broadening the price range.
-          </p>
+          <h3 className="font-editorial text-xl text-black">{coreContent.text("content-18", "No matching products found")}</h3>
+          <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">{coreContent.text("content-19", "We could not find any items matching your selected filters. Try clearing your search term or broadening the price range.")}</p>
           <button
             onClick={handleResetFilters}
             className="px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-all hover:scale-105 active:scale-95 shadow-xs"
-          >
-            Reset All Filters
-          </button>
+          >{coreContent.text("content-20", "Reset All Filters")}</button>
         </div>
       )}
 

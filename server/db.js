@@ -152,6 +152,7 @@ export function initDatabase(initialData = {}) {
   try {
     db.exec(`ALTER TABLE promotions ADD COLUMN usageLimit INTEGER`);
   } catch { /* column already exists */ }
+
   try {
     db.exec(`ALTER TABLE promotions ADD COLUMN usage_limit INTEGER`);
   } catch { /* column already exists */ }
@@ -195,6 +196,10 @@ export function initDatabase(initialData = {}) {
   try {
     db.exec(`ALTER TABLE custom_pages ADD COLUMN systemRoute TEXT`);
   } catch { /* column already exists */ }
+
+  if (!db.prepare('PRAGMA table_info(custom_pages)').all().some(column => column.name === 'nativeContent')) {
+    db.exec(`ALTER TABLE custom_pages ADD COLUMN nativeContent TEXT DEFAULT '{}'`);
+  }
 
   // 9. Navigation Config Table
   db.exec(`
@@ -835,7 +840,8 @@ export function getAllData() {
     ...p,
     showInNav: Boolean(p.showInNav),
     showInFooter: Boolean(p.showInFooter),
-    components: p.components ? JSON.parse(p.components) : []
+    components: p.components ? JSON.parse(p.components) : [],
+    nativeContent: p.nativeContent ? JSON.parse(p.nativeContent) : {}
   }));
 
   const navRows = db.prepare('SELECT * FROM navigation_config').all();
@@ -1441,8 +1447,8 @@ export function togglePromotionInDb(id) {
 
 export function saveCustomPageToDb(page) {
   db.prepare(`
-    INSERT OR REPLACE INTO custom_pages (id, title, slug, description, status, author, createdAt, updatedAt, publishedAt, showInNav, showInFooter, components, systemRoute)
-    VALUES (@id, @title, @slug, @description, @status, @author, @createdAt, @updatedAt, @publishedAt, @showInNav, @showInFooter, @components, @systemRoute)
+    INSERT OR REPLACE INTO custom_pages (id, title, slug, description, status, author, createdAt, updatedAt, publishedAt, showInNav, showInFooter, components, systemRoute, nativeContent)
+    VALUES (@id, @title, @slug, @description, @status, @author, @createdAt, @updatedAt, @publishedAt, @showInNav, @showInFooter, @components, @systemRoute, @nativeContent)
   `).run({
     id: page.id || `page-${Date.now()}`,
     title: page.title,
@@ -1456,7 +1462,8 @@ export function saveCustomPageToDb(page) {
     showInNav: page.showInNav !== false ? 1 : 0,
     showInFooter: page.showInFooter !== false ? 1 : 0,
     components: JSON.stringify(page.components || []),
-    systemRoute: page.systemRoute || null
+    systemRoute: page.systemRoute || null,
+    nativeContent: JSON.stringify(page.nativeContent || {})
   });
 }
 

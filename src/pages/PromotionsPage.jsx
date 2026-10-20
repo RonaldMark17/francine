@@ -1,9 +1,11 @@
+import { useCoreContent } from '../components/builder/CoreContentContext';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 import { Tag, Sparkles, Copy, Check, AlertCircle, ArrowRight, Gift } from 'lucide-react';
 
 export default function PromotionsPage() {
+  const coreContent = useCoreContent();
   const { 
     products, 
     promotions, 
@@ -33,15 +35,9 @@ export default function PromotionsPage() {
       
       {/* Header */}
       <div className="border-b border-neutral-200 pb-8 animate-fade-down">
-        <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">
-          Balik-Eskwela &amp; Academic Bundles
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">
-          Promotions &amp; Student Perks
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-xl leading-relaxed">
-          Seasonal discounts, bundle corners, and educator perks for in-demand periods like Balik-Eskwela, enrollment, research, and examinations at Plaridel Elementary, PINHS, and Banago, Nagcarlan.
-        </p>
+        <span className="text-[11px] uppercase tracking-[0.25em] text-[#0A1A3A] font-semibold">{coreContent.text("content-1", "Balik-Eskwela & Academic Bundles")}</span>
+        <h1 className="text-3xl sm:text-4xl font-light font-editorial text-black tracking-wide mt-1 uppercase">{coreContent.text("content-2", "Promotions & Student Perks")}</h1>
+        <p className="text-xs sm:text-sm text-neutral-600 font-light mt-2 max-w-xl leading-relaxed">{coreContent.text("content-3", "Seasonal discounts, bundle corners, and educator perks for in-demand periods like Balik-Eskwela, enrollment, research, and examinations at Plaridel Elementary, PINHS, and Banago, Nagcarlan.")}</p>
       </div>
 
       {/* Promotional Cards Banner Grid */}
@@ -70,8 +66,7 @@ export default function PromotionsPage() {
                 {promo.tagline}
               </p>
 
-              <div className="pt-2 text-[11px] text-neutral-500 font-light border-t border-neutral-200">
-                Condition: {promo.condition}
+              <div className="pt-2 text-[11px] text-neutral-500 font-light border-t border-neutral-200">{coreContent.text("content-4", "Condition: ")}{promo.condition}
               </div>
             </div>
 
@@ -79,7 +74,7 @@ export default function PromotionsPage() {
             <div className="pt-2">
               <div className="flex items-center justify-between bg-white border border-neutral-300 p-2.5 group-hover:border-neutral-400 transition-colors">
                 <div>
-                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 block">Code:</span>
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 block">{coreContent.text("content-5", "Code:")}</span>
                   <span className="font-mono font-bold text-xs text-black tracking-widest">
                     {promo.code}
                   </span>
@@ -91,18 +86,17 @@ export default function PromotionsPage() {
                   {copiedCode === promo.code ? (
                     <span className="flex items-center gap-1.5 animate-pop-in">
                       <Check className="w-3 h-3 text-emerald-400" />
-                      <span>Applied</span>
+                      <span>{coreContent.text("content-6", "Applied")}</span>
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5">
                       <Copy className="w-3 h-3" />
-                      <span>Apply Code</span>
+                      <span>{coreContent.text("content-7", "Apply Code")}</span>
                     </span>
                   )}
                 </button>
               </div>
-              <div className="text-[10px] text-neutral-400 mt-1.5 text-right font-light">
-                Valid until {promo.validUntil}
+              <div className="text-[10px] text-neutral-400 mt-1.5 text-right font-light">{coreContent.text("content-8", "Valid until ")}{promo.validUntil}
               </div>
             </div>
           </div>
@@ -113,16 +107,11 @@ export default function PromotionsPage() {
       <div className="space-y-8 animate-fade-up delay-200">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200 pb-4">
           <div>
-            <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">
-              Live Discounts
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-wide mt-1">
-              Discounted Inventory Items
-            </h2>
+            <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400 font-medium">{coreContent.text("content-9", "Live Discounts")}</span>
+            <h2 className="text-2xl sm:text-3xl font-light font-editorial text-black tracking-wide mt-1">{coreContent.text("content-10", "Discounted Inventory Items")}</h2>
           </div>
           <span className="text-xs text-neutral-500 font-light mt-2 md:mt-0">
-            {discountedProducts.length} discounted products available today
-          </span>
+            {discountedProducts.length}{coreContent.text("content-11", " discounted products available today")}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -137,22 +126,16 @@ export default function PromotionsPage() {
         <div className="max-w-3xl space-y-4">
           <div className="flex items-center gap-2 text-amber-300">
             <Gift className="w-5 h-5 animate-float" />
-            <span className="text-[10px] uppercase tracking-[0.25em] font-medium">
-              Academic Loyalty Advantage
-            </span>
+            <span className="text-[10px] uppercase tracking-[0.25em] font-medium">{coreContent.text("content-12", "Academic Loyalty Advantage")}</span>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-light font-editorial tracking-wide uppercase">
-            Are You a Teacher or Department Head?
-          </h3>
-          <p className="text-xs sm:text-sm text-neutral-300 font-light leading-relaxed">
-            Mama Mo offers institutional invoicing, bulk classroom delivery, and 30-day corporate terms for recognized schools, colleges, and student organizations.
-          </p>
+          <h3 className="text-2xl sm:text-3xl font-light font-editorial tracking-wide uppercase">{coreContent.text("content-13", "Are You a Teacher or Department Head?")}</h3>
+          <p className="text-xs sm:text-sm text-neutral-300 font-light leading-relaxed">{coreContent.text("content-14", "Mama Mo offers institutional invoicing, bulk classroom delivery, and 30-day corporate terms for recognized schools, colleges, and student organizations.")}</p>
           <div className="pt-2">
             <button
               onClick={() => navigateTo('contact')}
               className="px-6 py-3 bg-white text-black text-xs uppercase tracking-widest font-medium hover:bg-neutral-200 hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2 shadow-sm"
             >
-              <span>Inquire for Institutional Pricing</span>
+              <span>{coreContent.text("content-15", "Inquire for Institutional Pricing")}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

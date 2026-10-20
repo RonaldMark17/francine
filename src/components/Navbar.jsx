@@ -38,6 +38,27 @@ export default function Navbar({ previewTab } = {}) {
   const desktopNavRef = useRef(null);
   const navMeasurementRef = useRef(null);
   const moreMenuRef = useRef(null);
+  const searchPanelRef = useRef(null);
+
+  useEffect(() => {
+    setShowSearchInput(false);
+  }, [activeTab, activeCustomPageSlug]);
+
+  useEffect(() => {
+    if (!showSearchInput) return;
+    const dismissOutside = (event) => {
+      if (!searchPanelRef.current?.contains(event.target)) setShowSearchInput(false);
+    };
+    const dismissOnEscape = (event) => {
+      if (event.key === 'Escape') setShowSearchInput(false);
+    };
+    document.addEventListener('pointerdown', dismissOutside);
+    document.addEventListener('keydown', dismissOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', dismissOutside);
+      document.removeEventListener('keydown', dismissOnEscape);
+    };
+  }, [showSearchInput]);
 
   useEffect(() => {
     if (cartCount > 0) {
@@ -334,25 +355,22 @@ export default function Navbar({ previewTab } = {}) {
           <div className="ml-auto shrink-0 flex items-center space-x-1 sm:space-x-4 pl-1 sm:pl-4">
             
             {/* Search Toggle / Floating Overlay */}
-            <div className="relative">
+            <div ref={searchPanelRef} className="relative">
               <button
                 onClick={() => setShowSearchInput(!showSearchInput)}
                 className="p-2 text-neutral-700 hover:text-black transition-colors"
                 title="Search inventory"
                 aria-label="Search"
+                aria-expanded={showSearchInput}
+                aria-controls="inventory-search-panel"
               >
                 {showSearchInput ? <X className="w-5 h-5 stroke-[1.5]" /> : <Search className="w-5 h-5 stroke-[1.5]" />}
               </button>
 
               {showSearchInput && (
                 <>
-                  {/* Backdrop */}
-                  <div 
-                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs animate-fade-in" 
-                    onClick={() => setShowSearchInput(false)} 
-                  />
                   {/* Floating search panel */}
-                  <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-18 sm:top-full sm:mt-3 z-50 sm:w-96 bg-white/98 backdrop-blur-md border border-neutral-800 shadow-2xl p-2 animate-pop-in">
+                  <div id="inventory-search-panel" className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-full mt-3 z-50 sm:w-96 rounded-xl bg-white border border-neutral-200 shadow-xl p-3 animate-pop-in">
                     <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                       <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
@@ -361,7 +379,8 @@ export default function Navbar({ previewTab } = {}) {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search papers, pens, ink, supplies..."
                         autoFocus
-                        className="w-full text-xs pl-9 pr-16 py-2.5 bg-neutral-50 border border-neutral-200 focus:bg-white focus:outline-none focus:border-black font-sans transition-all"
+                        aria-label="Search store inventory"
+                        className="w-full text-xs pl-9 pr-24 py-3 rounded-lg bg-neutral-50 border border-neutral-200 focus:bg-white focus:outline-none focus:border-black font-sans transition-all"
                       />
                       <button
                         type="submit"

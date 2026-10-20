@@ -512,13 +512,22 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <button 
               onClick={() => navigateTo('home')}
-              className="text-left group focus:outline-none"
+              className="flex min-w-0 items-center gap-3 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 rounded-lg"
             >
+              <img
+                src="/images/mama_mo_logo.jpg"
+                alt="Mama Mo Ink Print & Supplies"
+                width={44}
+                height={44}
+                className="h-11 w-11 shrink-0 rounded-full object-cover border border-neutral-700"
+              />
+              <div>
               <div className="text-xl font-light font-editorial tracking-[0.22em] text-white uppercase group-hover:text-amber-300 transition-colors">
                 MAMA MO
               </div>
               <div className="text-[9px] uppercase tracking-[0.3em] text-neutral-400 font-sans mt-0.5">
                 ADMIN CONSOLE
+              </div>
               </div>
             </button>
             <button 
