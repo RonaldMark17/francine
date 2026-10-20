@@ -16,18 +16,38 @@ import {
 
 export default function ContactPage() {
   const coreContent = useCoreContent();
-  const { storeInfo, showToast } = useApp();
+  const { storeInfo, showToast, submitServiceInquiry } = useApp();
 
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactSubject, setContactSubject] = useState('Bulk Order Inquiry');
   const [contactMessage, setContactMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    showToast('Your message has been sent to our customer desk!', 'success');
+    if (isSubmitting) return;
+    if (!contactName.trim() || !contactMessage.trim()) {
+      showToast('Please enter your name and message.', 'error');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await submitServiceInquiry({
+        clientName: contactName.trim(),
+        clientEmail: contactEmail.trim(),
+        serviceType: contactSubject,
+        notes: contactMessage.trim(),
+        paperType: 'Contact inquiry',
+      });
+      setSubmitted(true);
+      setContactMessage('');
+    } catch {
+      showToast('Unable to send your inquiry. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const faqs = coreContent.collection(CORE_COLLECTIONS['/contact'][0]);
@@ -211,10 +231,11 @@ export default function ContactPage() {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full py-3.5 bg-black text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-neutral-800 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 shadow-xs"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>{coreContent.text("content-38", "Submit Inquiry")}</span>
+                <span>{isSubmitting ? 'Sending?' : coreContent.text("content-38", "Submit Inquiry")}</span>
               </button>
             </form>
           )}

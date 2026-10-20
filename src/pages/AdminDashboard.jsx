@@ -274,7 +274,7 @@ export default function AdminDashboard() {
     { id: 'inventory', label: 'Inventory & Stock Ledger', icon: Package, count: products.length },
     { id: 'pages', label: 'Dynamic Pages & CMS', icon: Layout, count: customPages.filter(page => !page.systemRoute).length },
     { id: 'promotions', label: 'Discounts & Promos', icon: Tag, count: promotionsList.length },
-    { id: 'inquiries', label: 'Print Requests', icon: Printer, count: serviceInquiries.length },
+    { id: 'inquiries', label: 'Inquiries', icon: Printer, count: serviceInquiries.length },
     { id: 'analytics', label: 'Financial Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Store Settings', icon: Settings }
   ];
@@ -1530,10 +1530,10 @@ export default function AdminDashboard() {
               
               <div className="bg-white p-5 rounded-xl border border-neutral-200/90 shadow-xs">
                 <h3 className="text-base font-light font-editorial uppercase tracking-[0.16em] text-black font-semibold">
-                  Printing & Thesis Quotation Submissions
+                  Customer Inquiries & Print Requests
                 </h3>
                 <p className="text-xs text-neutral-500 font-light mt-0.5">
-                  Client submissions from the website printing estimator tool.
+                  Contact messages and printing requests. Refreshes automatically every 10 seconds.
                 </p>
               </div>
 
@@ -1570,6 +1570,7 @@ export default function AdminDashboard() {
                           <td className="py-4 px-4">
                             <div className="font-medium text-neutral-800">{inq.pageCount} pages • {inq.paperType}</div>
                             <div className="text-[10px] text-neutral-500 mt-0.5">{inq.bindingDetails}</div>
+                            {inq.notes && <p className="mt-2 text-xs text-neutral-700 whitespace-pre-wrap break-words">{inq.notes}</p>}
                           </td>
                           <td className="py-4 px-4 font-mono font-bold text-black text-sm whitespace-nowrap">
                             ₱{inq.estimatedCost?.toLocaleString()}

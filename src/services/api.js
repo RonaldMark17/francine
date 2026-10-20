@@ -150,6 +150,10 @@ export const sqliteApi = {
   },
 
   // Service Inquiries
+  async getInquiries() {
+    return await fetchJson(`${API_BASE}/inquiries`);
+  },
+
   async createInquiry(inquiry) {
     return await fetchJson(`${API_BASE}/inquiries`, {
       method: 'POST',

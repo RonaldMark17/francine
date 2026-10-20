@@ -241,7 +241,7 @@ export function AppProvider({ children }) {
         if (Array.isArray(data.orders) && data.orders.length > 0) {
           setOrders(data.orders);
         }
-        if (Array.isArray(data.serviceInquiries) && data.serviceInquiries.length > 0) {
+        if (Array.isArray(data.serviceInquiries)) {
           setServiceInquiries(data.serviceInquiries);
         }
         if (Array.isArray(data.promotionsList)) {
@@ -267,6 +267,28 @@ export function AppProvider({ children }) {
     loadSqliteDatabase();
     return () => { isMounted = false; };
   }, []);
+
+  // Keep the admin inbox current across customer browsers and devices.
+  useEffect(() => {
+    if (currentUser?.role !== 'admin') return;
+    let cancelled = false;
+    const refreshInquiries = async () => {
+      try {
+        const inquiries = await sqliteApi.getInquiries();
+        if (!cancelled) setServiceInquiries(inquiries);
+      } catch (err) {
+        console.warn('Inquiry refresh:', err.message);
+      }
+    };
+    refreshInquiries();
+    const timer = window.setInterval(refreshInquiries, 10000);
+    window.addEventListener('focus', refreshInquiries);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refreshInquiries);
+    };
+  }, [currentUser?.role]);
 
   // Sync to localStorage
   useEffect(() => {
@@ -831,17 +853,17 @@ export function AppProvider({ children }) {
   };
 
   // Printing Inquiries
-  const submitServiceInquiry = (inquiryData) => {
-    const newInquiryId = `SRV-INQ-${Math.floor(100 + Math.random() * 900)}`;
+  const submitServiceInquiry = async (inquiryData) => {
+    const newInquiryId = `INQ-${crypto.randomUUID()}`;
     const newInq = {
       id: newInquiryId,
       date: new Date().toISOString(),
       status: 'In Review',
       ...inquiryData
     };
-    setServiceInquiries(prev => [newInq, ...prev]);
-    sqliteApi.createInquiry(newInq).catch(err => console.warn('SQLite inquiry save:', err.message));
-    showToast('Printing request submitted! Our production desk will review your specifications.', 'success');
+    await sqliteApi.createInquiry(newInq);
+    setServiceInquiries(prev => [newInq, ...prev.filter(inq => inq.id !== newInq.id)]);
+    showToast('Inquiry submitted! Our team will review your request.', 'success');
     return newInq;
   };
 

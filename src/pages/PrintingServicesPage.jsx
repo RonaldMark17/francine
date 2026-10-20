@@ -98,7 +98,7 @@ export default function PrintingServicesPage() {
     showToast(`Attached "${file.name}"`, 'info');
   };
 
-  const handleSubmitInquiry = (e) => {
+  const handleSubmitInquiry = async (e) => {
     e.preventDefault();
     if (!clientName.trim() || !clientPhone.trim()) {
       showToast('Please enter your name and phone number', 'error');
@@ -125,8 +125,12 @@ export default function PrintingServicesPage() {
       notes: specialInstructions
     };
 
-    const newInq = submitServiceInquiry(inquiryPayload);
-    setSubmittedInquiry(newInq);
+    try {
+      const newInq = await submitServiceInquiry(inquiryPayload);
+      setSubmittedInquiry(newInq);
+    } catch {
+      showToast('Unable to send your inquiry. Please try again.', 'error');
+    }
   };
 
   return (

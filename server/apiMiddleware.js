@@ -245,6 +245,10 @@ export function sqliteApiMiddleware() {
       }
 
       // 9. Printing Service Inquiries
+      if (pathname === '/api/inquiries' && req.method === 'GET') {
+        return sendJson(res, 200, getAllData().serviceInquiries);
+      }
+
       if (pathname === '/api/inquiries' && req.method === 'POST') {
         const body = await parseBody(req);
         saveInquiryToDb(body);
