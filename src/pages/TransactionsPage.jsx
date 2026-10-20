@@ -67,7 +67,7 @@ export default function TransactionsPage() {
     const baseSteps = isPickup 
       ? [
           { key: 'Order Placed', label: 'Order Placed', desc: 'Received at Banago store system' },
-          { key: 'Processing', label: 'Processing', desc: 'Items packed at Counter 2' },
+          { key: 'Processing', label: order?.items?.some(item => item.sku === 'PRINT-SERVICE') ? 'Printing' : 'Processing', desc: order?.items?.some(item => item.sku === 'PRINT-SERVICE') ? 'Print request in production' : 'Items packed at Counter 2' },
           { key: 'Ready for Pickup', label: 'Ready for Pickup', desc: 'Awaiting customer collection' },
           { key: 'Completed', label: 'Completed', desc: 'Collected & signed for' }
         ]

@@ -556,7 +556,7 @@ export const CORE_CONTENT_FIELDS = {
     {
       "id": "content-17",
       "kind": "text",
-      "defaultValue": "1. Project Specifications"
+      "defaultValue": "01 Project Specifications"
     },
     {
       "id": "content-18",
@@ -711,7 +711,7 @@ export const CORE_CONTENT_FIELDS = {
     {
       "id": "content-48",
       "kind": "text",
-      "defaultValue": "2. Customer & File Details"
+      "defaultValue": "02 Customer & File Details"
     },
     {
       "id": "content-49",

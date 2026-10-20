@@ -1,5 +1,6 @@
 import ModalOverlay from '../components/ModalOverlay';
 import Pagination from '../components/Pagination';
+import StoreSettingsExtras from '../components/StoreSettingsExtras';
 import { isPromotionExpired, storeDate } from '../utils/promotionDates';
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -248,6 +249,8 @@ export default function AdminDashboard() {
   // Order filters
   const [orderFilterStatus, setOrderFilterStatus] = useState('All');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersPageSize, setOrdersPageSize] = useState(10);
   const [selectedOrderPreview, setSelectedOrderPreview] = useState(null);
 
   // Status options for orders
@@ -473,6 +476,8 @@ export default function AdminDashboard() {
       (o.name || o.customer?.name || '').toLowerCase().includes(orderSearchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+  const currentOrdersPage = Math.min(ordersPage, Math.max(1, Math.ceil(filteredOrders.length / ordersPageSize)));
+  const pagedOrders = filteredOrders.slice((currentOrdersPage - 1) * ordersPageSize, currentOrdersPage * ordersPageSize);
 
   // Filtered products for inventory
   const filteredProducts = products.filter(p => {
@@ -786,7 +791,7 @@ export default function AdminDashboard() {
                     <button
                       key={st}
                       aria-pressed={orderFilterStatus === st}
-                      onClick={() => setOrderFilterStatus(st)}
+                      onClick={() => { setOrderFilterStatus(st); setOrdersPage(1); }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                         orderFilterStatus === st 
                           ? 'bg-neutral-900 text-white shadow-xs' 
@@ -807,7 +812,7 @@ export default function AdminDashboard() {
                       aria-label="Search orders by order ID or customer"
                       placeholder="Search order ID or client..."
                       value={orderSearchQuery}
-                      onChange={(e) => setOrderSearchQuery(e.target.value)}
+                      onChange={(e) => { setOrderSearchQuery(e.target.value); setOrdersPage(1); }}
                       className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50/50 text-xs focus:outline-none focus:border-black focus:bg-white transition-all"
                     />
                   </div>
@@ -848,7 +853,7 @@ export default function AdminDashboard() {
                           </td>
                         </tr>
                       ) : (
-                        filteredOrders.map((order) => {
+                        pagedOrders.map((order) => {
                           const customerName = order.name || order.customer?.name || 'Walk-in Customer';
                           const initials = customerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
                           const isPickup = order.fulfillment === 'pickup';
@@ -932,6 +937,15 @@ export default function AdminDashboard() {
                       )}
                     </tbody>
                   </table>
+                </div>
+                <div className="border-t border-neutral-100">
+                  <Pagination
+                    total={filteredOrders.length}
+                    page={currentOrdersPage}
+                    pageSize={ordersPageSize}
+                    onPageChange={setOrdersPage}
+                    onPageSizeChange={(size) => { setOrdersPageSize(size); setOrdersPage(1); }}
+                  />
                 </div>
               </div>
 
@@ -1502,7 +1516,7 @@ export default function AdminDashboard() {
                   Customer Inquiries
                 </h3>
                 <p className="text-xs text-neutral-500 font-light mt-0.5">
-                  Contact messages. Print requests appear in Transactions. Refreshes automatically every 10 seconds.
+                  Review customer messages and track follow-ups. Print requests are managed in Transactions.
                 </p>
               </div>
 
@@ -1513,13 +1527,16 @@ export default function AdminDashboard() {
                       <tr className="bg-[#FAF9F5] border-b border-neutral-200 text-[10px] uppercase tracking-wider text-neutral-500 font-mono">
                         <th className="py-3.5 px-4">Inquiry ID</th>
                         <th className="py-3.5 px-4">Client Contact</th>
-                        <th className="py-3.5 px-4">Service Type</th>
-                        <th className="py-3.5 px-4">Specifications</th>
-                        <th className="py-3.5 px-4">Estimated Total</th>
+                        <th className="py-3.5 px-4">Subject</th>
+                        <th className="py-3.5 px-4">Message</th>
+                        <th className="py-3.5 px-4 text-right">Estimated Cost</th>
                         <th className="py-3.5 px-4">Status & Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100">
+                      {serviceInquiries.length === 0 && (
+                        <tr><td colSpan={6} className="px-6 py-12 text-center text-neutral-500">No customer inquiries yet.</td></tr>
+                      )}
                       {serviceInquiries.map((inq) => (
                         <tr key={inq.id} className="hover:bg-neutral-50/70 transition-colors">
                           <td className="py-4 px-4 font-mono font-bold text-black whitespace-nowrap">
@@ -1537,19 +1554,17 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <div className="font-medium text-neutral-800">{inq.pageCount} pages • {inq.paperType}</div>
-                            <div className="text-[10px] text-neutral-500 mt-0.5">{inq.bindingDetails}</div>
-                            {inq.notes && <p className="mt-2 text-xs text-neutral-700 whitespace-pre-wrap break-words">{inq.notes}</p>}
+                            <p className="min-w-48 max-w-md text-xs leading-relaxed text-neutral-700 whitespace-pre-wrap break-words">{inq.notes || 'No message provided.'}</p>
                           </td>
-                          <td className="py-4 px-4 font-mono font-bold text-black text-sm whitespace-nowrap">
+                          <td className="py-4 px-4 font-mono font-bold text-black text-sm whitespace-nowrap text-right">
                             ₱{inq.estimatedCost?.toLocaleString()}
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 min-w-[150px]">
                             <select
                               aria-label={`Status for inquiry from ${inq.clientName}`}
                               value={['In Review', 'Responded', 'Closed'].includes(inq.status) ? inq.status : inq.status === 'Completed' ? 'Closed' : 'In Review'}
                               onChange={(e) => updateInquiryStatus(inq.id, e.target.value)}
-                              className="text-xs px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white font-medium focus:outline-none focus:border-black cursor-pointer shadow-2xs"
+                              className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white font-medium focus:outline-none focus:border-black focus:ring-1 focus:ring-black cursor-pointer shadow-2xs"
                             >
                               <option value="In Review">In Review</option>
                               <option value="Responded">Responded</option>
@@ -1571,103 +1586,73 @@ export default function AdminDashboard() {
           {/* ========================================================= */}
           {activeAdminTab === 'analytics' && (
             <div className="space-y-6">
-              
-              <div className="bg-white p-5 rounded-xl border border-neutral-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-light font-editorial uppercase tracking-[0.16em] text-black font-semibold">
-                    Financial Analytics & Omnichannel Breakdown
-                  </h3>
-                  <p className="text-xs text-neutral-500 font-light mt-0.5">
-                    Real-time transaction volume and revenue recognized from verified orders.
-                  </p>
-                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {[
+                  { label: 'Total order revenue', value: totalRevenue, description: `Across ${orders.length} store orders`, icon: DollarSign },
+                  { label: 'Average order value', value: avgOrderValue, description: 'Average spend per checkout', icon: ShoppingBag },
+                  { label: 'Inventory retail value', value: totalInventoryValuation, description: `Across ${products.length} catalog items`, icon: Package },
+                ].map(({ label, value, description, icon: Icon }) => (
+                  <div key={label} className="min-w-0 rounded-xl border border-neutral-200/90 bg-white p-5 shadow-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700"><Icon className="h-4 w-4" /></span>
+                    </div>
+                    <div className="mt-4 flex items-baseline gap-1 font-sans tabular-nums tracking-tight text-neutral-900">
+                      <span className="text-xl font-normal text-neutral-500">&#8369;</span>
+                      <span className="text-3xl font-medium">{value.toLocaleString()}</span>
+                    </div>
+                    <p className="mt-5 border-t border-neutral-100 pt-4 text-xs text-neutral-500">{description}</p>
+                  </div>
+                ))}
+              </div>
 
-                <button
-                  onClick={handleExportOrdersCSV}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-neutral-200 bg-white hover:border-black text-xs uppercase tracking-wider font-medium shadow-xs transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export Financial CSV</span>
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-neutral-200/90 bg-white p-4 shadow-xs">
+                <p className="text-xs text-neutral-500">Sales, inventory and fulfillment across {orders.length} store orders</p>
+                <button onClick={handleExportOrdersCSV} className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-xs font-medium uppercase tracking-wide text-neutral-900 shadow-xs transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900">
+                  <Download className="h-3.5 w-3.5 text-neutral-500" /> Export financial CSV
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-white rounded-xl border border-neutral-200/90 shadow-xs space-y-3">
-                  <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400">Total Recognized Revenue</span>
-                  <div className="text-3xl font-light font-editorial text-black tracking-tight">
-                    ₱{totalRevenue.toLocaleString()}
+              <section aria-labelledby="fulfillment-heading" className="overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-5 sm:px-6">
+                  <div>
+                    <h4 id="fulfillment-heading" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Fulfillment channels</h4>
+                    <p className="mt-1 text-xs text-neutral-500">How customers receive their orders</p>
                   </div>
-                  <p className="text-xs text-neutral-500 font-light">
-                    Cumulative sales across {orders.length} completed and pending orders.
-                  </p>
+                  <span className="rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-neutral-600">{orders.length} total orders</span>
                 </div>
-
-                <div className="p-6 bg-white rounded-xl border border-neutral-200/90 shadow-xs space-y-3">
-                  <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400">Average Order Value (AOV)</span>
-                  <div className="text-3xl font-light font-editorial text-black tracking-tight">
-                    ₱{avgOrderValue.toLocaleString()}
+                <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_2fr] lg:gap-10">
+                  <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-5">
+                    <p className="text-xs font-medium text-neutral-500">Order distribution</p>
+                    <div className="mt-3 text-3xl font-medium tabular-nums tracking-tight">{orders.length}<span className="ml-2 text-sm font-normal tracking-normal text-neutral-500">orders</span></div>
+                    <div className="mt-5 flex h-3 overflow-hidden rounded-full bg-neutral-200" role="img" aria-label={`${pickupOrdersCount} pickup orders and ${deliveryOrdersCount} delivery orders out of ${orders.length} total orders`}>
+                      <div className="h-full bg-amber-500" style={{ width: `${orders.length ? pickupOrdersCount / orders.length * 100 : 0}%` }} />
+                      <div className="h-full bg-sky-600" style={{ width: `${orders.length ? deliveryOrdersCount / orders.length * 100 : 0}%` }} />
+                    </div>
+                    <p className="mt-4 text-xs leading-relaxed text-neutral-500">{orders.length ? 'Pickup and delivery share of all orders.' : 'Channel data will appear when orders arrive.'}</p>
                   </div>
-                  <p className="text-xs text-neutral-500 font-light">
-                    Average basket size per customer checkout.
-                  </p>
-                </div>
-
-                <div className="p-6 bg-white rounded-xl border border-neutral-200/90 shadow-xs space-y-3">
-                  <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400">Catalog Inventory Value</span>
-                  <div className="text-3xl font-light font-editorial text-black tracking-tight">
-                    ₱{totalInventoryValuation.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-neutral-500 font-light">
-                    Total retail value across {products.length} catalog items.
-                  </p>
-                </div>
-              </div>
-
-              {/* Channel Distribution */}
-              <div className="p-6 bg-white rounded-xl border border-neutral-200/90 shadow-xs space-y-5">
-                <h4 className="text-xs uppercase tracking-[0.2em] font-semibold text-neutral-500">
-                  Fulfillment Channel Distribution
-                </h4>
-
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="flex items-center gap-1.5 text-black">
-                        <Store className="w-4 h-4 text-amber-600" />
-                        In-Store Counter 2 Pickup
-                      </span>
-                      <span className="font-mono font-bold text-neutral-800">
-                        {pickupOrdersCount} orders ({orders.length > 0 ? Math.round((pickupOrdersCount / orders.length) * 100) : 0}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-neutral-100 overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-500 rounded-full" 
-                        style={{ width: `${orders.length > 0 ? (pickupOrdersCount / orders.length) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="flex items-center gap-1.5 text-black">
-                        <Truck className="w-4 h-4 text-sky-600" />
-                        Banago, Nagcarlan &amp; Laguna Courier Delivery
-                      </span>
-                      <span className="font-mono font-bold text-neutral-800">
-                        {deliveryOrdersCount} orders ({orders.length > 0 ? Math.round((deliveryOrdersCount / orders.length) * 100) : 0}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-neutral-100 overflow-hidden">
-                      <div 
-                        className="h-full bg-sky-500 rounded-full" 
-                        style={{ width: `${orders.length > 0 ? (deliveryOrdersCount / orders.length) * 100 : 0}%` }}
-                      ></div>
-                    </div>
+                  <div className="space-y-6 self-center">
+                    {[
+                      { label: 'In-store pickup', detail: 'Counter 2 ? Banago, Nagcarlan', count: pickupOrdersCount, icon: Store, color: 'bg-amber-500', iconColor: 'bg-amber-50 text-amber-700' },
+                      { label: 'Courier delivery', detail: 'Banago, Nagcarlan & Laguna', count: deliveryOrdersCount, icon: Truck, color: 'bg-sky-600', iconColor: 'bg-sky-50 text-sky-700' },
+                    ].map(({ label, detail, count, icon: Icon, color, iconColor }) => {
+                      const percentage = orders.length ? Math.round(count / orders.length * 100) : 0;
+                      return (
+                        <div key={label}>
+                          <div className="flex items-center gap-3">
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconColor}`}><Icon className="h-5 w-5" /></span>
+                            <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-neutral-900">{label}</p><p className="mt-0.5 text-xs leading-relaxed text-neutral-500">{detail}</p></div>
+                            <div className="shrink-0 text-right"><p className="text-base font-semibold tabular-nums text-neutral-900">{percentage}%</p><p className="text-xs text-neutral-500">{count} {count === 1 ? 'order' : 'orders'}</p></div>
+                          </div>
+                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100" role="progressbar" aria-label={label} aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}>
+                            <div className={`h-full rounded-full ${color}`} style={{ width: `${percentage}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
-
+              </section>
             </div>
           )}
 
@@ -1709,6 +1694,8 @@ export default function AdminDashboard() {
               </div>
 
 
+
+              <StoreSettingsExtras onNavigate={handleAdminTabChange} />
 
               {/* Danger Zone */}
               <div className="bg-white rounded-xl border border-rose-200 p-6 space-y-4 shadow-xs">
@@ -1965,14 +1952,15 @@ export default function AdminDashboard() {
           onClick={() => setSelectedOrderPreview(null)}
         >
           <div 
-            className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
+            className="relative w-full max-w-4xl max-h-[90dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header: Keep fixed at top */}
             <div className="flex-shrink-0 p-5 border-b border-neutral-200 bg-white flex items-center justify-between">
               <div>
-                <span className="text-[10px] uppercase font-mono text-neutral-400">Order Verification</span>
+                <span className="text-[10px] uppercase font-mono text-neutral-400">Complete Order Details</span>
                 <h3 className="font-editorial text-xl text-black font-semibold">{selectedOrderPreview.id}</h3>
+                <span className="mt-1 inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium text-neutral-700">{selectedOrderPreview.status || 'Order Placed'}</span>
               </div>
               <button 
                 onClick={() => setSelectedOrderPreview(null)} 
@@ -1983,8 +1971,8 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Body: Enable vertical scroll */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
                 <div>
                   <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Customer</span>
                   <span className="font-semibold text-black">{selectedOrderPreview.name || selectedOrderPreview.customer?.name}</span>
@@ -1997,14 +1985,33 @@ export default function AdminDashboard() {
                     {selectedOrderPreview.fulfillment === 'pickup' ? 'Counter Pickup (Banago, Nagcarlan Main Store)' : 'Courier Delivery'}
                   </span>
                   <div className="text-neutral-600 mt-0.5">
-                    {selectedOrderPreview.fulfillment === 'pickup' ? selectedOrderPreview.pickupSlot : selectedOrderPreview.deliveryAddress}
+                    {selectedOrderPreview.fulfillment === 'pickup'
+                      ? (selectedOrderPreview.pickupTimeSlot || selectedOrderPreview.pickupSlot || selectedOrderPreview.pickupLocation || 'Counter 2')
+                      : (selectedOrderPreview.deliveryAddress || 'No delivery address provided')}
                   </div>
                 </div>
+                <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Payment</span>
+                  <span className="font-semibold text-black">{selectedOrderPreview.paymentMethod || 'Not specified'}</span>
+                  {selectedOrderPreview.appliedPromoCode && <div className="text-neutral-600 mt-0.5">Promo: {selectedOrderPreview.appliedPromoCode}</div>}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Order Date</span>
+                  <span className="text-neutral-700">{selectedOrderPreview.date ? new Date(selectedOrderPreview.date).toLocaleString() : 'Not available'}</span>
+                </div>
+                {selectedOrderPreview.orderType && <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Order Type</span>
+                  <span className="text-neutral-700 capitalize">{selectedOrderPreview.orderType}</span>
+                </div>}
+                {selectedOrderPreview.statusNotes && <div>
+                  <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Status Notes</span>
+                  <span className="text-neutral-700">{selectedOrderPreview.statusNotes}</span>
+                </div>}
               </div>
 
               {/* Items */}
               <div className="space-y-2">
-                <span className="font-semibold text-black text-xs uppercase tracking-wider">Ordered Products</span>
+                <span className="font-semibold text-black text-xs uppercase tracking-wider">Order Items</span>
                 <div className="divide-y divide-neutral-100 border border-neutral-200 rounded-xl overflow-hidden">
                   {(selectedOrderPreview.items || []).map((item, idx) => (
                     <div key={idx} className="p-3.5 flex items-center justify-between">
@@ -2020,10 +2027,44 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="pt-3 flex justify-between items-center text-sm font-bold border-t border-neutral-100">
-                <span className="text-neutral-700">Total Payable:</span>
-                <span className="font-mono text-black text-base">₱{selectedOrderPreview.total?.toLocaleString()}</span>
-              </div>
+              {(selectedOrderPreview.attachedFileName || selectedOrderPreview.notes) && (
+                <section className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                  <h4 className="font-semibold text-black text-xs uppercase tracking-wider">Print Service Details</h4>
+                  {selectedOrderPreview.attachedFileName && (
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono font-bold text-neutral-500">Attached Document</span>
+                      {(selectedOrderPreview.attachedFileDataUrl || selectedOrderPreview.items?.find(item => item?.sku === 'PRINT-SERVICE')?.attachedFileDataUrl) ? (
+                        <a
+                          href={selectedOrderPreview.attachedFileDataUrl || selectedOrderPreview.items.find(item => item?.sku === 'PRINT-SERVICE').attachedFileDataUrl}
+                          download={selectedOrderPreview.attachedFileName}
+                          className="mt-2 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 font-medium text-blue-800 hover:border-blue-500 hover:bg-blue-50"
+                        >
+                          <Download className="h-4 w-4 shrink-0" />
+                          <span>Download {selectedOrderPreview.attachedFileName}</span>
+                        </a>
+                      ) : (
+                        <p className="mt-1 text-[11px] text-rose-700">{selectedOrderPreview.attachedFileName} (file data is unavailable for this order)</p>
+                      )}
+                    </div>
+                  )}
+                  {selectedOrderPreview.notes && (
+                    <div>
+                      <span className="block text-[10px] uppercase font-mono font-bold text-neutral-500">Special Instructions / Spine Lettering Details</span>
+                      <p className="mt-1 whitespace-pre-wrap text-neutral-800">{selectedOrderPreview.notes.replace(/^File:.*(?:\r?\n|$)/gm, '').trim() || 'No special instructions provided.'}</p>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              <section className="rounded-xl border border-neutral-200 p-4">
+                <h4 className="font-semibold text-black text-xs uppercase tracking-wider">Payment Summary</h4>
+                <dl className="mt-3 space-y-2 text-neutral-600">
+                  <div className="flex justify-between gap-4"><dt>Subtotal</dt><dd>{`?${Number(selectedOrderPreview.subtotal || 0).toLocaleString()}`}</dd></div>
+                  {Number(selectedOrderPreview.discountAmount || 0) > 0 && <div className="flex justify-between gap-4"><dt>Discount</dt><dd>{`-?${Number(selectedOrderPreview.discountAmount).toLocaleString()}`}</dd></div>}
+                  {Number(selectedOrderPreview.deliveryFee || 0) > 0 && <div className="flex justify-between gap-4"><dt>Delivery fee</dt><dd>{`?${Number(selectedOrderPreview.deliveryFee).toLocaleString()}`}</dd></div>}
+                  <div className="flex justify-between gap-4 border-t border-neutral-100 pt-2 font-semibold text-black"><dt>Total</dt><dd>{`?${Number(selectedOrderPreview.total || 0).toLocaleString()}`}</dd></div>
+                </dl>
+              </section>
             </div>
 
             {/* Modal Footer: Keep fixed at bottom */}

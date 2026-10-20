@@ -791,10 +791,12 @@ export function getAllData() {
 
   const ordersRaw = db.prepare('SELECT * FROM orders ORDER BY date DESC').all();
   const orders = ordersRaw.map(o => {
+    let rawItems = [];
+    try { rawItems = JSON.parse(o.rawItems || '[]'); } catch { rawItems = []; }
     // Relational items from order_items (1NF/2NF)
     let items = db.prepare('SELECT productId as id, name, price, quantity, sku FROM order_items WHERE orderId = ?').all(o.id);
     if ((!items || items.length === 0) && o.rawItems) {
-      try { items = JSON.parse(o.rawItems); } catch { items = []; }
+      items = rawItems;
     }
 
     return {
@@ -824,6 +826,18 @@ export function getAllData() {
       deliveryFee: o.deliveryFee,
       total: o.total,
       notes: o.notes,
+      ...(() => {
+        try {
+          const rawOrder = rawItems.find(item => item?.sku === 'PRINT-SERVICE');
+          return rawOrder ? {
+            attachedFileName: rawOrder.attachedFileName || rawOrder.fileName || '',
+            attachedFileDataUrl: rawOrder.attachedFileDataUrl || rawOrder.fileDataUrl || '',
+            orderType: 'printing'
+          } : {};
+        } catch {
+          return {};
+        }
+      })(),
       items,
       statusHistory: historyByOrder[o.id] || []
     };
@@ -1000,11 +1014,19 @@ export function saveOrderToDb(order) {
 }
 
 export function updateOrderStatusInDb(orderId, status, notes) {
-  if (notes) {
-    db.prepare('UPDATE orders SET status = ?, statusNotes = ? WHERE id = ?').run(status, notes, orderId);
-  } else {
-    db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, orderId);
-  }
+  const now = new Date().toISOString();
+  const runTx = db.transaction(() => {
+    const update = notes
+      ? db.prepare('UPDATE orders SET status = ?, statusNotes = ? WHERE id = ?').run(status, notes, orderId)
+      : db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, orderId);
+    if (!update.changes) return false;
+    db.prepare(`
+      INSERT INTO order_status_history (orderId, status, notes, changedAt, changedBy)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(orderId, status, notes || '', now, 'Store Admin');
+    return true;
+  });
+  return runTx();
 }
 
 export function saveProductToDb(product) {

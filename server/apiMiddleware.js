@@ -111,7 +111,8 @@ export function sqliteApiMiddleware() {
         const parts = pathname.split('/');
         const orderId = parts[3];
         const body = await parseBody(req);
-        updateOrderStatusInDb(orderId, body.status, body.notes);
+        const updated = updateOrderStatusInDb(orderId, body.status, body.notes);
+        if (!updated) return sendJson(res, 404, { error: 'Order not found.' });
         return sendJson(res, 200, { success: true, orderId, status: body.status });
       }
 

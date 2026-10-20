@@ -1,6 +1,6 @@
 import { CoreSectionSlot } from '../components/builder/CoreSectionSlot';
 import { useCoreContent } from '../components/builder/CoreContentContext';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PRINTING_SERVICES } from '../data/initialData';
 import { 
@@ -18,7 +18,17 @@ import {
 
 export default function PrintingServicesPage() {
   const coreContent = useCoreContent();
-  const { submitPrintRequest, showToast } = useApp();
+  const {
+    currentUser,
+    submitPrintRequest,
+    showToast,
+    cart = [],
+    cartSubtotal = 0,
+    calculatePromoDiscount,
+    appliedPromo,
+    applyPromoCode,
+    removePromoCode
+  } = useApp();
 
   // Interactive Calculator State
   const [calcService, setCalcService] = useState('Document Printing');
@@ -30,13 +40,26 @@ export default function PrintingServicesPage() {
   const [calcBinding, setCalcBinding] = useState('none'); // 'none' | 'staple' | 'spiral' | 'hardbound'
 
   // Inquiry Form State
-  const [clientName, setClientName] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
+  const [clientName, setClientName] = useState(currentUser?.name ?? '');
+  const [clientPhone, setClientPhone] = useState(currentUser?.phone ?? '');
+  const [clientEmail, setClientEmail] = useState(currentUser?.email ?? '');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [submittedInquiry, setSubmittedInquiry] = useState(null);
+  const [fulfillment, setFulfillment] = useState('pickup');
+  const [pickupTimeSlot, setPickupTimeSlot] = useState('Today, 1:00 PM – 3:00 PM');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Cash on Pickup');
+  const [gcashReferenceNo, setGcashReferenceNo] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [promoError, setPromoError] = useState('');
+
+  useEffect(() => {
+    setClientName(currentUser?.name ?? '');
+    setClientPhone(currentUser?.phone ?? '');
+    setClientEmail(currentUser?.email ?? '');
+  }, [currentUser?.id, currentUser?.name, currentUser?.phone, currentUser?.email]);
 
   // Compute live estimated cost in Philippine Pesos
   const calculateEstimatedTotal = () => {
@@ -64,6 +87,18 @@ export default function PrintingServicesPage() {
   };
 
   const estimatedTotal = calculateEstimatedTotal();
+  const fulfillmentFee = fulfillment === 'delivery' ? 60 : 0;
+  const orderSubtotal = cartSubtotal + estimatedTotal;
+  const orderDiscount = calculatePromoDiscount(orderSubtotal);
+  const estimatedGrandTotal = Math.max(0, orderSubtotal - orderDiscount) + fulfillmentFee;
+  const paperType = `${calcPaperSize} (${calcPaperWeight})`;
+  const bindingDetails = calcBinding === 'hardbound'
+    ? 'Thesis Hardbound with Gold Stamping'
+    : calcBinding === 'spiral'
+      ? 'PVC Frosted Spiral Binding'
+      : calcBinding === 'staple'
+        ? 'Corner Heavy Staple'
+        : 'Loose Sheets / None';
 
   // File Upload Validation
   const handleFileChange = (e) => {
@@ -74,14 +109,12 @@ export default function PrintingServicesPage() {
     const allowedTypes = [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'image/jpeg',
-      'image/png'
+      'image/jpeg'
     ];
 
-    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|docx|doc|pptx|jpg|png)$/i)) {
-      setFileError('Invalid file format. Please upload PDF, Word (.docx), PPT, or High-res JPG/PNG.');
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|docx|pptx|jpg)$/i)) {
+      setFileError('Invalid file format. Please upload a PDF, DOCX, PPTX, or JPG file.');
       return;
     }
 
@@ -93,7 +126,8 @@ export default function PrintingServicesPage() {
     setSelectedFile({
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-      type: file.type || 'Document'
+      type: file.type || 'Document',
+      file
     });
     showToast(`Attached "${file.name}"`, 'info');
   };
@@ -104,6 +138,10 @@ export default function PrintingServicesPage() {
       showToast('Please enter your name and phone number', 'error');
       return;
     }
+    if (paymentMethod === 'GCash (E-Wallet)' && !gcashReferenceNo.trim()) {
+      showToast('Please enter your GCash reference number.', 'error');
+      return;
+    }
 
     const inquiryPayload = {
       clientName,
@@ -111,19 +149,31 @@ export default function PrintingServicesPage() {
       clientEmail,
       serviceType: calcService,
       pageCount: calcPages,
-      paperType: `${calcPaperSize} (${calcPaperWeight})`,
-      bindingDetails: calcBinding === 'hardbound' 
-        ? 'Thesis Hardbound with Gold Stamping' 
-        : calcBinding === 'spiral' 
-        ? 'PVC Frosted Spiral Binding' 
-        : calcBinding === 'staple' 
-        ? 'Corner Heavy Staple' 
-        : 'Loose Sheets / None',
+      paperType,
+      bindingDetails,
       quantity: calcCopies,
       estimatedCost: estimatedTotal,
+      cartItems: cart.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity, sku: item.sku })),
+      cartSubtotal,
+      discountAmount: orderDiscount,
+      appliedPromoCode: appliedPromo?.code || null,
+      fulfillment,
+      fulfillmentFee,
+      pickupLocation: 'Purok 5, Banago, Nagcarlan Main Branch — Counter 2',
+      pickupTimeSlot: fulfillment === 'pickup' ? pickupTimeSlot : '',
+      deliveryAddress: fulfillment === 'delivery' ? deliveryAddress.trim() : '',
+      paymentMethod: paymentMethod === 'GCash (E-Wallet)'
+        ? `GCash (Ref # ${gcashReferenceNo.trim()})`
+        : paymentMethod,
       attachedFileName: selectedFile ? selectedFile.name : '',
+      attachedFile: selectedFile?.file || null,
       notes: specialInstructions
     };
+
+    if (fulfillment === 'delivery' && !deliveryAddress.trim()) {
+      showToast('Please enter your delivery address.', 'error');
+      return;
+    }
 
     try {
       const newInq = await submitPrintRequest(inquiryPayload);
@@ -196,8 +246,8 @@ export default function PrintingServicesPage() {
 
       <CoreSectionSlot placement="before:2" />
       {/* INTERACTIVE PRICE ESTIMATOR & INQUIRY FORM */}
-      <div className="bg-[#FAF9F5] border border-neutral-300 p-6 sm:p-10">
-        <div className="max-w-3xl mb-8">
+      <div className="bg-[#FAF9F5] border border-neutral-300 p-4 sm:p-6">
+        <div className="max-w-3xl mb-5">
           <div className="flex items-center gap-2 text-neutral-500 mb-1">
             <Calculator className="w-4 h-4" />
             <span className="text-[10px] uppercase tracking-[0.25em] font-semibold">{coreContent.text("content-8", "Self-Service Print Calculator")}</span>
@@ -212,19 +262,20 @@ export default function PrintingServicesPage() {
             <div className="w-12 h-12 mx-auto bg-emerald-50 border border-emerald-300 text-emerald-700 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h3 className="font-editorial text-2xl text-black">{coreContent.text("content-11", "Inquiry Submitted!")}</h3>
-            <div className="text-xs text-neutral-600 font-light leading-relaxed">{coreContent.text("content-12", "Your transaction reference number is ")}<strong className="font-mono font-bold text-black">{submittedInquiry.id}</strong>{coreContent.text("content-13", ". Estimated total is ")}<strong className="font-semibold text-black">{coreContent.text("content-14", "₱")}{submittedInquiry.estimatedCost.toLocaleString()}</strong>{coreContent.text("content-15", ". Our print specialist will review your document and notify you via SMS/Email.")}</div>
+            <h3 className="font-editorial text-2xl text-black">{coreContent.text("content-11", "Print & Shop Order Submitted!")}</h3>
+            <div className="text-xs text-neutral-600 font-light leading-relaxed">{coreContent.text("content-12", "Your transaction reference number is ")}<strong className="font-mono font-bold text-black">{submittedInquiry.id}</strong>{coreContent.text("content-13", ". Estimated total is ")}<strong className="font-semibold text-black">{coreContent.text("content-14", "₱")}{(submittedInquiry.total ?? submittedInquiry.estimatedCost).toLocaleString()}</strong>{coreContent.text("content-15", ". Our print specialist will review your document and notify you via SMS/Email.")}</div>
+            <div className="text-[11px] text-neutral-500">{submittedInquiry.fulfillment === 'delivery' ? `Local Delivery · ${submittedInquiry.deliveryAddress}` : `In-Store Pickup · ${submittedInquiry.pickupTimeSlot}`} · {submittedInquiry.paymentMethod}</div>
             <button
               onClick={() => setSubmittedInquiry(null)}
               className="mt-4 px-6 py-2.5 bg-black text-white text-xs uppercase tracking-widest font-medium hover:bg-neutral-800 transition-colors"
             >{coreContent.text("content-16", "Submit Another Print Request")}</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmitInquiry} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <form onSubmit={handleSubmitInquiry} className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-4 sm:gap-5 items-stretch">
             
             {/* Left Column: Calculation Parameters */}
-            <div className="space-y-5 bg-white p-6 border border-neutral-200">
-              <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-neutral-400">{coreContent.text("content-17", "1. Project Specifications")}</h3>
+            <div className="space-y-3 bg-white p-4 sm:p-5 border border-neutral-200">
+              <h3 className="text-[10px] uppercase tracking-[0.2em] font-semibold text-neutral-500 border-b border-neutral-200 pb-2">{coreContent.text("content-17", "01 Project Specifications")}</h3>
 
               {/* Service Selection */}
               <div>
@@ -393,7 +444,7 @@ export default function PrintingServicesPage() {
                       type="file"
                       onChange={handleFileChange}
                       className="hidden"
-                      accept=".pdf,.docx,.doc,.pptx,.jpg,.png"
+                      accept=".pdf,.docx,.pptx,.jpg,image/jpeg,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     />
                   </label>
 

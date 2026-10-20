@@ -239,7 +239,7 @@ export function AppProvider({ children }) {
         if (Array.isArray(data.users) && data.users.length > 0) {
           setUsers(data.users);
         }
-        if (Array.isArray(data.orders) && data.orders.length > 0) {
+        if (Array.isArray(data.orders)) {
           setOrders(data.orders);
         }
         if (Array.isArray(data.serviceInquiries)) {
@@ -290,6 +290,26 @@ export function AppProvider({ children }) {
       window.removeEventListener('focus', refreshInquiries);
     };
   }, [currentUser?.role]);
+
+  // Refresh persisted transactions so customers see store status changes promptly.
+  useEffect(() => {
+    let cancelled = false;
+    const refreshOrders = async () => {
+      try {
+        const data = await sqliteApi.getAllData();
+        if (!cancelled && Array.isArray(data.orders)) setOrders(data.orders);
+      } catch (err) {
+        console.warn('Order refresh:', err.message);
+      }
+    };
+    const timer = window.setInterval(refreshOrders, 10000);
+    window.addEventListener('focus', refreshOrders);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refreshOrders);
+    };
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -621,7 +641,7 @@ export function AppProvider({ children }) {
     setAppliedPromo(null);
   };
 
-  const applyPromoCode = (code) => {
+  const applyPromoCode = (code, subtotalForValidation = cartSubtotal) => {
     const trimmed = code.trim().toUpperCase();
     // Check dynamic promotionsList first
     const dynamicPromo = promotionsList.find(p => p.code === trimmed);
@@ -641,7 +661,7 @@ export function AppProvider({ children }) {
         }
       }
       // Min spend validation
-      if (dynamicPromo.minSpend && cartSubtotal < dynamicPromo.minSpend) {
+      if (dynamicPromo.minSpend && subtotalForValidation < dynamicPromo.minSpend) {
         showToast(`Minimum spend of ₱${dynamicPromo.minSpend} required for this code.`, 'error');
         return { success: false, message: `Minimum spend of ₱${dynamicPromo.minSpend} required for this code.` };
       }
@@ -671,21 +691,25 @@ export function AppProvider({ children }) {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
-  let cartDiscount = 0;
-  if (appliedPromo && !isPromotionExpired(appliedPromo)) {
-    if (appliedPromo.discountType === 'percentage' || appliedPromo.discountPercentage) {
-      const pct = appliedPromo.discountValue || appliedPromo.discountPercentage || 15;
-      cartDiscount = Math.round(cartSubtotal * (pct / 100));
-    } else if (appliedPromo.discountType === 'fixed' || appliedPromo.discountAmount) {
-      cartDiscount = appliedPromo.discountValue || appliedPromo.discountAmount || 50;
-    } else if (appliedPromo.code === 'STUDENT15') {
-      cartDiscount = Math.round(cartSubtotal * 0.15);
-    } else if (appliedPromo.code === 'FACULTYPACK') {
-      cartDiscount = 150;
-    } else if (appliedPromo.code === 'THESIS2026') {
-      cartDiscount = 200;
+  const calculatePromoDiscount = (subtotal, promo = appliedPromo) => {
+    let discount = 0;
+    if (promo && !isPromotionExpired(promo)) {
+      if (promo.discountType === 'percentage' || promo.discountPercentage) {
+        const pct = promo.discountValue || promo.discountPercentage || 15;
+        discount = Math.round(subtotal * (pct / 100));
+      } else if (promo.discountType === 'fixed' || promo.discountAmount) {
+        discount = promo.discountValue || promo.discountAmount || 50;
+      } else if (promo.code === 'STUDENT15') {
+        discount = Math.round(subtotal * 0.15);
+      } else if (promo.code === 'FACULTYPACK') {
+        discount = 150;
+      } else if (promo.code === 'THESIS2026') {
+        discount = 200;
+      }
     }
-  }
+    return Math.max(0, Math.min(Number(subtotal) || 0, discount));
+  };
+  const cartDiscount = calculatePromoDiscount(cartSubtotal);
 
   // ==========================================
   // ORDER PLACEMENT & INVENTORY LEDGER
@@ -854,12 +878,72 @@ export function AppProvider({ children }) {
   };
 
   const submitPrintRequest = async (requestData) => {
-    const request = { ...requestData, id: `PRINT-${crypto.randomUUID()}`, date: new Date().toISOString() };
-    const order = printRequestToOrder(request, currentUser?.id);
-    await sqliteApi.createOrder(order);
-    setOrders(prev => [order, ...prev]);
-    showToast('Print request submitted! View it in Transactions.', 'success');
-    return { ...request, ...order, estimatedCost: request.estimatedCost };
+    const { attachedFile, ...printRequestData } = requestData;
+    let attachedFileDataUrl = '';
+    if (attachedFile) {
+      attachedFileDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Unable to read the attached document.'));
+        reader.readAsDataURL(attachedFile);
+      });
+    }
+    const request = {
+      ...printRequestData,
+      attachedFileDataUrl,
+      id: `PRINT-${crypto.randomUUID()}`,
+      date: new Date().toISOString()
+    };
+    const cartItems = request.cartItems || cart.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      sku: item.sku
+    }));
+    const printOrder = printRequestToOrder(request, currentUser?.id);
+    const subtotal = Number(request.cartSubtotal ?? cartSubtotal) + Number(request.estimatedCost || 0);
+    const discountAmount = Number(request.discountAmount ?? request.cartDiscount ?? cartDiscount) || 0;
+    const appliedPromoCode = request.appliedPromoCode || appliedPromo?.code || null;
+    const persistedOrder = {
+      ...printOrder,
+      items: [...cartItems, ...printOrder.items],
+      subtotal,
+      discountAmount,
+      appliedPromoCode,
+      total: Math.max(0, subtotal - discountAmount) + Number(request.fulfillmentFee || 0),
+      status: 'Order Placed'
+    };
+    await sqliteApi.createOrder(persistedOrder);
+
+    const ledgerEntries = [];
+    setProducts(prevProducts => prevProducts.map(product => {
+      const cartItem = cartItems.find(item => item.id === product.id);
+      if (!cartItem) return product;
+      const newStock = Math.max(0, product.stock - cartItem.quantity);
+      ledgerEntries.push({
+        id: `led-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        productId: product.id,
+        productName: product.name,
+        changeAmount: -cartItem.quantity,
+        previousStock: product.stock,
+        newStock,
+        reason: `Online Print Service Order #${persistedOrder.id} (${request.fulfillment === 'pickup' ? 'Store Pickup' : 'Delivery'})`,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        user: currentUser?.name || request.clientName || 'Customer Checkout'
+      });
+      return { ...product, stock: newStock };
+    }));
+    if (ledgerEntries.length) setInventoryLedger(prev => [...ledgerEntries, ...prev]);
+    if (appliedPromoCode) {
+      setPromotionsList(prev => prev.map(promo => promo.code === appliedPromoCode
+        ? { ...promo, times_used: (promo.times_used ?? promo.usageCount ?? 0) + 1, usageCount: (promo.times_used ?? promo.usageCount ?? 0) + 1 }
+        : promo));
+    }
+    setOrders(prev => [persistedOrder, ...prev.filter(existing => existing.id !== persistedOrder.id)]);
+    clearCart();
+    showToast('Print and shop order submitted! View it in Transactions.', 'success');
+    return { ...request, ...persistedOrder, estimatedCost: request.estimatedCost };
   };
 
   // Printing Inquiries
@@ -1169,6 +1253,7 @@ export function AppProvider({ children }) {
         cartCount,
         cartSubtotal,
         cartDiscount,
+        calculatePromoDiscount,
         cartFinalTotal: Math.max(0, cartSubtotal - cartDiscount),
         setActiveTab,
         setActiveCustomPageSlug,
