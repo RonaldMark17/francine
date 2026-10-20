@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import ProductCard from '../ProductCard';
 import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { 
   ArrowRight, 
   ChevronDown, 
@@ -31,7 +32,11 @@ const FEATURE_ICONS = {
   truck: Truck,
   tag: Tag,
   sparkles: Sparkles,
-  package: Package
+  package: Package,
+  'map-pin': MapPin,
+  phone: Phone,
+  mail: Mail,
+  clock: Clock
 };
 
 const getSafeMapUrl = (url) => {
@@ -162,12 +167,13 @@ function SectionFrame({ component, navigateTo, children }) {
   );
 }
 
-export default function DynamicPageRenderer({ page }) {
+export default function DynamicPageRenderer({ page, asFragment = false, coreContent = null }) {
   const { products, navigateTo } = useApp();
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
+  useBodyScrollLock(Boolean(lightboxImage));
 
-  if (!page || !page.components || page.components.length === 0) {
+  if (!page || (!coreContent && !asFragment && (!page.components || page.components.length === 0))) {
     return (
       <div className="py-24 text-center max-w-xl mx-auto px-4">
         <h2 className="font-editorial text-2xl text-neutral-800 mb-2">{page?.title || 'Untitled Page'}</h2>
@@ -177,13 +183,22 @@ export default function DynamicPageRenderer({ page }) {
       </div>
     );
   }
+  if (!page.components?.length && !coreContent) return null;
 
   const toggleFaq = (idx) => {
     setOpenFaqIndex(openFaqIndex === idx ? null : idx);
   };
 
+  const PageContainer = asFragment ? 'div' : 'article';
+  const componentsToRender = coreContent
+    ? [
+        ...page.components.filter(component => component.data?.placement !== 'bottom'),
+        { id: 'system-core-content', type: 'system-core-content', data: {} },
+        ...page.components.filter(component => component.data?.placement === 'bottom')
+      ]
+    : page.components;
   return (
-    <article className="min-h-screen bg-[#FAF9F5] text-[#121212]">
+    <PageContainer className={`${asFragment ? '' : 'min-h-screen'} bg-[#FAF9F5] text-[#121212]`}>
       {/* Dynamic Page Header Metadata */}
       <header className="sr-only">
         <h1>{page.title}</h1>
@@ -191,8 +206,11 @@ export default function DynamicPageRenderer({ page }) {
       </header>
 
       {/* Render Components sequentially */}
-      {page.components.map((comp) => {
+      {componentsToRender.map((comp) => {
         const { id, type, data = {} } = comp;
+        if (type === 'system-core-content') {
+          return <React.Fragment key={id}>{coreContent}</React.Fragment>;
+        }
 
         return (
           <SectionFrame key={id} component={comp} navigateTo={navigateTo}>
@@ -567,6 +585,29 @@ export default function DynamicPageRenderer({ page }) {
             );
           }
 
+          case 'steps': {
+            const items = data.items || [];
+            return (
+              <section key={id} data-component-id={id} className="py-16 sm:py-20 border-b border-neutral-200 bg-white">
+                <div className="max-w-6xl mx-auto px-6 space-y-8">
+                  <div className="text-center">
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-mono">Simple Process</span>
+                    <h3 className="builder-section-headline mt-2 text-2xl sm:text-3xl font-light font-editorial uppercase tracking-[0.07em] text-black">{data.title || 'How It Works'}</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {items.map((item, index) => (
+                      <div key={index} className="border border-neutral-200 bg-[#FAF9F5] p-6 space-y-4">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">{index + 1}</span>
+                        <h4 className="font-editorial text-base uppercase tracking-wider text-black">{item.title}</h4>
+                        <p className="text-xs leading-relaxed text-neutral-600">{item.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            );
+          }
+
           /* 11. CATEGORY QUICK LINKS */
           case 'category_grid': {
             const items = data.items || [];
@@ -695,6 +736,6 @@ export default function DynamicPageRenderer({ page }) {
           </figure>
         </div>
       )}
-    </article>
+    </PageContainer>
   );
 }

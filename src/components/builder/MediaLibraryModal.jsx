@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import ModalOverlay from '../ModalOverlay';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { 
   X, 
   Upload, 
@@ -18,15 +20,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
   const [selectedMediaId, setSelectedMediaId] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Lock background body scroll when modal is open
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -78,12 +72,11 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+    <ModalOverlay
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop"
+        className="relative w-full max-w-4xl max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header: Keep fixed at top */}
@@ -158,7 +151,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
         </div>
 
         {/* Modal Body: Enable vertical scroll */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-neutral-50/50">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-neutral-50/50">
           {filteredMedia.length === 0 ? (
             <div className="col-span-full py-16 text-center text-neutral-400 text-xs">
               No media assets match your filter. Upload a new image to get started.
@@ -240,6 +233,6 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelectImage }) {
           </div>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

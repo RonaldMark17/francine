@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import ModalOverlay from '../ModalOverlay';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { X, Package, ArrowUpRight, ArrowDownRight, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function StockAdjustmentModal({ product, isOpen, onClose }) {
@@ -10,15 +12,7 @@ export default function StockAdjustmentModal({ product, isOpen, onClose }) {
   const [reason, setReason] = useState('Received New Stock from Distributor');
   const [customReason, setCustomReason] = useState('');
 
-  // Lock background body scroll when modal is open
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen && Boolean(product));
 
   if (!isOpen || !product) return null;
 
@@ -63,12 +57,11 @@ export default function StockAdjustmentModal({ product, isOpen, onClose }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+    <ModalOverlay
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
+        className="relative w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header: Keep fixed at top */}
@@ -87,7 +80,7 @@ export default function StockAdjustmentModal({ product, isOpen, onClose }) {
         {/* Modal Form Layout: Body scrolls vertically while Header and Footer are fixed */}
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Modal Body: Enable vertical scroll */}
-          <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
             {/* Product Reference */}
             <div className="bg-[#FAF9F5] border border-neutral-200 p-3.5 space-y-1 rounded-lg">
               <div className="text-[10px] uppercase tracking-widest text-neutral-400 font-mono">
@@ -207,6 +200,6 @@ export default function StockAdjustmentModal({ product, isOpen, onClose }) {
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

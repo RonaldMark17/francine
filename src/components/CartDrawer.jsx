@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { X, Trash2, ArrowRight, ShoppingBag, Tag, Check, LogIn, Receipt, Truck } from 'lucide-react';
 
 const LOCAL_PRODUCT_IMAGES = {
@@ -36,6 +37,7 @@ export default function CartDrawer({ onProceedToCheckout }) {
     setIsAuthModalOpen,
     setAuthModalMode
   } = useApp();
+  useBodyScrollLock(isCartOpen);
 
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState('');

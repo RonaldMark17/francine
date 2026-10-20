@@ -188,9 +188,13 @@ export function initDatabase(initialData = {}) {
       publishedAt TEXT,
       showInNav INTEGER DEFAULT 1,
       showInFooter INTEGER DEFAULT 1,
-      components TEXT -- JSON array
+      components TEXT, -- JSON array
+      systemRoute TEXT
     );
   `);
+  try {
+    db.exec(`ALTER TABLE custom_pages ADD COLUMN systemRoute TEXT`);
+  } catch { /* column already exists */ }
 
   // 9. Navigation Config Table
   db.exec(`
@@ -1437,8 +1441,8 @@ export function togglePromotionInDb(id) {
 
 export function saveCustomPageToDb(page) {
   db.prepare(`
-    INSERT OR REPLACE INTO custom_pages (id, title, slug, description, status, author, createdAt, updatedAt, publishedAt, showInNav, showInFooter, components)
-    VALUES (@id, @title, @slug, @description, @status, @author, @createdAt, @updatedAt, @publishedAt, @showInNav, @showInFooter, @components)
+    INSERT OR REPLACE INTO custom_pages (id, title, slug, description, status, author, createdAt, updatedAt, publishedAt, showInNav, showInFooter, components, systemRoute)
+    VALUES (@id, @title, @slug, @description, @status, @author, @createdAt, @updatedAt, @publishedAt, @showInNav, @showInFooter, @components, @systemRoute)
   `).run({
     id: page.id || `page-${Date.now()}`,
     title: page.title,
@@ -1451,7 +1455,8 @@ export function saveCustomPageToDb(page) {
     publishedAt: page.publishedAt || null,
     showInNav: page.showInNav !== false ? 1 : 0,
     showInFooter: page.showInFooter !== false ? 1 : 0,
-    components: JSON.stringify(page.components || [])
+    components: JSON.stringify(page.components || []),
+    systemRoute: page.systemRoute || null
   });
 }
 

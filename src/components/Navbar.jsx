@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { 
   ShoppingBag, 
   Search, 
@@ -12,9 +13,9 @@ import {
   ChevronDown
 } from 'lucide-react';
 
-export default function Navbar() {
+export default function Navbar({ previewTab } = {}) {
   const { 
-    activeTab, 
+    activeTab: currentActiveTab, 
     activeCustomPageSlug,
     navigateTo, 
     cartCount, 
@@ -26,6 +27,8 @@ export default function Navbar() {
     setAuthModalMode,
     navigationConfig
   } = useApp();
+
+  const activeTab = previewTab || currentActiveTab;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -125,17 +128,15 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') setMobileMenuOpen(false);
     };
-    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', closeOnEscape);
     return () => {
-      document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [mobileMenuOpen]);
+  useBodyScrollLock(mobileMenuOpen);
 
   useEffect(() => {
     const desktopBreakpoint = window.matchMedia('(min-width: 1024px)');
@@ -220,7 +221,7 @@ export default function Navbar() {
               className="group text-left inline-flex min-w-0 items-center gap-2 sm:gap-3 focus:outline-none"
             >
               <img 
-                src="/images/mama_mo_logo.png" 
+                src="/images/mama_mo_logo.jpg" 
                 alt="Mama Mo Ink Print & Supplies" 
                 className="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover shadow-xs border border-neutral-200 transition-transform duration-300 group-hover:scale-105"
               />
@@ -461,7 +462,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-3 text-left focus:outline-none"
               >
                 <img
-                  src="/images/mama_mo_logo.png"
+                  src="/images/mama_mo_logo.jpg"
                   alt="Mama Mo Logo"
                   className="h-10 w-10 rounded-full border border-neutral-200 object-cover shadow-2xs"
                 />

@@ -12,7 +12,8 @@ import {
   INITIAL_CUSTOM_PAGES,
   INITIAL_MEDIA_LIBRARY,
   INITIAL_INVENTORY_LEDGER,
-  INITIAL_PROMOTIONS_LIST
+  INITIAL_PROMOTIONS_LIST,
+  SYSTEM_CORE_PAGES
 } from '../data/builderData';
 import { sqliteApi } from '../services/api';
 
@@ -495,7 +496,8 @@ export function AppProvider({ children }) {
       newHash = `page-${slug}`;
     } else {
       // Check if destination matches any published custom page slug
-      const matchingPage = customPages.find(p => p.slug === destination && p.status === 'published');
+      const isSystemRoute = SYSTEM_CORE_PAGES.some(page => page.slug === destination);
+      const matchingPage = !isSystemRoute && customPages.find(p => p.slug === destination && p.status === 'published');
       if (matchingPage) {
         setActiveCustomPageSlug(destination);
         setActiveTab('custom_page');

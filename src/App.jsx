@@ -23,10 +23,18 @@ import ContactPage from './pages/ContactPage';
 import AdminDashboard from './pages/AdminDashboard';
 
 import DynamicPageRenderer from './components/builder/DynamicPageRenderer';
+import { SYSTEM_CORE_PAGES, normalizeCorePage } from './data/builderData';
 
 function MainLayout() {
   const { activeTab, activeCustomPageSlug, customPages, navigateTo } = useApp();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  const renderCorePage = (route, CoreComponent) => {
+    const definition = SYSTEM_CORE_PAGES.find(page => page.systemRoute === route);
+    const cmsPage = customPages.find(page => page.systemRoute === route && page.status === 'published');
+    if (!definition || !cmsPage) return <CoreComponent />;
+    return <DynamicPageRenderer page={normalizeCorePage(cmsPage)} coreContent={<CoreComponent />} />;
+  };
 
   // Render current tab/page
   const renderContent = () => {
@@ -54,25 +62,25 @@ function MainLayout() {
 
     switch (activeTab) {
       case 'home':
-        return <HomePage />;
+        return renderCorePage('/', HomePage);
       case 'shop':
-        return <ShopPage />;
+        return renderCorePage('/shop', ShopPage);
       case 'promotions':
-        return <PromotionsPage />;
+        return renderCorePage('/promotions', PromotionsPage);
       case 'services':
-        return <PrintingServicesPage />;
+        return renderCorePage('/services', PrintingServicesPage);
       case 'transactions':
         return (
           <ProtectedRoute message="Please sign in to view your orders and transactions.">
-            <TransactionsPage />
+            {renderCorePage('/transactions', TransactionsPage)}
           </ProtectedRoute>
         );
       case 'tracking':
         return <OrderTrackingPage />;
       case 'about':
-        return <AboutPage />;
+        return renderCorePage('/about', AboutPage);
       case 'contact':
-        return <ContactPage />;
+        return renderCorePage('/contact', ContactPage);
       case 'admin':
         return <AdminDashboard />;
       default:

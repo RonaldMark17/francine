@@ -12,7 +12,11 @@ const ICON_OPTIONS = [
   ['truck', 'Delivery Truck'],
   ['tag', 'Discount Tag'],
   ['sparkles', 'Sparkles'],
-  ['package', 'Package']
+  ['package', 'Package'],
+  ['map-pin', 'Location'],
+  ['phone', 'Phone'],
+  ['mail', 'Email'],
+  ['clock', 'Store Hours']
 ];
 
 const CATEGORY_OPTIONS = [
@@ -180,6 +184,34 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
               <Field label="Spec / Size"><input className={inputClass} value={item.spec || ''} onChange={(event) => updateItem(index, 'spec', event.target.value)} /></Field>
               <Field label="Price"><input className={inputClass} value={item.price || ''} onChange={(event) => updateItem(index, 'price', event.target.value)} /></Field>
               <Field label="Notes"><input className={inputClass} value={item.notes || ''} onChange={(event) => updateItem(index, 'notes', event.target.value)} /></Field>
+            </>
+          )}
+        </ItemEditor>
+      </div>
+    );
+  }
+
+  if (type === 'steps') {
+    const items = data.items || [];
+    return (
+      <div className="space-y-4">
+        <Field label="Section Title">
+          <input className={inputClass} value={data.title || ''} onChange={(event) => onChange('title', event.target.value)} />
+        </Field>
+        <ItemEditor
+          title="Order Steps"
+          items={items}
+          onItemsChange={(nextItems) => onChange('items', nextItems)}
+          createItem={() => ({ title: 'New Step', description: 'Describe this step.' })}
+        >
+          {(item, index, updateItem) => (
+            <>
+              <Field label="Step Title">
+                <input className={inputClass} value={item.title || ''} onChange={(event) => updateItem(index, 'title', event.target.value)} />
+              </Field>
+              <Field label="Description">
+                <textarea rows={3} className={textareaClass} value={item.description || ''} onChange={(event) => updateItem(index, 'description', event.target.value)} />
+              </Field>
             </>
           )}
         </ItemEditor>

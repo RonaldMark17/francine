@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import ModalOverlay from '../ModalOverlay';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { 
   X, 
   Menu, 
@@ -24,15 +26,7 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
 
   const [activeMenuTab, setActiveMenuTab] = useState('headerNav'); // 'headerNav' | 'footerNav'
 
-  // Lock background body scroll when modal is open
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
   const [items, setItems] = useState(() => {
     return JSON.parse(JSON.stringify(navigationConfig[activeMenuTab] || []));
   });
@@ -117,12 +111,11 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+    <ModalOverlay
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
+        className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header: Fixed at top */}
@@ -163,8 +156,8 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Modal Body: flex-1 overflow-y-auto overscroll-contain p-6 space-y-4 */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
+        {/* Modal Body: min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4 */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
           <div className="space-y-2">
           {items.map((item, idx) => (
             <div
@@ -342,6 +335,6 @@ export default function NavigationManagerModal({ isOpen, onClose }) {
         </div>
 
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

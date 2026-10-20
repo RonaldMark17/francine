@@ -1,5 +1,7 @@
+import ModalOverlay from './ModalOverlay';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -40,15 +42,7 @@ export default function CheckoutModal({ isOpen, onClose }) {
   const [checkoutPromoInput, setCheckoutPromoInput] = useState('');
   const [checkoutPromoError, setCheckoutPromoError] = useState('');
 
-  // Lock background body scroll while checkout modal is open
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   // Derive customer type from role
   const getCustomerType = (role) => {
@@ -198,12 +192,11 @@ export default function CheckoutModal({ isOpen, onClose }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+    <ModalOverlay
       onClick={onClose}
     >
       <div 
-        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-auto sm:my-8 animate-modal-pop max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain"
+        className="relative bg-white max-w-3xl w-full border border-neutral-300 shadow-2xl overflow-hidden my-auto animate-modal-pop max-h-[85dvh] overflow-y-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
@@ -703,6 +696,6 @@ export default function CheckoutModal({ isOpen, onClose }) {
         )}
 
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

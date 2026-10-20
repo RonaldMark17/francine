@@ -279,3 +279,192 @@ export const INITIAL_PROMOTIONS_LIST = [
     usageCount: 9
   }
 ];
+
+const systemSection = (id, type, data, placement) => ({
+  id: `system-${id}`,
+  type,
+  data: { ...data, ...(placement ? { placement } : {}) }
+});
+
+const LEGACY_CORE_PAGES = [
+  {
+    id: 'system-page-home',
+    systemRoute: '/',
+    slug: 'home',
+    title: 'Home',
+    description: 'The storefront home page.',
+    hybrid: false,
+    components: [
+      systemSection('home-hero', 'hero', {
+        eyebrow: 'Mama Mo Ink Print and Supplies',
+        title: 'Everything You Need, All in One Place.',
+        subtitle: 'Affordable school supplies and dependable printing services in Banago, Nagcarlan.',
+        buttonText: 'Explore Catalog',
+        buttonLink: 'shop',
+        imageUrl: '/images/mama_mo_logo.jpg',
+        align: 'center',
+        theme: 'dark'
+      }),
+      systemSection('home-categories', 'category_grid', { title: 'Shop By Category', columns: 4, items: [
+        { category: 'School Supplies', title: 'School Supplies', imageUrl: '/images/mongol_pencils.jpg', buttonText: 'Shop Supplies' },
+        { category: 'Printing Materials', title: 'Printing Materials', imageUrl: '/images/epson_003_ink.jpg', buttonText: 'Browse Materials' },
+        { category: 'Paper Products', title: 'Paper Products', imageUrl: '/images/paper_one_ream.jpg', buttonText: 'View Paper' },
+        { category: 'Office Supplies', title: 'Office Supplies', imageUrl: '/images/deli_stapler.jpg', buttonText: 'Shop Office' }
+      ] }),
+      systemSection('home-products', 'product_grid', { title: 'Featured Products', subtitle: 'Customer favorites for school, work, and everyday needs.', category: 'All', limit: 4 }),
+      systemSection('home-values', 'features_grid', { title: 'Why Choose Mama Mo', columns: 4, items: [
+        { icon: 'printer', title: 'Same-Day Printing', description: 'Fast production for urgent school and business requirements.' },
+        { icon: 'graduation-cap', title: 'Student Discounts', description: 'Accessible pricing for students, teachers, and campus groups.' },
+        { icon: 'timer', title: 'Quick Turnaround', description: 'Priority service when every minute matters.' },
+        { icon: 'shield-check', title: 'Quality Guarantee', description: 'Carefully checked output before every order leaves the store.' }
+      ] }),
+      systemSection('home-cta', 'cta', { title: 'Ready To Print or Shop?', subtitle: 'Visit our store or browse the catalog online.', buttonText: 'Contact Our Store', buttonLink: 'contact' })
+    ]
+  },
+  {
+    id: 'system-page-shop',
+    systemRoute: '/shop',
+    slug: 'shop',
+    title: 'Shop',
+    description: 'Product catalog page sections.',
+    hybrid: true,
+    components: [
+      systemSection('shop-banner', 'announcement', { badge: 'Store Notice', text: 'Browse school, office, and printing essentials available for pickup and delivery.' }, 'top'),
+      systemSection('shop-categories', 'category_grid', { title: 'Browse Categories', columns: 4, items: [
+        { category: 'School Supplies', title: 'School Supplies', imageUrl: '/images/mongol_pencils.jpg', buttonText: 'Shop Supplies' },
+        { category: 'Printing Materials', title: 'Printing Materials', imageUrl: '/images/epson_003_ink.jpg', buttonText: 'Browse Materials' }
+      ] }, 'top'),
+      systemSection('shop-faq', 'faq', { title: 'Shopping & Pickup FAQ', items: [
+        { q: 'How do I collect my order?', a: 'Choose in-store pickup at checkout and present your order reference at the store.' },
+        { q: 'Can I filter the catalog?', a: 'Use the category, search, and filter controls in the product catalog above.' }
+      ] }, 'bottom')
+    ]
+  },
+  {
+    id: 'system-page-promotions',
+    systemRoute: '/promotions',
+    slug: 'promotions',
+    title: 'Promotions',
+    description: 'Current promotions and student perks page sections.',
+    hybrid: true,
+    components: [
+      systemSection('promotions-banner', 'announcement', { badge: 'Special Offers', text: 'Discover current savings for students, educators, and local businesses.' }, 'top'),
+      systemSection('promotions-faq', 'faq', { title: 'Promotion FAQ', items: [
+        { q: 'How do I apply a promotion code?', a: 'Copy the code shown with an offer and apply it in your shopping cart or at checkout.' },
+        { q: 'Can offers be combined?', a: 'Promotion eligibility and combinations are shown with each active offer.' }
+      ] }, 'bottom')
+    ]
+  },
+  {
+    id: 'system-page-services',
+    systemRoute: '/services',
+    slug: 'services',
+    title: 'Printing Services',
+    description: 'Printing, copying, and document finishing services.',
+    hybrid: true,
+    components: [
+      systemSection('services-hero', 'hero', { eyebrow: 'Banago Printing Counter', title: 'Printing, Copying & Document Finishing', subtitle: 'Reliable printing and binding for students, educators, and local businesses.', buttonText: 'Contact Our Team', buttonLink: 'contact', imageUrl: '/images/banago_store_location_map.png', align: 'center', theme: 'dark' }, 'top'),
+      systemSection('services-pricing', 'pricing_table', { title: 'Services & Pricing', subtitle: 'Starting rates for our most requested services.', items: [
+        { service: 'Black & White Printing', spec: 'A4 / Short / Long', price: 'From ₱2/page', notes: 'Same-day' },
+        { service: 'Full Color Printing', spec: 'A4, high quality', price: 'From ₱10/page', notes: 'Same-day' },
+        { service: 'Soft Binding', spec: 'Up to 200 pages', price: 'From ₱60', notes: '30–60 minutes' },
+        { service: 'Hard Binding', spec: 'Thesis with gold stamp', price: 'From ₱450', notes: '2–3 working days' }
+      ] }, 'top'),
+      systemSection('services-process', 'steps', { title: 'How to Place a Print Order', items: [
+        { title: 'Choose Your Service', description: 'Select printing, copying, or finishing options that fit your project.' },
+        { title: 'Share Your Specifications', description: 'Provide file details, paper size, quantity, and binding preferences.' },
+        { title: 'Confirm Your Estimate', description: 'Review the calculated estimate and submit your request.' },
+        { title: 'Pick Up Your Order', description: 'We will contact you when your order is ready for collection.' }
+      ] }, 'top'),
+      systemSection('services-faq', 'faq', { title: 'Printing Services FAQ', items: [
+        { q: 'Can I request rush thesis printing?', a: 'Yes. Share your deadline and specifications so our team can confirm availability.' },
+        { q: 'What file types can I submit?', a: 'PDF is recommended for consistent print formatting. Contact the store for other formats.' }
+      ] }, 'bottom')
+    ]
+  },
+  {
+    id: 'system-page-about',
+    systemRoute: '/about',
+    slug: 'about',
+    title: 'About Us',
+    description: 'Learn about Mama Mo Ink Print and Supplies.',
+    hybrid: false,
+    components: [
+      systemSection('about-hero', 'hero', { eyebrow: 'Established 2026 • Nagcarlan, Laguna', title: 'A Local Hub for School & Print Essentials', subtitle: 'Supporting students, educators, and neighbors with affordable supplies and dependable service.', imageUrl: '/images/mama_mo_logo.jpg', align: 'center', theme: 'dark' }),
+      systemSection('about-split', 'text_image', { eyebrow: 'Our Story', title: 'Designed for Learners & Educators', description: 'Mama Mo Ink Print and Supplies brings everyday school materials and practical printing services together in Barangay Banago, Nagcarlan.', buttonText: 'Get in Touch', buttonLink: 'contact', imageUrl: '/images/paper_one_ream.jpg', imagePosition: 'right' }),
+      systemSection('about-story', 'rich_text', { title: 'Our Purpose', content: 'We help students, teachers, and local businesses get the supplies and print services they need without unnecessary trips. Our team is committed to friendly assistance, fair pricing, and reliable results.' }),
+      systemSection('about-location', 'location_map', { storeName: 'Mama Mo Ink Print and Supplies', address: 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002', phone: 'Contact our Banago store for current service inquiries', hours: 'Monday–Saturday: 8:00 AM–7:00 PM\\nSunday: 9:00 AM–5:00 PM', mapEmbedUrl: '' })
+    ]
+  },
+  {
+    id: 'system-page-contact',
+    systemRoute: '/contact',
+    slug: 'contact',
+    title: 'Contact',
+    description: 'Contact information and store location.',
+    hybrid: true,
+    components: [
+      systemSection('contact-hero', 'hero', { eyebrow: 'We Are Here to Help', title: 'Contact Mama Mo', subtitle: 'Get in touch about bulk orders, printing, and store services.', imageUrl: '/images/banago_store_location_map.png', align: 'center', theme: 'dark' }, 'top'),
+      systemSection('contact-location', 'location_map', { storeName: 'Mama Mo Ink Print and Supplies', address: 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002', phone: 'Contact our Banago store for current service inquiries', hours: 'Monday–Saturday: 8:00 AM–7:00 PM\\nSunday: 9:00 AM–5:00 PM', mapEmbedUrl: '' }, 'top'),
+      systemSection('contact-info', 'features_grid', { title: 'Contact & Store Information', columns: 3, items: [
+        { icon: 'map-pin', title: 'Visit Us', description: 'Purok 5, Barangay Banago, Nagcarlan, Laguna 4002.' },
+        { icon: 'phone', title: 'Call the Store', description: 'Contact our Banago team for current service inquiries.' },
+        { icon: 'clock', title: 'Store Hours', description: 'Monday–Saturday, 8:00 AM–7:00 PM; Sunday, 9:00 AM–5:00 PM.' }
+      ] }, 'top'),
+      systemSection('contact-faq', 'faq', { title: 'Frequently Asked Questions', items: [
+        { q: 'How soon can I pick up an online order?', a: 'Pickup readiness depends on the items ordered and current store workload. Check your order updates.' },
+        { q: 'Can I request rush printing?', a: 'Contact our printing team with your specifications and deadline to confirm availability.' }
+      ] }, 'bottom')
+    ]
+  },
+  {
+    id: 'system-page-transactions',
+    systemRoute: '/transactions',
+    slug: 'transactions',
+    title: 'Transactions',
+    description: 'Order history and transaction tracking page sections.',
+    hybrid: true,
+    components: [
+      systemSection('transactions-banner', 'announcement', { badge: 'Order Center', text: 'Review your order history and follow the latest order status below.' }, 'top'),
+      systemSection('transactions-faq', 'faq', { title: 'Order History FAQ', items: [
+        { q: 'Where can I find my order status?', a: 'Your recent orders and their current statuses are listed in the transaction history above.' },
+        { q: 'Need help with an order?', a: 'Contact the store and provide your order reference for assistance.' }
+      ] }, 'bottom')
+    ]
+  }
+];
+
+// Core pages share the storefront implementation instead of approximate templates.
+export const SYSTEM_CORE_PAGES = LEGACY_CORE_PAGES.map(page => ({
+  ...page, hybrid: true, components: [], nativeDesignVersion: 1,
+}));
+
+export const normalizeCorePage = (page) => {
+  const definition = SYSTEM_CORE_PAGES.find(item => item.systemRoute === page?.systemRoute);
+  if (!definition) return page;
+  if (page.nativeDesignVersion === 1) return { ...page, hybrid: true };
+  const legacy = LEGACY_CORE_PAGES.find(item => item.systemRoute === page.systemRoute);
+  const templateIds = new Set(legacy.components.map(section => section.id));
+  return {
+    ...page, hybrid: true, nativeDesignVersion: 1,
+    // Retain the old template for recovery without duplicating it on the page.
+    legacyTemplateComponents: page.components || [],
+    components: (page.components || []).filter(section => !templateIds.has(section.id)),
+  };
+};
+
+export const createSystemPage = (route) => {
+  const template = SYSTEM_CORE_PAGES.find(page => page.systemRoute === route);
+  if (!template) return null;
+  return {
+    ...template,
+    components: JSON.parse(JSON.stringify(template.components)),
+    status: 'published',
+    author: 'Store Manager',
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10),
+    publishedAt: new Date().toISOString().slice(0, 10),
+    showInNav: false,
+    showInFooter: false
+  };
+};

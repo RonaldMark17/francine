@@ -1,5 +1,7 @@
+import ModalOverlay from './ModalOverlay';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { X, ShoppingBag, Check, ShieldCheck, Truck, RefreshCw, Star } from 'lucide-react';
 
 const LOCAL_PRODUCT_IMAGES = {
@@ -38,15 +40,7 @@ export default function ProductDetailModal() {
     }
   }, [quickViewProduct?.id]);
 
-  // Lock background body scroll while modal is open
-  useEffect(() => {
-    if (!quickViewProduct) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [quickViewProduct]);
+  useBodyScrollLock(Boolean(quickViewProduct));
 
   // Close on Escape key
   useEffect(() => {
@@ -85,12 +79,11 @@ export default function ProductDetailModal() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+    <ModalOverlay
       onClick={handleClose}
     >
       <div 
-        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden animate-modal-pop max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain my-auto"
+        className="relative bg-white max-w-4xl w-full border border-neutral-300 shadow-2xl overflow-hidden animate-modal-pop max-h-[85dvh] overflow-y-auto overscroll-contain my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -279,6 +272,6 @@ export default function ProductDetailModal() {
           </div>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

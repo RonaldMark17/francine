@@ -1,12 +1,16 @@
+import ModalOverlay from '../components/ModalOverlay';
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/initialData';
 import { DEFAULT_SECTION_SETTINGS } from '../data/sectionSettings';
+import { SYSTEM_CORE_PAGES, createSystemPage } from '../data/builderData';
 import VisualPageEditor from '../components/builder/VisualPageEditor';
 import MediaLibraryModal from '../components/builder/MediaLibraryModal';
 import NavigationManagerModal from '../components/builder/NavigationManagerModal';
 import StockAdjustmentModal from '../components/inventory/StockAdjustmentModal';
 import { loadPageBuilderDraft } from '../utils/pageBuilderDraft';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { 
   Package, 
   ShoppingBag, 
@@ -153,10 +157,20 @@ export default function AdminDashboard() {
           const savedPage = customPages.find(page => page.id === editorPageId || page.slug === editorPageId);
           const recoveredDraft = loadPageBuilderDraft(editorPageId);
           const openPage = editingCustomPage?.id === editorPageId ? editingCustomPage : null;
-          const requestedPage = savedPage || recoveredDraft?.page || openPage;
+          const systemDefinition = SYSTEM_CORE_PAGES.find(page => page.systemRoute === savedPage?.systemRoute || page.id === editorPageId);
+          const normalizedSavedPage = savedPage && systemDefinition
+            ? (openPage?.hybrid === systemDefinition.hybrid
+              ? openPage
+              : { ...systemDefinition, ...savedPage, hybrid: systemDefinition.hybrid })
+            : savedPage;
+          const requestedPage = normalizedSavedPage || recoveredDraft?.page || openPage || (systemDefinition ? createSystemPage(systemDefinition.systemRoute) : null);
 
           if (requestedPage) {
-            setEditingCustomPage(requestedPage);
+            if (editingCustomPage?.id !== requestedPage.id || (
+              systemDefinition && editingCustomPage?.hybrid !== systemDefinition.hybrid
+            )) {
+              setEditingCustomPage(requestedPage);
+            }
             setIsVisualEditorOpen(true);
             return;
           }
@@ -253,7 +267,7 @@ export default function AdminDashboard() {
   const adminNavItems = [
     { id: 'orders', label: 'Transactions & Orders', icon: ShoppingBag, count: orders.length },
     { id: 'inventory', label: 'Inventory & Stock Ledger', icon: Package, count: products.length },
-    { id: 'pages', label: 'Dynamic Pages & CMS', icon: Layout, count: customPages.length },
+    { id: 'pages', label: 'Dynamic Pages & CMS', icon: Layout, count: customPages.filter(page => !page.systemRoute).length },
     { id: 'promotions', label: 'Discounts & Promos', icon: Tag, count: promotionsList.length },
     { id: 'inquiries', label: 'Print Requests', icon: Printer, count: serviceInquiries.length },
     { id: 'analytics', label: 'Financial Analytics', icon: BarChart3 },
@@ -391,6 +405,15 @@ export default function AdminDashboard() {
     updateAdminUrl('pages', page.id);
   };
 
+  const handleEditSystemPage = (definition) => {
+    const savedPage = customPages.find(page => page.systemRoute === definition.systemRoute);
+    const page = savedPage
+      ? { ...definition, ...savedPage, hybrid: definition.hybrid }
+      : createSystemPage(definition.systemRoute);
+    if (!page) return;
+    handleEditCustomPage(page);
+  };
+
   const handleCloseVisualEditor = () => {
     setIsVisualEditorOpen(false);
     setEditingCustomPage(null);
@@ -435,16 +458,7 @@ export default function AdminDashboard() {
 
   // Lock background body scroll while any modal is open in Admin
   const isAnyAdminModalOpen = isAddProductModalOpen || Boolean(selectedOrderPreview) || isAddPromoOpen || isMediaLibraryOpen || isNavManagerOpen || isStockModalOpen || isVisualEditorOpen;
-  
-  useEffect(() => {
-    if (isAnyAdminModalOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isAnyAdminModalOpen]);
+  useBodyScrollLock(isAnyAdminModalOpen || isMobileSidebarOpen);
 
   // Filtered orders
   const filteredOrders = orders.filter(o => {
@@ -486,13 +500,15 @@ export default function AdminDashboard() {
       {/* ========================================================= */}
       {/* SIDEBAR NAVIGATION (Desktop Fixed / Mobile Drawer)       */}
       {/* ========================================================= */}
-      <aside 
-        className={`fixed md:sticky top-0 left-0 z-50 h-screen w-72 bg-[#111111] text-neutral-200 flex flex-col justify-between border-r border-neutral-800 transition-transform duration-300 ${
+      <div className="hidden md:block w-72 shrink-0" aria-hidden="true" />
+      {createPortal(<>
+      <aside
+        className={`fixed top-0 left-0 z-50 h-dvh max-h-dvh w-72 max-w-[85vw] overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-[#111111] text-neutral-200 flex flex-col justify-between border-r border-neutral-800 transition-transform duration-300 ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Top: Brand & Back to Store */}
-        <div className="p-5 border-b border-neutral-800/80 space-y-4">
+        <div className="shrink-0 p-5 border-b border-neutral-800/80 space-y-4">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => navigateTo('home')}
@@ -507,6 +523,7 @@ export default function AdminDashboard() {
             </button>
             <button 
               onClick={() => setIsMobileSidebarOpen(false)}
+              aria-label="Close sidebar"
               className="md:hidden p-1.5 text-neutral-400 hover:text-white"
             >
               <X className="w-5 h-5" />
@@ -528,7 +545,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Center: Navigation Links */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-none">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 space-y-1 scrollbar-none">
           <div className="px-3 pb-2 text-[10px] uppercase font-mono tracking-widest text-neutral-500">
             Operations & Logistics
           </div>
@@ -563,7 +580,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Bottom: Store Location & Admin User Profile */}
-        <div className="p-4 border-t border-neutral-800/80 bg-neutral-950/60 space-y-3">
+        <div className="shrink-0 p-4 border-t border-neutral-800/80 bg-neutral-950/60 space-y-3">
           
           <div className="flex items-center gap-2 text-[11px] text-neutral-400 px-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -603,6 +620,8 @@ export default function AdminDashboard() {
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
         />
       )}
+
+      </>, document.body)}
 
       {/* ========================================================= */}
       {/* MAIN ADMIN WORKSPACE                                      */}
@@ -677,6 +696,7 @@ export default function AdminDashboard() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl w-full mx-auto">
           
           {/* KPI Metrics Summary Cards */}
+          {activeAdminTab === 'orders' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-down">
             
             {/* Card 1: Gross Sales */}
@@ -763,6 +783,7 @@ export default function AdminDashboard() {
             </div>
 
           </div>
+          )}
 
           {/* ========================================================= */}
           {/* TAB CONTENT WITH PAGE-ENTER TRANSITION                    */}
@@ -1207,8 +1228,51 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {customPages.map((page) => {
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-neutral-800">System / Core Pages</h4>
+                    <p className="text-[11px] text-neutral-500 mt-1">Edit the storefront pages that power the main customer experience.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {SYSTEM_CORE_PAGES.map((definition) => {
+                    const page = customPages.find(item => item.systemRoute === definition.systemRoute);
+                    return (
+                      <div key={definition.id} className="bg-white rounded-xl border border-neutral-200/90 p-6 flex flex-col justify-between space-y-5 hover:border-neutral-400 hover:shadow-md transition-all shadow-xs group">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full border bg-blue-50 text-blue-800 border-blue-200">System Page</span>
+                            <span className="text-[10px] font-mono text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded">{page?.components?.length ?? definition.components.length} sections</span>
+                          </div>
+                          <div>
+                            <h4 className="font-editorial text-xl text-black font-semibold leading-snug group-hover:text-amber-800 transition-colors">{page?.title || definition.title}</h4>
+                            <p className="font-mono text-[11px] text-neutral-500 mt-1">{definition.systemRoute}</p>
+                          </div>
+                          <p className="text-xs text-neutral-600 font-light line-clamp-2 leading-relaxed">{definition.description}</p>
+                        </div>
+                        <div className="pt-4 border-t border-neutral-100 flex items-center justify-between text-xs">
+                          <button
+                            onClick={() => handleEditSystemPage(definition)}
+                            className="px-3 py-1.5 rounded-lg bg-black text-white text-[11px] uppercase tracking-wider font-medium hover:bg-neutral-800 transition-colors shadow-xs"
+                          >
+                            Visual Editor
+                          </button>
+                          <span className="text-[10px] text-neutral-400">{definition.hybrid ? 'Functional page with editable sections' : 'Fully editable page sections'}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-5 border-t border-neutral-200">
+                <div className="mb-3">
+                  <h4 className="text-xs uppercase tracking-[0.18em] font-semibold text-neutral-800">Custom / Campaign Pages</h4>
+                  <p className="text-[11px] text-neutral-500 mt-1">User-created landing pages, promotions, and seasonal campaigns.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {customPages.filter(page => !page.systemRoute).map((page) => {
                   const isPublished = page.status === 'published';
                   return (
                     <div
@@ -1300,6 +1364,7 @@ export default function AdminDashboard() {
                     </div>
                   );
                 })}
+                </div>
               </div>
 
             </div>
@@ -1665,16 +1730,17 @@ export default function AdminDashboard() {
         </main>
       </div>
 
+      {createPortal(
+        <>
       {/* ========================================================= */}
       {/* MODAL 1: ADD / EDIT PRODUCT                               */}
       {/* ========================================================= */}
       {isAddProductModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+        <ModalOverlay
           onClick={() => setIsAddProductModalOpen(false)}
         >
           <div 
-            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
+            className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header: Keep fixed at top */}
@@ -1707,7 +1773,7 @@ export default function AdminDashboard() {
               id="admin-product-form"
               onSubmit={handleSaveProduct} 
               ref={productModalBodyRef}
-              className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
             >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Product Title *</label>
@@ -1875,19 +1941,18 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* ========================================================= */}
       {/* MODAL 2: ORDER DETAILS PREVIEW                            */}
       {/* ========================================================= */}
       {selectedOrderPreview && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+        <ModalOverlay
           onClick={() => setSelectedOrderPreview(null)}
         >
           <div 
-            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
+            className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs text-neutral-800"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header: Keep fixed at top */}
@@ -1905,7 +1970,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Body: Enable vertical scroll */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF9F5] rounded-xl border border-neutral-200 text-xs">
                 <div>
                   <span className="text-[10px] uppercase text-neutral-400 block font-mono font-bold">Customer</span>
@@ -1970,19 +2035,18 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* ========================================================= */}
       {/* MODAL 3: CREATE PROMOTION CODE                            */}
       {/* ========================================================= */}
       {isAddPromoOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+        <ModalOverlay
           onClick={() => setIsAddPromoOpen(false)}
         >
           <div 
-            className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
+            className="relative w-full max-w-md max-h-[85dvh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header: Keep fixed at top */}
@@ -2002,7 +2066,7 @@ export default function AdminDashboard() {
             <form 
               id="admin-promo-form"
               onSubmit={handleSavePromo} 
-              className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-4"
             >
               <div>
                 <label className="block font-medium text-neutral-700 mb-1">Coupon Code *</label>
@@ -2101,7 +2165,7 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* ========================================================= */}
@@ -2111,7 +2175,7 @@ export default function AdminDashboard() {
         <VisualPageEditor
           key={editingCustomPage.id}
           page={editingCustomPage}
-          isNewPage={!customPages.some(page => page.id === editingCustomPage.id)}
+          isNewPage={!editingCustomPage.systemRoute && !customPages.some(page => page.id === editingCustomPage.id)}
           onClose={handleCloseVisualEditor}
           onSave={(updatedPage) => {
             saveCustomPage(updatedPage);
@@ -2152,6 +2216,9 @@ export default function AdminDashboard() {
           setStockAdjustProduct(null);
         }}
       />
+        </>,
+        document.body
+      )}
 
     </div>
   );

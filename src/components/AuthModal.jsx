@@ -1,5 +1,7 @@
+import ModalOverlay from './ModalOverlay';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { 
   X, 
   User, 
@@ -56,15 +58,7 @@ export default function AuthModal() {
     }
   }, [isAuthModalOpen, authModalMode]);
 
-  // Lock background body scroll when auth modal is open
-  useEffect(() => {
-    if (!isAuthModalOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isAuthModalOpen]);
+  useBodyScrollLock(isAuthModalOpen);
 
   // Close on Escape key
   useEffect(() => {
@@ -133,16 +127,15 @@ export default function AuthModal() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex justify-center p-3 sm:p-6 animate-fade-in"
+    <ModalOverlay
       onClick={handleClose}
     >
       <div 
-        className="relative bg-white max-w-lg w-full border border-neutral-300 shadow-2xl overflow-hidden my-auto sm:my-6 animate-modal-pop max-h-[92vh] sm:max-h-[90vh] overflow-y-auto"
+        className="relative bg-white max-w-lg w-full border border-neutral-300 shadow-2xl overflow-hidden my-auto flex flex-col animate-modal-pop max-h-[85dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#FAF9F5] border-b border-neutral-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="bg-[#FAF9F5] border-b border-neutral-200 px-6 py-4 flex items-center justify-between shrink-0 z-10">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-black" />
             <span className="text-xs font-light font-editorial uppercase tracking-[0.2em] text-black">
@@ -159,24 +152,24 @@ export default function AuthModal() {
         </div>
 
         {/* Content Body */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-8 space-y-6">
 
           {/* If already logged in, show profile card */}
           {currentUser ? (
             <div className="space-y-6">
-              <div className="bg-[#FAF9F5] border border-neutral-300 p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-editorial text-lg">
+              <div className="bg-[#FAF9F5] border border-neutral-300 p-4 sm:p-6 space-y-4">
+                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="w-12 h-12 shrink-0 bg-black text-white rounded-full flex items-center justify-center font-editorial text-lg">
                       {currentUser.name.charAt(0)}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-black text-sm">{currentUser.name}</h3>
-                      <p className="text-xs text-neutral-500 font-mono">{currentUser.email}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-black text-sm break-words [overflow-wrap:anywhere]">{currentUser.name}</h3>
+                      <p className="text-xs text-neutral-500 font-mono break-words [overflow-wrap:anywhere]">{currentUser.email}</p>
                     </div>
                   </div>
 
-                  <span className={`text-[10px] uppercase tracking-wider px-2.5 py-1 font-semibold border ${
+                  <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2.5 py-1 font-semibold border ${
                     currentUser.role === 'admin'
                       ? 'bg-black text-white border-black'
                       : 'bg-emerald-100 text-emerald-900 border-emerald-300'
@@ -185,7 +178,7 @@ export default function AuthModal() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-200 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>div]:min-w-0 [&>div]:break-words [&>div]:[overflow-wrap:anywhere] pt-3 border-t border-neutral-200 text-xs">
                   <div>
                     <span className="text-[10px] uppercase text-neutral-400 block">Affiliation</span>
                     <span className="font-medium text-neutral-800">{currentUser.affiliation || 'Not specified'}</span>
@@ -209,7 +202,7 @@ export default function AuthModal() {
                     <span className="text-[10px] uppercase text-neutral-400 block mb-1">Saved Address</span>
                     <div className="flex items-start gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0 mt-0.5" />
-                      <span className="text-neutral-700 font-light">{currentUser.savedAddress}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-neutral-700 font-light">{currentUser.savedAddress}</span>
                     </div>
                   </div>
                 )}
@@ -217,7 +210,7 @@ export default function AuthModal() {
 
 
 
-              <div className="pt-2 flex items-center justify-between border-t border-neutral-200">
+              <div className="pt-3 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 border-t border-neutral-200">
                 <button
                   onClick={handleLogout}
                   className="text-xs text-rose-600 hover:underline font-medium flex items-center gap-1.5"
@@ -225,7 +218,7 @@ export default function AuthModal() {
                   <LogOut className="w-3.5 h-3.5" />
                   Sign Out
                 </button>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full sm:w-auto flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3">
                   <button
                     onClick={() => {
                       handleClose();
@@ -450,6 +443,6 @@ export default function AuthModal() {
 
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

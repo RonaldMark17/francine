@@ -1,3 +1,9 @@
+import PreviewFrame from './PreviewFrame';
+import Navbar from '../Navbar';
+import Footer from '../Footer';
+import CorePageContent from './CorePageContent';
+import { normalizeCorePage } from '../../data/builderData';
+import ModalOverlay from '../ModalOverlay';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import DynamicPageRenderer from './DynamicPageRenderer';
@@ -6,6 +12,7 @@ import ExtendedSectionInspector from './ExtendedSectionInspector';
 import InspectorAccordion from './InspectorAccordion';
 import SectionDesignInspector from './SectionDesignInspector';
 import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import {
   clearPageBuilderDraft,
   loadPageBuilderDraft,
@@ -39,12 +46,13 @@ const serializeEditorPage = (pageData) => JSON.stringify({
 
 export default function VisualPageEditor({ page, isNewPage = false, onClose, onSave }) {
   const { showToast } = useApp();
+  useBodyScrollLock(true);
   const previewScrollRef = useRef(null);
   const recoveryNoticeShownRef = useRef(false);
   const [initialEditorData] = useState(() => {
     const recoveredDraft = loadPageBuilderDraft(page?.id);
     return {
-      page: recoveredDraft?.page || page || {},
+      page: normalizeCorePage(recoveredDraft?.page || page || {}),
       recovered: Boolean(recoveredDraft)
     };
   });
@@ -86,7 +94,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   });
   const hasUnsavedChanges = editorSnapshot !== savedSnapshot;
   const draftPage = useMemo(() => ({
-    ...page,
+    ...initialPage,
     id: page?.id || initialPage.id,
     title: pageTitle,
     slug: pageSlug,
@@ -94,7 +102,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     showInNav,
     showInFooter,
     components
-  }), [page, initialPage.id, pageTitle, pageSlug, pageDesc, showInNav, showInFooter, components]);
+  }), [page, initialPage, pageTitle, pageSlug, pageDesc, showInNav, showInFooter, components]);
 
   useEffect(() => {
     if (initialEditorData.recovered && !recoveryNoticeShownRef.current) {
@@ -132,7 +140,8 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     const preview = previewScrollRef.current;
     if (!preview || !componentId) return;
 
-    const target = Array.from(preview.querySelectorAll('[data-component-id]'))
+    const previewDocument = preview.querySelector('iframe')?.contentDocument || preview;
+    const target = Array.from(previewDocument.querySelectorAll('[data-component-id]'))
       .find(element => element.dataset.componentId === componentId);
 
     target?.scrollIntoView({
@@ -286,6 +295,19 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       }
     },
     {
+      type: 'steps',
+      label: 'Order Process Steps',
+      desc: 'Numbered steps explaining how customers place an order',
+      defaultData: {
+        title: 'How It Works',
+        items: [
+          { title: 'Choose a Service', description: 'Select the service you need.' },
+          { title: 'Share Details', description: 'Provide your specifications and timeline.' },
+          { title: 'Confirm Your Order', description: 'Review the estimate and submit your request.' }
+        ]
+      }
+    },
+    {
       type: 'category_grid',
       label: 'Category Quick Links',
       desc: 'Image cards that take shoppers directly to product categories',
@@ -412,7 +434,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     }
     const cleanSlug = pageSlug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const updatedPage = {
-      ...page,
+      ...initialPage,
       id: page?.id || `page-${Date.now()}`,
       title: pageTitle.trim(),
       slug: cleanSlug,
@@ -435,7 +457,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     }
     const cleanSlug = pageSlug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const updatedPage = {
-      ...page,
+      ...initialPage,
       id: page?.id || `page-${Date.now()}`,
       title: pageTitle.trim(),
       slug: cleanSlug,
@@ -466,6 +488,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     description: pageDesc,
     components
   };
+  const pagePath = page.systemRoute || `/${pageSlug}`;
 
   return (
     <div className="fixed inset-0 z-50 h-screen min-h-0 bg-[#121212] text-white flex flex-col overflow-hidden animate-fade-in">
@@ -484,7 +507,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 Website Builder
               </span>
               <span className="text-[10px] text-neutral-400 font-mono">
-                /{pageSlug}
+                {pagePath}
               </span>
               <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 font-bold ${
                 page?.status === 'published' ? 'bg-emerald-950 text-emerald-400 border border-emerald-700' : 'bg-neutral-800 text-neutral-400'
@@ -571,35 +594,43 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             <div>
               <label className="block text-[11px] text-neutral-400 mb-1">URL Slug</label>
               <div className="flex items-center bg-neutral-950 border border-neutral-800 px-2.5 py-1 text-xs">
-                <span className="text-neutral-500 font-mono">/</span>
-                <input
-                  type="text"
-                  value={pageSlug}
-                  onChange={(e) => setPageSlug(e.target.value)}
-                  className="w-full bg-transparent text-white font-mono focus:outline-none pl-1"
-                />
+                {!page.systemRoute && <span className="text-neutral-500 font-mono">/</span>}
+                  {page.systemRoute ? (
+                    <span className="w-full text-neutral-400 font-mono pl-1">{page.systemRoute}</span>
+                  ) : (
+                    <input
+                      type="text"
+                      value={pageSlug}
+                      onChange={(e) => setPageSlug(e.target.value)}
+                      className="w-full bg-transparent text-white font-mono focus:outline-none pl-1"
+                    />
+                  )}
               </div>
             </div>
 
             <div className="flex items-center gap-4 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-[11px] text-neutral-300">
-                <input
-                  type="checkbox"
-                  checked={showInNav}
-                  onChange={(e) => setShowInNav(e.target.checked)}
-                  className="accent-white"
-                />
-                <span>Show in Header</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer text-[11px] text-neutral-300">
-                <input
-                  type="checkbox"
-                  checked={showInFooter}
-                  onChange={(e) => setShowInFooter(e.target.checked)}
-                  className="accent-white"
-                />
-                <span>Show in Footer</span>
-              </label>
+              {!page.systemRoute && (
+                <>
+                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-neutral-300">
+                    <input
+                      type="checkbox"
+                      checked={showInNav}
+                      onChange={(e) => setShowInNav(e.target.checked)}
+                      className="accent-white"
+                    />
+                    <span>Show in Header</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-neutral-300">
+                    <input
+                      type="checkbox"
+                      checked={showInFooter}
+                      onChange={(e) => setShowInFooter(e.target.checked)}
+                      className="accent-white"
+                    />
+                    <span>Show in Footer</span>
+                  </label>
+                </>
+              )}
             </div>
           </div>
 
@@ -618,7 +649,13 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           </div>
 
           {/* Sections List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
+            {page.systemRoute && (
+              <div className="p-3 border border-neutral-700 bg-neutral-800 text-xs text-neutral-300 space-y-2">
+                <strong className="block text-white">Original {page.title} design</strong>
+                <p>The preview uses the live storefront layout and data. Add sections above or below this page. Manage products, promotions, and store information in their admin tabs.</p>
+              </div>
+            )}
             {components.map((comp, idx) => {
               const isSelected = selectedCompId === comp.id;
               return (
@@ -639,6 +676,11 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                       {comp.type.replace('_', ' ')}
                     </span>
                   </div>
+                  {page.hybrid && (
+                    <span className="text-[9px] uppercase tracking-wider text-neutral-500 mr-2">
+                      {comp.data?.placement === 'bottom' ? 'Bottom' : 'Top'}
+                    </span>
+                  )}
 
                   {/* Reorder and Delete Mini Controls */}
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -699,15 +741,24 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
               </div>
               <span className="text-[10px] truncate max-w-[240px]">
-                mamamoinkprint.ph/{pageSlug}
+                mamamoinkprint.ph{pagePath}
               </span>
               <span className="text-[10px] text-neutral-500">
                 {viewport.toUpperCase()}
               </span>
             </div>
 
-            {/* Dynamic Page Live Output */}
-            <DynamicPageRenderer page={previewPageObject} />
+            {/* Use the storefront design within the selected device viewport. */}
+            <PreviewFrame>
+            {page.systemRoute && <div inert><Navbar previewTab={page.systemRoute === '/' ? 'home' : page.systemRoute.slice(1)} /></div>}
+            <div inert={page.systemRoute ? true : undefined}>
+            <DynamicPageRenderer
+              page={previewPageObject}
+              coreContent={page.systemRoute ? <CorePageContent route={page.systemRoute} /> : null}
+            />
+            </div>
+            {page.systemRoute && <div inert><Footer /></div>}
+            </PreviewFrame>
           </div>
 
         </main>
@@ -728,13 +779,26 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
+          <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5 text-xs">
             {!selectedComponent ? (
               <div className="py-12 text-center text-neutral-500 text-xs">
                 Select a section from the left tree to inspect and customize its content.
               </div>
             ) : (
               <>
+                {page.hybrid && (
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Section Position</label>
+                    <select
+                      value={selectedComponent.data.placement === 'bottom' ? 'bottom' : 'top'}
+                      onChange={(event) => handleUpdateComponentData('placement', event.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 px-3 py-2 text-white focus:outline-none"
+                    >
+                      <option value="top">Above the native {page.title} component</option>
+                      <option value="bottom">Below the native {page.title} component</option>
+                    </select>
+                  </div>
+                )}
                 <InspectorAccordion title="Content" defaultOpen>
                 {/* Hero Fields */}
                 {selectedComponent.type === 'hero' && (
@@ -1089,12 +1153,11 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
 
       {/* MODAL: ADD COMPONENT PICKER */}
       {isAddComponentOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-fade-in"
+        <ModalOverlay
           onClick={() => setIsAddComponentOpen(false)}
         >
           <div 
-            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
+            className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl overflow-hidden my-auto animate-modal-pop text-xs"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header: Keep fixed at top */}
@@ -1116,7 +1179,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             </div>
 
             {/* Modal Body: Enable vertical scroll */}
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {COMPONENT_TYPES.map(comp => (
                 <div
                   key={comp.type}
@@ -1147,7 +1210,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* MEDIA LIBRARY PICKER MODAL */}

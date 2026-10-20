@@ -76,7 +76,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center relative z-10 py-16 sm:py-24">
           
           <img 
-            src="/images/mama_mo_logo.png" 
+            src="/images/mama_mo_logo.jpg" 
             alt="Mama Mo Ink Print & Supplies" 
             className="animate-pop-in w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-lg border-2 border-white/80 mb-6 hover:scale-105 transition-transform duration-300"
           />

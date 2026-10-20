@@ -16,7 +16,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <img 
-                src="/images/mama_mo_logo.png" 
+                src="/images/mama_mo_logo.jpg" 
                 alt="Mama Mo Ink" 
                 className="w-12 h-12 rounded-full object-cover border border-neutral-700 shadow-md"
               />
