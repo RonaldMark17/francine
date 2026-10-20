@@ -33,5 +33,5 @@ export function useCoreContent() {
           }
         }}>{content(id, fallback) || '\u200b'}</span>
     : content(id, fallback);
-  return Object.assign(content, { text, collection: definition => getCollectionItems(values, definition) });
+  return Object.assign(content, { text, editable: selectable, collection: definition => getCollectionItems(values, definition) });
 }

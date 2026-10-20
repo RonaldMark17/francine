@@ -214,10 +214,10 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {coreContent.collection(CORE_COLLECTIONS['/about'][0]).map((member) => (
             <div key={member.id} data-core-field={`team-${member.id}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
-              <div data-core-field={`team-${member.id}-image`} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
+              <div data-core-field={`team-${member.id}-image`} tabIndex={coreContent.editable ? 0 : undefined} role={coreContent.editable ? 'button' : undefined} aria-label={coreContent.editable ? `Add or change photo for ${coreContent(`team-${member.id}-name`, member.name)}` : undefined} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
                 {coreContent(`team-${member.id}-image`, '') ? (
                   <img src={coreContent(`team-${member.id}-image`, '')} alt={coreContent(`team-${member.id}-name`, member.name)} className="w-full h-full object-cover" />
-                ) : coreContent.text(`team-${member.id}-initials`, member.initials)}
+                ) : coreContent(`team-${member.id}-initials`, member.initials)}
               </div>
               <div>
                 <h4 className="font-semibold text-black text-xs group-hover:text-amber-900 transition-colors">{coreContent.text(`team-${member.id}-name`, member.name)}</h4>

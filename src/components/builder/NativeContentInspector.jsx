@@ -24,7 +24,7 @@ export default function NativeContentInspector({ route, title, values, onChange,
         <h2 className="text-lg text-white font-medium">{title}</h2>
         <p className="mt-2 text-xs text-neutral-400 leading-relaxed">Click text in the preview to type directly, or select an image to replace it here. Publish when ready.</p>
       </div>
-      {(CORE_COLLECTIONS[route] || []).map(definition => <CoreCollectionInspector key={definition.id} definition={definition} values={values} onChange={onChange} />)}
+      {(CORE_COLLECTIONS[route] || []).map(definition => <CoreCollectionInspector key={definition.id} definition={definition} values={values} onChange={onChange} onChooseImage={onChooseImage} />)}
       <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-950 p-1 border border-neutral-800" role="group" aria-label="Content type">
         {[['text', Type, 'Text'], ['images', Image, 'Images']].map(([id, Icon, label]) => (
           <button key={id} type="button" aria-pressed={tab === id} onClick={() => setTab(id)} className={`flex items-center justify-center gap-2 py-2 rounded-md text-xs transition-colors ${tab === id ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-400 hover:text-white'}`}><Icon className="w-3.5 h-3.5" />{label}</button>
