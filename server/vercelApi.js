@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless'
+import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
 import { hashPassword, verifyPassword, sanitizeUser, validatePasswordPolicy, sanitizeEmail, sanitizeString } from './security.js'
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_SERVICE_INQUIRIES, PROMOTIONS, STORE_INFO } from '../src/data/initialData.js'
@@ -7,46 +7,52 @@ import { INITIAL_NAV_CONFIG, INITIAL_CUSTOM_PAGES, INITIAL_MEDIA_LIBRARY, INITIA
 const validInquiryStatuses = new Set(['In Review', 'Responded', 'Closed'])
 const validOrderStatuses = new Set(['Order Placed', 'Processing', 'Ready for Pickup', 'Out for Delivery', 'Completed', 'Cancelled'])
 const privateBuckets = new Set(['users', 'orders', 'serviceInquiries', 'inventoryLedger', 'auditLogs'])
+const TABLE = 'app_records'
+let supabaseClient
 
 function db() {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.')
-  return neon(process.env.DATABASE_URL)
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.')
+  }
+  if (!supabaseClient) {
+    supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+    })
+  }
+  return supabaseClient
 }
 
-async function ensureSchema(sql) {
-  await sql`CREATE TABLE IF NOT EXISTS app_records (
-    bucket text NOT NULL,
-    record_id text NOT NULL,
-    payload jsonb NOT NULL,
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (bucket, record_id)
-  )`
-  await sql`CREATE INDEX IF NOT EXISTS app_records_bucket_idx ON app_records (bucket)`
+async function result(query) {
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+async function ensureSchema(client) {
+  try {
+    await result(client.from(TABLE).select('record_id').limit(1))
+  } catch (error) {
+    error.message = `Supabase table check failed: ${error.message}`
+    throw error
+  }
 }
 
 const idOf = (value, prefix) => value?.id || `${prefix}-${randomBytes(10).toString('hex')}`
-const json = (value) => JSON.stringify(value ?? {})
 async function rows(sql, bucket) {
-  const found = await sql`SELECT payload FROM app_records WHERE bucket = ${bucket}`
+  const found = await result(sql.from(TABLE).select('payload').eq('bucket', bucket))
   return found.map(row => row.payload)
 }
 async function one(sql, bucket, id) {
-  const found = await sql`SELECT payload FROM app_records WHERE bucket = ${bucket} AND record_id = ${id} LIMIT 1`
-  return found[0]?.payload ?? null
+  const found = await result(sql.from(TABLE).select('payload').eq('bucket', bucket).eq('record_id', id).maybeSingle())
+  return found?.payload ?? null
 }
 async function put(sql, bucket, id, payload) {
-  await sql`INSERT INTO app_records (bucket, record_id, payload) VALUES (${bucket}, ${id}, ${json(payload)}::jsonb)
-    ON CONFLICT (bucket, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = now()`
+  await result(sql.from(TABLE).upsert({ bucket, record_id: id, payload }, { onConflict: 'bucket,record_id' }))
 }
 async function remove(sql, bucket, id) {
-  await sql`DELETE FROM app_records WHERE bucket = ${bucket} AND record_id = ${id}`
+  await result(sql.from(TABLE).delete().eq('bucket', bucket).eq('record_id', id))
 }
 async function inc(sql, bucket, id, key) {
-  if (bucket === 'promotionsList' && key === 'usageCount') {
-    await sql`UPDATE app_records SET payload = jsonb_set(jsonb_set(payload, '{usageCount}', to_jsonb(COALESCE((payload->>'usageCount')::int, (payload->>'times_used')::int, 0) + 1), true), '{times_used}', to_jsonb(COALESCE((payload->>'usageCount')::int, (payload->>'times_used')::int, 0) + 1), true), updated_at = now() WHERE bucket = ${bucket} AND record_id = ${id}`
-    return
-  }
-  await sql`UPDATE app_records SET payload = jsonb_set(payload, ARRAY[${key}], to_jsonb(COALESCE((payload->>${key})::int, 0) + 1), true), updated_at = now() WHERE bucket = ${bucket} AND record_id = ${id}`
+  await result(sql.rpc('increment_app_record_field', { p_bucket: bucket, p_record_id: id, p_field_name: key }))
 }
 function safeUser(user) { return sanitizeUser(user) }
 function getToken(req) { return (req.headers.authorization || '').replace(/^Bearer\s+/i, '') }
@@ -92,18 +98,6 @@ async function bootstrapAdmin(sql) {
   await put(sql, 'users', user.id, user)
 }
 
-function responseData(records, user) {
-  const allowed = user?.role === 'admin'
-  const data = Object.fromEntries(Object.entries(records).map(([key, value]) => [key, privateBuckets.has(key) && !allowed ? [] : value]))
-  if (user?.role === 'buyer') data.orders = (records.orders || []).filter(order => order.userId === user.id)
-  if (!allowed) data.customPages = (data.customPages || []).filter(page => page.status === 'published')
-  data.users = allowed ? data.users.map(safeUser) : []
-  data.securitySummary = { engine: 'Neon Postgres', activeSessions: records.sessions?.filter(x => x.valid).length || 0, totalAuditLogs: records.auditLogs?.length || 0 }
-  delete data.sessions
-  delete data.rateLimits
-  return data
-}
-
 async function allData(sql, user) {
   const buckets = ['users','products','categories','orders','serviceInquiries','promotionsList','inventoryLedger','customPages','navigationConfig','mediaLibrary','storeInfo','auditLogs','sessions','rateLimits']
   const results = await Promise.all(buckets.map(bucket => rows(sql, bucket)))
@@ -111,10 +105,18 @@ async function allData(sql, user) {
   data.navigationConfig = data.navigationConfig[0] || { headerNav: [], footerNav: [] }
   data.storeInfo = data.storeInfo[0] || null
   data.auditLogs = data.auditLogs.slice(-20).reverse()
-  return responseData(data, user)
+  const allowed = user?.role === 'admin'
+  const visible = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, privateBuckets.has(key) && !allowed ? [] : value]))
+  if (user?.role === 'buyer') visible.orders = (data.orders || []).filter(order => order.userId === user.id)
+  if (!allowed) visible.customPages = (data.customPages || []).filter(page => page.status === 'published')
+  visible.users = allowed ? data.users.map(safeUser) : []
+  visible.securitySummary = { engine: 'Supabase Postgres', activeSessions: data.sessions?.filter(x => x.valid).length || 0, totalAuditLogs: data.auditLogs?.length || 0 }
+  delete visible.sessions
+  delete visible.rateLimits
+  return visible
 }
 async function resetSeedData(sql) {
-  await sql`DELETE FROM app_records WHERE bucket NOT IN ('users','sessions')`
+  await result(sql.from(TABLE).delete().not('bucket', 'in', '("users","sessions")'))
   const seed = {
     products: INITIAL_PRODUCTS, orders: INITIAL_ORDERS, serviceInquiries: INITIAL_SERVICE_INQUIRIES,
     promotionsList: INITIAL_PROMOTIONS_LIST, inventoryLedger: INITIAL_INVENTORY_LEDGER,
@@ -161,7 +163,7 @@ export async function handleVercelApi(req, res) {
   const profile = async () => { user = await requireUser(sql, req); return user }
 
   if (method === 'OPTIONS') return res.status(204).end()
-  if (path === '/api/health' && method === 'GET') return send(200, { status: 'ok', engine: 'Neon Postgres' })
+  if (path === '/api/health' && method === 'GET') return send(200, { status: 'ok', engine: 'Supabase Postgres' })
   if (path === '/api/all-data' && method === 'GET') {
     user = await currentUser(sql, req)
     return send(200, await allData(sql, user))
@@ -241,17 +243,9 @@ export async function handleVercelApi(req, res) {
     }
     await put(sql, 'orders', order.id, order)
     for (const [productId, quantity] of productChanges) {
-      const changed = await sql`WITH prior AS (
-          SELECT record_id, COALESCE((payload->>'stock')::int, 0) AS previous_stock
-          FROM app_records WHERE bucket = 'products' AND record_id = ${productId} FOR UPDATE
-        ), updated AS (
-          UPDATE app_records AS record SET payload = jsonb_set(record.payload, '{stock}',
-            to_jsonb(GREATEST(0, prior.previous_stock - ${quantity})), true), updated_at = now()
-          FROM prior WHERE record.bucket = 'products' AND record.record_id = prior.record_id
-          RETURNING prior.previous_stock, record.payload
-        ) SELECT previous_stock, COALESCE((payload->>'stock')::int, 0) AS new_stock, payload->>'name' AS name FROM updated`
+      const changed = await result(sql.rpc('adjust_app_product_stock', { p_product_id: productId, p_change_amount: -quantity }))
       if (!changed.length) continue
-      const { previous_stock: previousStock, new_stock: newStock, name } = changed[0]
+      const { previous_stock: previousStock, new_stock: newStock, product_name: name } = changed[0]
       const entry = { id: idOf(null, 'led'), productId, productName: name, changeAmount: -quantity,
         previousStock, newStock, reason: `Customer Checkout #${order.id}`, date: new Date().toISOString(), user: customer?.name || 'Customer Checkout' }
       await put(sql, 'inventoryLedger', entry.id, entry)
@@ -297,17 +291,9 @@ export async function handleVercelApi(req, res) {
   if (parts[1] === 'products' && parts[3] === 'adjust-stock' && method === 'POST') {
     await admin(); const product = await one(sql, 'products', parts[2]); if (!product) return send(404, { error: 'Product not found.' })
     const change = Number(body.changeAmount); if (!Number.isInteger(change) || Math.abs(change) > 100000) return send(400, { error: 'changeAmount must be a valid whole number.' })
-    const changed = await sql`WITH prior AS (
-        SELECT record_id, COALESCE((payload->>'stock')::int, 0) AS previous_stock
-        FROM app_records WHERE bucket = 'products' AND record_id = ${parts[2]} FOR UPDATE
-      ), updated AS (
-        UPDATE app_records AS record SET payload = jsonb_set(record.payload, '{stock}',
-          to_jsonb(GREATEST(0, prior.previous_stock + ${change})), true), updated_at = now()
-        FROM prior WHERE record.bucket = 'products' AND record.record_id = prior.record_id
-        RETURNING prior.previous_stock, record.payload
-      ) SELECT previous_stock, COALESCE((payload->>'stock')::int, 0) AS new_stock, payload->>'name' AS name FROM updated`
+    const changed = await result(sql.rpc('adjust_app_product_stock', { p_product_id: parts[2], p_change_amount: change }))
     if (!changed.length) return send(404, { error: 'Product not found.' })
-    const { previous_stock: previousStock, new_stock: newStock, name } = changed[0]
+    const { previous_stock: previousStock, new_stock: newStock, product_name: name } = changed[0]
     const entry = { id: idOf(null,'led'), productId: parts[2], productName: name, changeAmount: change, previousStock, newStock, reason: sanitizeString(body.reason || '', 250), date: new Date().toISOString(), user: user.name }
     await put(sql, 'inventoryLedger', entry.id, entry); return send(200, { productId: parts[2], previousStock, newStock })
   }

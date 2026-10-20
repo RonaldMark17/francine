@@ -1,55 +1,60 @@
-# Deploy Mama Mo Ink to Vercel
+# Deploy Mama Mo Ink to Vercel with Supabase
 
-The frontend remains Vite/React. Vercel serves API requests through `api/[...path].js`; application data is stored in Neon Postgres. SQLite remains only for local development and the one-time import.
+The frontend remains Vite/React. Vercel serves requests through `api/[...path].js`; the server accesses Supabase Postgres through its Data API with a server-only service role key. SQLite remains for local development and the one-time import.
 
-## 1. Create the hosted database
+The Postgres schema uses a keyed `app_records` table with JSONB payloads. This preserves the existing app data shapes without exposing the database to the browser.
 
-Create a Neon Postgres project and copy its pooled connection string from the Neon dashboard. Keep the string private. Do not put it in a `VITE_*` variable or frontend source.
+## 1. Create the Supabase table and functions
 
-The Postgres schema is a keyed `app_records` table with JSONB payloads. This preserves the existing UI data shapes while moving persistence to hosted Postgres; it does not create one relational SQL table for each old SQLite table.
+In your Supabase project, open **SQL Editor**, paste the contents of [supabase/schema.sql](supabase/schema.sql), and run it. The table has Row Level Security enabled and no public policies; the API uses the service role key only on the server.
 
-Create `.env` in the project root from `.env.example`, then set:
+## 2. Set environment variables
 
-- `DATABASE_URL`: Neon pooled Postgres connection string.
-- `ADMIN_EMAIL`: email address for the production administrator.
+For local migration, copy `.env.example` to `.env` and fill these values from your Supabase dashboard:
+
+- `SUPABASE_URL`: the project's URL from Project Settings → API.
+- `SUPABASE_SERVICE_ROLE_KEY`: the secret `service_role` key from Project Settings → API. Keep this private. Never prefix it with `VITE_` or put it in frontend code.
+- `ADMIN_EMAIL`: email for the production administrator. Choose an email that is not already used by a buyer account.
 - `ADMIN_PASSWORD`: a unique password of at least 12 characters. Do not use the old demo password `admin123`.
 - `ADMIN_NAME`: optional display name.
 
-`.env` is ignored by Git. The API creates the administrator the first time it runs when the configured email is absent. It excludes the old demo admin records during migration.
+The Vercel Function uses Supabase's HTTPS Data API, so it does not need a raw Postgres connection string or pooler URL.
 
-## 2. Migrate the current SQLite data
+## 3. Migrate the existing SQLite data
 
-The SQLite file is the source. Keep a separate backup before migrating (one is present in this workspace as `backup-pre-vercel-*`). From the project directory run:
+The tracked `database.sqlite` is the import source. A backup of the SQLite file and WAL files is in the local `backup-pre-vercel-*` directory. From the project directory run:
 
 ```powershell
 npm install
-npm run db:migrate:neon
+npm run db:migrate:supabase
 ```
 
-The migration preserves products, categories, orders and order history, inquiries, promotions, inventory ledger, custom pages, navigation, media, store settings, audit records, and buyer accounts/password hashes. It omits admin accounts, sessions, and failed-login counters. Use an administrator email that is not already used by a buyer account. Existing buyer accounts can sign in and legacy plain-text passwords are upgraded to scrypt hashes at their next successful sign-in.
+The migration preserves products, categories, orders and order history, inquiries, promotions, inventory ledger, custom pages, navigation, media, store settings, audit records, and buyer accounts/password hashes. It omits old demo admins, sessions, and failed-login counters. Legacy plain-text buyer passwords are upgraded to scrypt hashes at their next successful sign-in.
 
-The migration stops if the Neon table already contains records. `npm run db:migrate:neon -- --force` replaces those records with the local SQLite contents; use it only when you intend to overwrite the Neon application data.
+The migration stops if the Supabase table already contains records. `npm run db:migrate:supabase -- --force` replaces all records in `app_records` with the local SQLite contents; use it only if you intend to overwrite the hosted app data.
 
-## 3. Configure Vercel
+## 4. Configure and deploy on Vercel
 
-Import the repository into Vercel with the project root as the Root Directory. Use Vite (or Other) with:
+Import the repository with the project root as the Root Directory. Use Vite (or Other) with:
 
 - Build command: `npm run build`
 - Output directory: `dist`
 - Install command: `npm install`
 
-Add `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optionally `ADMIN_NAME` under **Project Settings → Environment Variables** for Production and Preview as needed. Add secrets directly in the dashboard; do not commit them or prefix them with `VITE_`. Redeploy after changing environment variables. No `vercel.json` is needed for the Vite static output plus root `api/` Functions.
+Add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optionally `ADMIN_NAME` in **Project Settings → Environment Variables** for Production (and Preview if needed). Add secrets directly in the dashboard, not in source control. Redeploy after adding them. No `vercel.json` is needed for the Vite static output plus root `api/` Functions.
 
-## 4. Verify the deployment
+The first API request creates the configured administrator if that account is missing. Changing `ADMIN_PASSWORD` updates the configured admin password on the next API request.
 
-- `GET /api/health` should return `{ "status": "ok", "engine": "Neon Postgres" }`.
-- `GET /api/all-data` should return storefront data; anonymous requests do not receive customer orders, user records, or inquiries.
-- Sign in using the configured admin email/password. Admin data and mutations require the resulting server session token.
-- Submit a test inquiry from Printing Services. It should appear in the admin Inquiries panel; changing its status should persist after refresh.
+## 5. Verify
+
+- `GET /api/health` returns `{ "status": "ok", "engine": "Supabase Postgres" }`.
+- Anonymous `GET /api/all-data` returns storefront data without user records, orders, or inquiries.
+- Sign in with the configured admin email/password; admin list and edit operations use the issued server session.
+- Submit a test Printing Services inquiry; it should appear in the admin Inquiries panel and retain status changes after refresh.
 - Place a test order, confirm it appears in Transactions, and check its ID in Order Tracking.
 
-`/api/inquiries` POST and order creation are public storefront actions. Reading inquiries, changing statuses, order status updates, product and content administration, audit logs, and database reset require an authenticated administrator.
+Inquiry creation and order creation are public storefront actions. Reading inquiries, changing inquiry/order status, product and content administration, audit logs, and database reset require an authenticated administrator.
 
 ## Local development
 
-`npm run dev` continues to use the existing local SQLite middleware. To exercise Vercel Functions locally, use Vercel CLI with the project environment variables configured or pulled into a private local environment. Do not use a real production database for destructive tests such as `/api/reset`.
+`npm run dev` continues to use the local SQLite middleware. The migration and Vercel Functions use Supabase only when `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured.

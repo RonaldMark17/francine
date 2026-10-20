@@ -10,10 +10,10 @@
     "preview": "vite preview",
     "db:seed": "node scripts/seedSqlite.js",
     "db:verify": "node scripts/verifySqlite.js",
-    "db:migrate:neon": "node --env-file=.env scripts/migrateToNeon.js"
+    "db:migrate:supabase": "node --env-file=.env scripts/migrateToSupabase.js"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.118.0",
     "@tailwindcss/vite": "^4.3.3",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^1.59.0",
