@@ -1,4 +1,5 @@
 import ModalOverlay from './ModalOverlay';
+import { getAccountReference } from '../utils/accountReference';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
@@ -27,6 +28,7 @@ export default function AuthModal() {
     register, 
     currentUser,
     logout,
+    updateUserProfile,
     orders = [],
     navigateTo
   } = useApp();
@@ -35,6 +37,8 @@ export default function AuthModal() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({});
 
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -55,6 +59,7 @@ export default function AuthModal() {
       setIsRegister(authModalMode === 'register');
       setErrorMsg('');
       setShowPassword(false);
+      setIsEditing(false);
     }
   }, [isAuthModalOpen, authModalMode]);
 
@@ -126,6 +131,25 @@ export default function AuthModal() {
     setIsAuthModalOpen(false);
   };
 
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const fields = Object.fromEntries(Object.entries(profileData).map(([key, value]) => [key, value.trim()]));
+    if (!fields.name) {
+      setErrorMsg('Please enter your name.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await updateUserProfile(fields);
+      setIsEditing(false);
+    } catch (err) {
+      setErrorMsg(err.message || 'Unable to save your profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ModalOverlay
       onClick={handleClose}
@@ -157,6 +181,42 @@ export default function AuthModal() {
           {/* If already logged in, show profile card */}
           {currentUser ? (
             <div className="space-y-6">
+              {isEditing ? (
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
+                  <h3 className="text-sm font-semibold">Edit Profile</h3>
+                  <fieldset disabled={isLoading} className="space-y-4 disabled:opacity-60">
+                    {[
+                      ['name', 'Full Name', 'text', 'name'],
+                      ['phone', 'Phone', 'tel', 'tel'],
+                      ['affiliation', 'School / Organization / Affiliation', 'text', 'organization'],
+                    ].map(([key, label, type, autoComplete]) => (
+                      <label key={key} className="block text-xs font-medium text-neutral-700">
+                        {label}{key === 'name' ? ' *' : ''}
+                        <input type={type} autoComplete={autoComplete} required={key === 'name'} maxLength={200}
+                          value={profileData[key] || ''}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="mt-1 w-full px-3 py-2.5 border border-neutral-300 focus:outline-none focus:border-black" />
+                      </label>
+                    ))}
+                    <label className="block text-xs font-medium text-neutral-700">
+                      Saved Address
+                      <textarea autoComplete="street-address" rows={3} maxLength={1000} value={profileData.savedAddress || ''}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, savedAddress: e.target.value }))}
+                        className="mt-1 w-full px-3 py-2.5 border border-neutral-300 focus:outline-none focus:border-black" />
+                    </label>
+                  </fieldset>
+                  {errorMsg && <p role="alert" className="p-3 bg-rose-50 border border-rose-300 text-rose-800 text-xs">{errorMsg}</p>}
+                  <div className="flex justify-end gap-3">
+                    <button type="button" disabled={isLoading} onClick={() => { setIsEditing(false); setErrorMsg(''); }}
+                      className="px-4 py-2 border border-neutral-300 text-xs uppercase tracking-wider disabled:opacity-50">Cancel</button>
+                    <button type="submit" disabled={isLoading}
+                      className="px-4 py-2 bg-black text-white text-xs uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-50">
+                      {isLoading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
               <div className="bg-[#FAF9F5] border border-neutral-300 p-4 sm:p-6 space-y-4">
                 <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -185,7 +245,7 @@ export default function AuthModal() {
                   </div>
                   <div>
                     <span className="text-[10px] uppercase text-neutral-400 block">ID Reference</span>
-                    <span className="font-mono text-neutral-800">{currentUser.idNumber || 'N/A'}</span>
+                    <span className="font-mono text-neutral-800">{getAccountReference(currentUser)}</span>
                   </div>
                   <div>
                     <span className="text-[10px] uppercase text-neutral-400 block">Phone</span>
@@ -219,6 +279,13 @@ export default function AuthModal() {
                   Sign Out
                 </button>
                 <div className="flex w-full sm:w-auto flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3">
+                  <button onClick={() => {
+                    setProfileData(Object.fromEntries(['name', 'phone', 'affiliation', 'savedAddress'].map(key => [key, currentUser[key] || ''])));
+                    setErrorMsg('');
+                    setIsEditing(true);
+                  }} className="px-4 py-2 border border-neutral-300 text-black text-xs uppercase tracking-wider font-medium hover:border-black transition-colors">
+                    Edit Profile
+                  </button>
                   <button
                     onClick={() => {
                       handleClose();
@@ -236,6 +303,8 @@ export default function AuthModal() {
                   </button>
                 </div>
               </div>
+                </>
+              )}
             </div>
           ) : (
             /* Login & Register Forms */

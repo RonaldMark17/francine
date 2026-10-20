@@ -475,12 +475,12 @@ export function AppProvider({ children }) {
     }
   };
 
-  const updateUserProfile = (updatedFields) => {
-    if (!currentUser) return;
+  const updateUserProfile = async (updatedFields) => {
+    if (!currentUser) throw new Error('Please sign in to update your profile.');
     const updated = { ...currentUser, ...updatedFields };
+    await sqliteApi.saveUser(updated);
     setCurrentUser(updated);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? updated : u));
-    sqliteApi.saveUser(updated).catch(err => console.warn('SQLite user update:', err.message));
     showToast('Profile information updated successfully.', 'success');
   };
 

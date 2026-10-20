@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { getAccountReference } from '../src/utils/accountReference.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -1074,7 +1075,8 @@ export function adjustProductStockInDb({ productId, changeAmount, reason, user }
 }
 
 export function saveUserToDb(user) {
-  const existing = db.prepare('SELECT id, password FROM users WHERE id = ? OR email = ?').get(user.id, user.email.toLowerCase());
+  const existing = db.prepare('SELECT id, password, idNumber FROM users WHERE id = ? OR email = ?').get(user.id, user.email.toLowerCase());
+  user = { ...user, idNumber: getAccountReference(existing || { id: user.id }) };
   
   if (existing) {
     if (user.password) {
@@ -1318,7 +1320,7 @@ export function registerUser(userData, ipAddress = '127.0.0.1') {
     phone: sanitizeString(userData.phone || '', 50),
     role: 'buyer',
     affiliation: sanitizeString(userData.affiliation || '', 120),
-    idNumber: sanitizeString(userData.idNumber || '', 60),
+    idNumber: getAccountReference({ id: userId }),
     joinedDate: nowStr,
     savedAddress: sanitizeString(userData.savedAddress || 'Purok 5, Banago, Nagcarlan, Laguna 4002', 200)
   });
