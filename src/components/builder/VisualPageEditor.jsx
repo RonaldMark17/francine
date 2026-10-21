@@ -1,6 +1,7 @@
 import NativeContentInspector from './NativeContentInspector';
 import { CORE_SECTION_POSITIONS } from '../../data/coreSectionPositions';
 import { CoreSelectionContext } from './CoreContentContext';
+import { BuilderSelectionContext } from './BuilderSelectionContext';
 import PreviewFrame from './PreviewFrame';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
@@ -14,6 +15,7 @@ import MediaLibraryModal from './MediaLibraryModal';
 import ExtendedSectionInspector from './ExtendedSectionInspector';
 import InspectorAccordion from './InspectorAccordion';
 import SectionDesignInspector from './SectionDesignInspector';
+import PageContentTree from './PageContentTree';
 import { DEFAULT_SECTION_SETTINGS } from '../../data/sectionSettings';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import {
@@ -49,10 +51,16 @@ const serializeEditorPage = (pageData) => JSON.stringify({
   components: pageData?.components || []
 });
 
+const ABOUT_FLOOR_ITEMS = [
+  { id: 'ground-floor', title: 'Ground Floor', description: 'Service Hub' },
+  { id: 'second-floor', title: 'Second Floor', description: 'Supplies Gallery' }
+];
+
 export default function VisualPageEditor({ page, isNewPage = false, onClose, onSave }) {
   const { showToast } = useApp();
   useBodyScrollLock(true);
   const previewScrollRef = useRef(null);
+  const inspectorScrollRef = useRef(null);
   const recoveryNoticeShownRef = useRef(false);
   const [initialEditorData] = useState(() => {
     const recoveredDraft = loadPageBuilderDraft(page?.id);
@@ -71,18 +79,31 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   const [showInNav, setShowInNav] = useState(initialPage.showInNav ?? false);
   const [showInFooter, setShowInFooter] = useState(initialPage.showInFooter ?? true);
 
-  const [nativeContent, setNativeContent] = useState(initialPage.nativeContent || {});
+  const [nativeContent, setNativeContent] = useState(() => {
+    const saved = initialPage.nativeContent || {};
+    const floorKey = 'section-about-floor-layout-items';
+    return page?.systemRoute === '/about' && !Array.isArray(saved[floorKey])
+      ? { ...saved, [floorKey]: ABOUT_FLOOR_ITEMS }
+      : saved;
+  });
   const [selectedField, setSelectedField] = useState(null);
+  const [selectedNativeSection, setSelectedNativeSection] = useState(null);
+  const [activeInspectorNode, setActiveInspectorNode] = useState(null);
 
   // Components state
   const [components, setComponents] = useState(initialPage.components ? JSON.parse(JSON.stringify(initialPage.components)) : []);
-  const [selectedCompId, setSelectedCompId] = useState(page.systemRoute ? 'native-content' : components[0]?.id || null);
+  const [activeSectionId, setActiveSectionId] = useState(page.systemRoute ? 'native-content' : components[0]?.id || null);
+  const [activeItemId, setActiveItemId] = useState(null);
+  const selectedCompId = activeSectionId;
+  const setSelectedCompId = setActiveSectionId;
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     initialEditorData.recovered || isNewPage ? null : serializeEditorPage(page)
   );
 
   // Viewport mode: 'desktop' | 'tablet' | 'mobile'
   const [viewport, setViewport] = useState('desktop');
+  const [mobilePanel, setMobilePanel] = useState('canvas');
+  const [inspectorTab, setInspectorTab] = useState('content');
 
   // Modals & Panels
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
@@ -162,6 +183,72 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     });
   }, []);
 
+  useEffect(() => {
+    if (!activeInspectorNode) return;
+    const nodes = inspectorScrollRef.current?.querySelectorAll('[data-inspector-node]');
+    const target = Array.from(nodes || []).find(node => node.dataset.inspectorNode === activeInspectorNode);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeInspectorNode]);
+
+  const selectAndScrollToField = useCallback((fieldId) => {
+    setSelectedField(fieldId);
+    setActiveInspectorNode(`native:${fieldId}`);
+    const preview = previewScrollRef.current;
+    const previewFrame = preview?.querySelector('iframe');
+    const previewDocument = previewFrame?.contentDocument;
+    const target = Array.from(previewDocument?.querySelectorAll('[data-core-field]') || [])
+      .find(element => element.dataset.coreField === fieldId);
+
+    if (!target || !previewFrame?.contentWindow) return;
+
+    window.requestAnimationFrame(() => {
+      const previewWindow = previewFrame.contentWindow;
+      const targetPosition = target.getBoundingClientRect();
+      const top = previewWindow.scrollY + targetPosition.top
+        - (previewFrame.clientHeight - targetPosition.height) / 2;
+
+      previewWindow.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }, []);
+
+  const scrollPreviewToEditorField = useCallback((event) => {
+    if (!selectedComponent) return;
+    const field = event.target;
+    const isTextField = field.tagName === 'TEXTAREA'
+      || (field.tagName === 'INPUT' && !['checkbox', 'radio', 'file', 'color', 'range'].includes(field.type));
+    if (!isTextField) return;
+
+    const previewFrame = previewScrollRef.current?.querySelector('iframe');
+    const previewDocument = previewFrame?.contentDocument;
+    const previewWindow = previewFrame?.contentWindow;
+    if (!previewDocument || !previewWindow) return;
+
+    const section = Array.from(previewDocument.querySelectorAll('[data-component-id]'))
+      .find(element => element.dataset.componentId === selectedCompId);
+    const item = activeItemId
+      ? Array.from(section?.querySelectorAll('[data-builder-item-id]') || [])
+        .find(element => element.dataset.builderItemId === activeItemId)
+      : null;
+    const scope = item || section;
+    const text = String(field.value || '').trim().replace(/\s+/g, ' ');
+    const target = text.length >= 3 && scope
+      ? Array.from(scope.querySelectorAll('*')).find(element =>
+        element.textContent.trim().replace(/\s+/g, ' ') === text
+        && !Array.from(element.children).some(child => child.textContent.trim().replace(/\s+/g, ' ') === text)
+      )
+      : null;
+    const scrollTarget = target || item || section;
+    if (!scrollTarget) return;
+
+    window.requestAnimationFrame(() => {
+      const targetPosition = scrollTarget.getBoundingClientRect();
+      const top = previewWindow.scrollY + targetPosition.top
+        - (previewFrame.clientHeight - targetPosition.height) / 2;
+
+      previewWindow.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }, [activeItemId, selectedCompId, selectedComponent]);
+
   // Keep the canvas aligned after selecting, adding, or reordering sections.
   useEffect(() => {
     scrollPreviewToComponent(selectedCompId);
@@ -173,6 +260,9 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
     if (componentId === selectedCompId) {
       scrollPreviewToComponent(componentId);
     }
+    setSelectedNativeSection(null);
+    setSelectedField(null);
+    setActiveItemId(null);
     setSelectedCompId(componentId);
   };
 
@@ -374,6 +464,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       type: compType,
       data: {
         ...template.defaultData,
+        subSections: template.defaultData.subSections || [],
         ...(page.systemRoute ? { placement: insertPlacement } : {}),
         settings: {
           ...DEFAULT_SECTION_SETTINGS,
@@ -402,6 +493,65 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       return c;
     }));
   };
+
+  const handleUpdateInlineComponentData = (componentId, field, value) => {
+    setComponents(previous => previous.map(component => component.id === componentId
+      ? { ...component, data: { ...component.data, [field]: value } }
+      : component));
+  };
+
+  const handleUpdateCollectionItem = (componentId, collectionKey, itemIndex, field, value) => {
+    setComponents(previous => previous.map(component => {
+      if (component.id !== componentId) return component;
+      const items = Array.isArray(component.data?.[collectionKey]) ? component.data[collectionKey] : [];
+      return {
+        ...component,
+        data: {
+          ...component.data,
+          [collectionKey]: items.map((item, index) => index === itemIndex ? { ...item, [field]: value } : item)
+        }
+      };
+    }));
+  };
+
+  const handleAddSubSection = (componentId) => {
+    const id = `sub-${crypto.randomUUID()}`;
+    setComponents(previous => previous.map(component => component.id === componentId
+      ? { ...component, data: { ...component.data, subSections: [...(component.data?.subSections || []), { id, eyebrow: '', title: 'New Sub-Section', description: 'Add a description.', icon: '', image: '' }] } }
+      : component));
+    setSelectedCompId(componentId);
+  };
+
+  const handleUpdateComponentItems = (componentId, items) => setComponents(previous => previous.map(component =>
+    component.id === componentId ? { ...component, data: { ...component.data, items } } : component
+  ));
+
+  const handleRemoveSubSection = (componentId, subSectionId) => {
+    setComponents(previous => previous.map(component => component.id === componentId
+      ? { ...component, data: { ...component.data, subSections: (component.data?.subSections || []).filter(item => item.id !== subSectionId) } }
+      : component));
+  };
+
+  const handleAddCollectionItem = (definition, item) => {
+    const collectionKey = `collection-${definition.id}`;
+    const id = `item-${crypto.randomUUID()}`;
+    setNativeContent(previous => {
+      const existing = Array.isArray(previous[collectionKey]) ? previous[collectionKey] : [];
+      const next = { ...previous, [collectionKey]: [...existing, id] };
+      for (const field of definition.fields) next[`${definition.id}-${id}-${field}`] = item?.[field] ?? '';
+      return next;
+    });
+    return id;
+  };
+
+  const handleRemoveCollectionItem = (definition, id) => setNativeContent(previous => {
+    const collectionKey = `collection-${definition.id}`;
+    const existing = Array.isArray(previous[collectionKey]) ? previous[collectionKey] : [];
+    const isDefault = definition.defaults.some((_, index) => String(index) === id);
+    const next = { ...previous, [collectionKey]: isDefault ? [...existing, id] : existing.filter(itemId => itemId !== id) };
+    if (!isDefault) for (const field of definition.fields) delete next[`${definition.id}-${id}-${field}`];
+    return next;
+  });
 
   const handleMoveComponent = (idx, direction) => {
     const targetIdx = idx + direction;
@@ -506,14 +656,15 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
   const pagePath = page.systemRoute || `/${pageSlug}`;
 
   return (
-    <div className="fixed inset-0 z-50 h-screen min-h-0 bg-[#121212] text-white flex flex-col overflow-hidden animate-fade-in">
+    <BuilderSelectionContext.Provider value={{ activeSectionId, setActiveSectionId, activeItemId, setActiveItemId, activeInspectorNode, setActiveInspectorNode }}>
+    <div className="fixed inset-0 z-50 h-[100dvh] min-h-0 bg-[#121212] text-white flex flex-col overflow-hidden animate-fade-in">
       
       {/* Top Application Bar */}
-      <header className="h-14 border-b border-neutral-800 bg-neutral-900 px-4 sm:px-6 flex items-center justify-between shrink-0">
+      <header className="min-h-14 border-b border-neutral-800 bg-neutral-900 px-2 sm:px-6 py-2 flex items-center justify-between gap-2 shrink-0">
         
         {/* Page Identity & Status */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-black border border-neutral-700 flex items-center justify-center font-editorial text-sm font-semibold">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="hidden sm:flex w-8 h-8 bg-black border border-neutral-700 items-center justify-center font-editorial text-sm font-semibold">
             MM
           </div>
           <div>
@@ -521,10 +672,10 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               <span className="text-xs font-semibold uppercase tracking-wider text-white">
                 Website Builder
               </span>
-              <span className="text-[10px] text-neutral-400 font-mono">
+              <span className="hidden sm:inline text-[10px] text-neutral-400 font-mono">
                 {pagePath}
               </span>
-              <span className={`text-[9px] uppercase tracking-widest px-1.5 py-0.5 font-bold ${
+              <span className={`hidden sm:inline text-[9px] uppercase tracking-widest px-1.5 py-0.5 font-bold ${
                 page?.status === 'published' ? 'bg-emerald-950 text-emerald-400 border border-emerald-700' : 'bg-neutral-800 text-neutral-400'
               }`}>
                 {page?.status || 'Draft'}
@@ -534,7 +685,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         </div>
 
         {/* Viewport Switcher */}
-        <div className="hidden md:flex items-center gap-1 bg-black/60 p-1 border border-neutral-800">
+        <div className="flex items-center gap-0.5 bg-black/60 p-0.5 sm:gap-1 sm:p-1 border border-neutral-800">
           <button
             onClick={() => setViewport('desktop')}
             className={`p-1.5 transition-colors ${viewport === 'desktop' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white'}`}
@@ -559,23 +710,23 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         </div>
 
         {/* Top Actions: Close, Save Draft, Publish */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2.5">
           <button
             onClick={handleClose}
-            className="px-3 py-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
+            className="px-1.5 sm:px-3 py-1.5 text-[10px] sm:text-xs text-neutral-400 hover:text-white transition-colors"
           >
             Exit Editor
           </button>
           <button
             onClick={handleSaveDraft}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-neutral-700 hover:border-neutral-500 text-xs text-neutral-200 transition-colors uppercase tracking-wider font-medium"
+            className="inline-flex items-center gap-1.5 px-2 sm:px-3.5 py-1.5 border border-neutral-700 hover:border-neutral-500 text-[10px] sm:text-xs text-neutral-200 transition-colors uppercase tracking-wider font-medium"
           >
             <Save className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Save Draft</span>
           </button>
           <button
             onClick={handlePublish}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-black hover:bg-neutral-200 transition-colors text-xs uppercase tracking-wider font-semibold shadow-sm"
+            className="inline-flex items-center gap-1.5 px-2 sm:px-4 py-1.5 bg-white text-black hover:bg-neutral-200 transition-colors text-[10px] sm:text-xs uppercase tracking-wider font-semibold shadow-sm"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Publish Page</span>
@@ -583,11 +734,15 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         </div>
       </header>
 
+      <nav className="grid grid-cols-3 border-b border-neutral-800 bg-neutral-950 lg:hidden" aria-label="Builder panels">
+        {[["sections", "Sections"], ["canvas", "Preview"], ["inspector", "Inspector"]].map(([panel, label]) => <button key={panel} type="button" onClick={() => setMobilePanel(panel)} aria-pressed={mobilePanel === panel} className={`py-2.5 text-xs ${mobilePanel === panel ? 'border-b-2 border-amber-300 text-amber-200' : 'text-neutral-400'}`}>{label}</button>)}
+      </nav>
+
       {/* Main Workspace: Left Sections List, Center Canvas, Right Inspector */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         
         {/* LEFT COLUMN: Page Settings & Section Tree */}
-        <aside className="w-56 xl:w-60 min-h-0 bg-neutral-900 border-r border-neutral-800 flex flex-col shrink-0">
+        <aside className={`${mobilePanel === 'sections' ? 'flex w-full' : 'hidden'} lg:flex lg:w-56 xl:w-60 min-h-0 bg-neutral-900 border-r border-neutral-800 flex-col shrink-0`}>
           
           {/* Page Meta Settings Collapsible */}
           <div className="p-4 border-b border-neutral-800 space-y-3 text-xs">
@@ -666,7 +821,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
           {/* Sections List */}
           <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
             {page.systemRoute && (
-              <button type="button" onClick={() => { setSelectedCompId('native-content'); setSelectedField(null); }} className={`w-full rounded-lg p-3 text-left border transition-colors ${selectedCompId === 'native-content' ? 'border-amber-300/60 bg-amber-300/5' : 'border-neutral-700 hover:bg-neutral-800'}`}>
+              <button type="button" onClick={() => { setSelectedCompId('native-content'); setSelectedField(null); setSelectedNativeSection(null); setActiveItemId(null); }} className={`w-full rounded-lg p-3 text-left border transition-colors ${selectedCompId === 'native-content' || selectedNativeSection ? 'border-amber-300/60 bg-amber-300/5' : 'border-neutral-700 hover:bg-neutral-800'}`}>
                 <span className="flex items-center gap-2 text-xs text-white font-medium"><Type className="w-4 h-4 text-amber-300" />{page.title} content</span>
                 <span className="block mt-1.5 pl-6 text-[11px] text-neutral-400">Text, images & page details</span>
               </button>
@@ -740,7 +895,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         {/* CENTER COLUMN: Live Interactive Visual Canvas */}
         <main
           ref={previewScrollRef}
-          className="flex-1 min-w-0 h-full min-h-0 bg-[#202020] flex flex-col items-center overflow-auto overscroll-contain p-3 xl:p-5"
+          className={`${mobilePanel === 'canvas' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 h-full min-h-0 bg-[#202020] flex-col items-center overflow-auto overscroll-contain p-2 sm:p-3 xl:p-5`}
         >
           
           <div 
@@ -766,14 +921,35 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             {/* Use the storefront design within the selected device viewport. */}
             <PreviewFrame>
             {page.systemRoute && <div inert><Navbar previewTab={page.systemRoute === '/' ? 'home' : page.systemRoute.slice(1)} /></div>}
-            <CoreSelectionContext.Provider value={{ onChange: (id, value) => setNativeContent(previous => ({ ...previous, [id]: value })), onAddSection: true }}>
+            <CoreSelectionContext.Provider value={{ selectedField, systemRoute: page.systemRoute, activeSectionId, activeItemId, setActiveSectionId, setActiveItemId, onChange: (id, value) => setNativeContent(previous => ({ ...previous, [id]: value })), onAddSection: true, onAddSubSection: (key, item) => setNativeContent(previous => ({ ...previous, [key]: [...(Array.isArray(previous[key]) ? previous[key] : []), item] })), onRemoveSubSection: (key, id) => setNativeContent(previous => ({ ...previous, [key]: (Array.isArray(previous[key]) ? previous[key] : []).filter(item => item.id !== id) })), onAddCollectionItem: handleAddCollectionItem, onRemoveCollectionItem: handleRemoveCollectionItem }}>
             <style>{`
               [data-editor-preview] [data-core-field] { cursor: pointer; }
               [data-editor-preview] [data-core-field]:hover,
-              [data-editor-preview] [data-core-field]:focus-visible { outline: 2px dashed #d97706; outline-offset: 4px; }
-              ${selectedField ? `[data-editor-preview] [data-core-field="${selectedField}"] { outline: 2px solid #d97706; outline-offset: 4px; background-color: #fbbf241a; }` : ''}
+              [data-editor-preview] [data-core-field]:focus-visible { outline: 1px dashed #f97316; outline-offset: 3px; }
+              [data-editor-preview] [data-builder-inline-text] { cursor: text; }
+              [data-editor-preview] [data-builder-inline-text]:hover,
+              [data-editor-preview] [data-builder-inline-text]:focus { outline: 1px dashed #f97316; outline-offset: 3px; }
+              ${selectedField ? `[data-editor-preview] [data-core-field="${selectedField}"] { outline: 1px dashed #f97316; outline-offset: 3px; }` : ''}
+              ${activeSectionId && !['native-content'].includes(activeSectionId) ? `[data-editor-preview] [data-native-section="${activeSectionId}"] { outline: 2px solid #fbbf24; outline-offset: 3px; border-radius: 14px; }` : ''}
             `}</style>
             <div data-editor-preview onClickCapture={event => {
+              if (event.target.closest('[data-add-subsection="true"]')) return;
+              if (event.target.closest('[data-subsection-action="true"]')) return;
+              const nativeSection = event.target.closest('[data-native-section]');
+              setSelectedNativeSection(nativeSection?.dataset.nativeSection || null);
+              const clickedComponent = event.target.closest('[data-component-id]');
+              const clickedField = event.target.closest('[data-core-field]');
+              const clickedItem = event.target.closest('[data-builder-item-id]');
+              setActiveSectionId(nativeSection?.dataset.nativeSection || clickedComponent?.dataset.componentId || (clickedField ? 'native-content' : null));
+              setActiveItemId(clickedItem?.dataset.builderItemId || null);
+              if (clickedField) setActiveInspectorNode(`native:${clickedField.dataset.coreField}`);
+              else if (clickedItem && clickedComponent) {
+                const componentId = clickedComponent.dataset.componentId;
+                const itemId = clickedItem.dataset.builderItemId;
+                setActiveInspectorNode(`component:${componentId}:${itemId}:title`);
+              } else if (clickedComponent) {
+                setActiveInspectorNode(null);
+              }
               const insertion = event.target.closest('[data-insert-placement]');
               if (insertion) {
                 event.preventDefault();
@@ -782,11 +958,16 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 setIsAddComponentOpen(true);
                 return;
               }
-              if (!event.target.closest('[contenteditable="true"]')) event.preventDefault();
+              // Let the browser focus editable text and place the caret. The
+              // previous preventDefault here made preview text impossible to edit.
+              if (event.target.closest('[contenteditable="true"]')) {
+                event.stopPropagation();
+                return;
+              }
               event.stopPropagation();
               const field = event.target.closest('[data-core-field]');
               if (field) {
-                setSelectedCompId('native-content');
+                if (!nativeSection) setSelectedCompId('native-content');
                 setSelectedField(field.dataset.coreField);
                 if (field.getAttribute('role') === 'button' && field.dataset.coreField.endsWith('-image')) {
                   const id = field.dataset.coreField;
@@ -795,7 +976,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                 }
               } else {
                 const section = event.target.closest('[data-component-id]');
-                if (section) { setSelectedField(null); handleSelectComponent(section.dataset.componentId); }
+              if (section) handleSelectComponent(section.dataset.componentId);
               }
             }} onKeyDownCapture={event => {
               if (event.target.closest('[contenteditable="true"]')) {
@@ -824,6 +1005,13 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
             <DynamicPageRenderer
               page={previewPageObject}
               coreContent={page.systemRoute ? <CorePageContent route={page.systemRoute} /> : null}
+              isEditing
+              onAddSubSection={handleAddSubSection}
+              onRemoveSubSection={handleRemoveSubSection}
+              onUpdateComponentData={handleUpdateInlineComponentData}
+              onUpdateCollectionItem={handleUpdateCollectionItem}
+              onUpdateItems={handleUpdateComponentItems}
+              activeSectionId={activeSectionId}
             />
             </div>
             </CoreSelectionContext.Provider>
@@ -834,26 +1022,58 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
         </main>
 
         {/* RIGHT COLUMN: Component Property Inspector */}
-        <aside className="w-72 2xl:w-80 min-h-0 bg-neutral-900 border-l border-neutral-800 flex flex-col shrink-0">
-          <div className="p-3.5 px-5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-neutral-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-white">
-                {selectedCompId === 'native-content' ? 'Page Inspector' : 'Section Inspector'}
-              </span>
-            </div>
-            {selectedComponent && (
-              <span className="text-[10px] font-mono text-neutral-400 uppercase">
-                {selectedComponent.type}
-              </span>
-            )}
+        <aside className={`${mobilePanel === 'inspector' ? 'flex w-full' : 'hidden'} lg:flex lg:w-72 2xl:w-80 min-h-0 bg-neutral-900 border-l border-neutral-800 flex-col shrink-0`}>
+          <div className="border-b border-neutral-800 bg-neutral-950 px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-neutral-400"><Sliders className="mr-1 h-3.5 w-3.5" /><span>Page</span>{selectedComponent && <><span className="text-neutral-600">›</span><span className="max-w-[150px] truncate font-semibold text-white">{selectedComponent.data.title || selectedComponent.type.replaceAll('_', ' ')}</span><span className="text-neutral-600">›</span><span>{inspectorTab === 'content' ? 'Content & Items' : 'Layout & Style'}</span></>}{selectedNativeSection && !selectedComponent && <><span className="text-neutral-600">›</span><span className="truncate font-semibold text-white">{selectedNativeSection === 'about-floor-layout' ? 'Two-Floor Purpose-Built Layout' : selectedNativeSection.replaceAll('-', ' ')}</span><span className="text-neutral-600">›</span><span>Items</span></>}{selectedField && !selectedComponent && !selectedNativeSection && <><span className="text-neutral-600">›</span><span className="truncate">Selected content</span></>}</div>
+            {!selectedComponent && <div className="mt-1 text-sm font-semibold text-white">{page.title} Inspector</div>}
           </div>
+          {selectedComponent && <div className="grid grid-cols-2 border-b border-neutral-800 bg-neutral-900 p-1.5">
+            {[['content', 'Content & Items'], ['layout', 'Layout & Style']].map(([tab, label]) => <button key={tab} type="button" aria-pressed={inspectorTab === tab} onClick={() => setInspectorTab(tab)} className={`rounded-md px-2 py-2 text-[10px] font-semibold transition-colors ${inspectorTab === tab ? 'bg-amber-300 text-neutral-950' : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'}`}>{label}</button>)}
+          </div>}
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5 text-xs">
-            {selectedCompId === 'native-content' && page.systemRoute ? (
+          <div ref={inspectorScrollRef} className="min-h-0 flex-1 overflow-y-auto p-5 space-y-5 text-xs" onFocusCapture={scrollPreviewToEditorField}>
+            <PageContentTree
+              route={page.systemRoute}
+              components={components}
+              nativeContent={nativeContent}
+              activeSectionId={activeSectionId}
+              activeInspectorNode={activeInspectorNode}
+              onSelectNativeField={(fieldId, sectionId, nodeId) => {
+                setSelectedCompId('native-content');
+                setSelectedNativeSection(sectionId || null);
+                setSelectedField(sectionId ? null : fieldId);
+                setActiveSectionId(sectionId || 'native-content');
+                setActiveItemId(null);
+                setActiveInspectorNode(nodeId || `native:${fieldId}`);
+              }}
+              onSelectComponentField={(componentId, field) => {
+                setSelectedCompId(componentId);
+                setSelectedNativeSection(null);
+                setSelectedField(null);
+                setInspectorTab('content');
+                setActiveSectionId(componentId);
+                setActiveItemId(null);
+                setActiveInspectorNode(`component:${componentId}:${field}`);
+              }}
+              onSelectComponentItem={(componentId, itemId, field) => {
+                setSelectedCompId(componentId);
+                setSelectedNativeSection(null);
+                setSelectedField(null);
+                setInspectorTab('content');
+                setActiveSectionId(componentId);
+                setActiveItemId(itemId);
+                setActiveInspectorNode(`component:${componentId}:${itemId}:${field}`);
+              }}
+            />
+            {activeSectionId && activeSectionId !== 'native-content' && page.systemRoute ? (
               <>
-              {selectedField && <button type="button" onClick={() => setSelectedField(null)} className="text-xs text-amber-300 hover:text-white">All page content</button>}
-              <NativeContentInspector key={selectedField || 'all'} selectedField={selectedField} route={page.systemRoute} title={pageTitle} values={nativeContent} onChange={setNativeContent} onChooseImage={id => {
+                <button type="button" onClick={() => { setSelectedNativeSection(null); setSelectedCompId('native-content'); setSelectedField(null); setActiveItemId(null); }} className="text-xs text-amber-300 hover:text-white">All page content</button>
+                <NativeContentInspector key={`section-${activeSectionId}`} selectedSection={activeSectionId} route={page.systemRoute} title={pageTitle} values={nativeContent} onChange={setNativeContent} onSelectField={selectAndScrollToField} onAddCollectionItem={handleAddCollectionItem} onRemoveCollectionItem={handleRemoveCollectionItem} />
+              </>
+            ) : selectedCompId === 'native-content' && page.systemRoute ? (
+              <>
+              <button type="button" onClick={() => { setSelectedField(null); setSelectedNativeSection(null); }} className="text-xs text-amber-300 hover:text-white">All page content</button>
+              <NativeContentInspector key={`${selectedField || 'all'}-${selectedNativeSection || 'page'}`} selectedField={selectedField} selectedSection={selectedNativeSection} route={page.systemRoute} title={pageTitle} values={nativeContent} onChange={setNativeContent} onSelectField={selectAndScrollToField} onAddCollectionItem={handleAddCollectionItem} onRemoveCollectionItem={handleRemoveCollectionItem} onChooseImage={id => {
                 setActiveMediaTargetField(() => url => setNativeContent(values => ({ ...values, [id]: url })));
                 setIsMediaPickerOpen(true);
               }} />
@@ -864,7 +1084,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               </div>
             ) : (
               <>
-                {page.systemRoute && (
+                {inspectorTab === 'content' && page.systemRoute && (
                   <div>
                     <label className="block text-neutral-400 mb-1 font-medium">Section Position</label>
                     <select
@@ -878,7 +1098,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                     </select>
                   </div>
                 )}
-                <InspectorAccordion title="Content" defaultOpen>
+                {inspectorTab === 'content' && <InspectorAccordion title="Content & Items" defaultOpen>
                 {/* Hero Fields */}
                 {selectedComponent.type === 'hero' && (
                   <div className="space-y-4">
@@ -1216,12 +1436,12 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
                   data={selectedComponent.data}
                   onChange={handleUpdateComponentData}
                 />
-                </InspectorAccordion>
+                </InspectorAccordion>}
 
-                <SectionDesignInspector
+                {inspectorTab === 'layout' && <SectionDesignInspector
                   data={selectedComponent.data}
                   onChange={handleUpdateComponentData}
-                />
+                />}
 
               </>
             )}
@@ -1317,5 +1537,6 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
       />
 
     </div>
+    </BuilderSelectionContext.Provider>
   );
 }

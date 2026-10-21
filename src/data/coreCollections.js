@@ -26,19 +26,18 @@ export const CORE_COLLECTIONS = {
 
 export function getCollectionItems(values, definition) {
   const order = values[`collection-${definition.id}`];
-  return (Array.isArray(order) ? order : definition.defaults.map((_, index) => String(index)))
+  const defaultIds = definition.defaults.map((_, index) => String(index));
+  const ids = Array.isArray(order) ? [...defaultIds, ...order] : defaultIds;
+  return ids
     .filter(id => typeof id === 'string' && /^[a-zA-Z0-9-]+$/.test(id))
     .filter((id, index, ids) => ids.indexOf(id) === index)
-    .map(id => ({ id, ...(definition.defaults[Number(id)] || {}) }));
+    .map(id => ({ id, ...(definition.defaults[Number(id)] || {}),
+      ...Object.fromEntries(definition.fields.map(field => [field, values[`${definition.id}-${id}-${field}`] ?? definition.defaults[Number(id)]?.[field] ?? ''])) }));
 }
 
 export function getCoreFields(route, values, staticFields) {
   const definitions = CORE_COLLECTIONS[route] || [];
   return [
     ...staticFields.filter(field => !definitions.some(definition => field.id.startsWith(`${definition.id}-`))),
-    ...definitions.flatMap(definition => getCollectionItems(values, definition).flatMap((item, index) =>
-      definition.fields.map(field => ({ id: `${definition.id}-${item.id}-${field}`, kind: field === 'image' ? 'image' : 'text',
-        label: `${definition.label} ${index + 1}: ${{ q: 'Question', a: 'Answer', image: 'Photo' }[field] || field}`, defaultValue: item[field] || '' }))
-    )),
   ];
 }

@@ -452,3 +452,8 @@
   .admin-order-search { max-width: none; flex-basis: 100%; }
   .admin-order-filters { gap: 6px; }
 }
+@media (max-width: 640px) {
+  [data-component-id] > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, ChevronDown, GripVertical, ArrowUp, ArrowDown, Copy } from 'lucide-react';
+import { useBuilderSelection } from './BuilderSelectionContext';
 
 const inputClass = 'w-full bg-neutral-950 border border-neutral-800 px-3 py-1.5 text-white focus:outline-none focus:border-neutral-500';
 const textareaClass = `${inputClass} leading-relaxed`;
@@ -37,6 +38,8 @@ function Field({ label, children }) {
 }
 
 function ItemEditor({ title, items, onItemsChange, createItem, children }) {
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const { activeItemId, setActiveItemId } = useBuilderSelection();
   const updateItem = (index, field, value) => {
     onItemsChange(items.map((item, itemIndex) =>
       itemIndex === index ? { ...item, [field]: value } : item
@@ -44,43 +47,67 @@ function ItemEditor({ title, items, onItemsChange, createItem, children }) {
   };
 
   const removeItem = (index) => {
+    setExpandedIndex(null);
     onItemsChange(items.filter((_, itemIndex) => itemIndex !== index));
   };
+  const moveItem = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    onItemsChange(next);
+  };
+  const duplicateItem = index => onItemsChange([...items.slice(0, index + 1), { ...items[index] }, ...items.slice(index + 1)]);
 
   return (
-    <div className="space-y-3 border-t border-neutral-800 pt-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">{title}</span>
-        <button
-          type="button"
-          onClick={() => onItemsChange([...items, createItem()])}
-          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-amber-300 hover:text-amber-200"
-        >
-          <Plus className="w-3 h-3" /> Add Item
-        </button>
-      </div>
+    <div className="overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900/80">
+      <div className="flex items-center justify-between border-b border-neutral-700 bg-neutral-950 px-3 py-3"><span className="text-xs font-semibold text-white">{title}</span><span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-300">{items.length}</span></div>
+      <div className="space-y-2 p-2.5">
 
       {items.map((item, index) => (
-        <div key={index} className="space-y-2 border border-neutral-800 bg-neutral-950/50 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase text-neutral-500">Item {index + 1}</span>
-            <button
-              type="button"
-              onClick={() => removeItem(index)}
-              className="text-neutral-500 hover:text-rose-400"
-              aria-label={`Remove item ${index + 1}`}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          {children(item, index, updateItem)}
+        <div key={item.id || index} className={`overflow-hidden rounded-lg border bg-neutral-800/70 shadow-sm ${activeItemId === item.id ? 'border-amber-300 ring-1 ring-amber-300/50' : 'border-neutral-700'}`}>
+          <div className="flex items-center gap-1.5 px-2 py-2"><GripVertical className="h-3.5 w-3.5 shrink-0 text-neutral-500" /><span className="w-4 shrink-0 text-[10px] text-neutral-500">{index + 1}</span><button type="button" aria-expanded={expandedIndex === index} onClick={() => { setActiveItemId(item.id || null); setExpandedIndex(expandedIndex === index ? null : index); }} className="flex min-w-0 flex-1 items-center gap-2 text-left text-xs text-white"><span className="truncate">{item.name || item.title || item.service || item.category || item.q || item.caption || `Item ${index + 1}`}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${expandedIndex === index ? 'rotate-180' : ''}`} /></button><div className="flex shrink-0 items-center gap-0.5"><button type="button" title="Move up" aria-label={`Move item ${index + 1} up`} disabled={!index} onClick={() => moveItem(index, -1)} className="rounded p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button><button type="button" title="Move down" aria-label={`Move item ${index + 1} down`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)} className="rounded p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button><button type="button" title="Duplicate" aria-label={`Duplicate item ${index + 1}`} onClick={() => duplicateItem(index)} className="rounded p-1 text-neutral-400 hover:bg-neutral-700 hover:text-white"><Copy className="h-3.5 w-3.5" /></button><button type="button" title="Delete" aria-label={`Delete item ${index + 1}`} onClick={() => removeItem(index)} className="rounded p-1 text-neutral-400 hover:bg-rose-950 hover:text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button></div></div>
+          {expandedIndex === index && <div className="space-y-3 border-t border-neutral-700 p-3">{children(item, index, updateItem)}</div>}
         </div>
       ))}
+      </div>
+      <div className="sticky bottom-0 border-t border-neutral-700 bg-neutral-950/95 p-2.5 backdrop-blur"><button type="button" onClick={() => { onItemsChange([...items, createItem()]); setExpandedIndex(items.length); }} className="w-full rounded-lg border border-amber-300/50 py-2 text-xs text-amber-200 hover:bg-amber-300/10"><Plus className="mr-1 inline h-3.5 w-3.5" />Add {title.replace(/s$/, '')}</button></div>
     </div>
   );
 }
 
 export default function ExtendedSectionInspector({ type, data = {}, onChange }) {
+  const subSections = Array.isArray(data.subSections) ? data.subSections : [];
+  const updateSubSection = (index, field, value) => onChange('subSections', subSections.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
+  const moveSubSection = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= subSections.length) return;
+    const next = [...subSections];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange('subSections', next);
+  };
+  const nestedItemsEditor = (
+    <div className="space-y-3 border-t border-neutral-800 pt-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">Nested Sub-Sections / Cards ({subSections.length})</span>
+        <button type="button" onClick={() => onChange('subSections', [...subSections, { id: `sub-${crypto.randomUUID()}`, eyebrow: '', title: 'New Sub-Section', description: 'Add a description.', icon: '', image: '' }])} className="text-[10px] text-amber-300 hover:text-amber-200">+ Add New</button>
+      </div>
+      <Field label="Grid Columns">
+        <select className={inputClass} value={data.subSectionColumns || Math.min(Math.max(subSections.length, 1), 3)} onChange={event => onChange('subSectionColumns', Number(event.target.value))}>
+          {[1, 2, 3, 4].map(count => <option key={count} value={count}>{count} Column{count === 1 ? '' : 's'}</option>)}
+        </select>
+      </Field>
+      {subSections.map((item, index) => <div key={item.id || index} className="space-y-2 border border-neutral-800 bg-neutral-950/50 p-3">
+        <div className="flex items-center justify-between"><span className="text-[10px] font-mono text-neutral-500">Sub-Section {index + 1}</span><div className="flex gap-2 text-xs text-amber-300"><button type="button" disabled={!index} onClick={() => moveSubSection(index, -1)} aria-label={`Move sub-section ${index + 1} up`} className="disabled:opacity-30">Up</button><button type="button" disabled={index === subSections.length - 1} onClick={() => moveSubSection(index, 1)} aria-label={`Move sub-section ${index + 1} down`} className="disabled:opacity-30">Down</button><button type="button" onClick={() => onChange('subSections', subSections.filter((_, itemIndex) => itemIndex !== index))} className="text-rose-300">Delete</button></div></div>
+        <Field label="Eyebrow"><input className={inputClass} value={item.eyebrow || ''} onChange={event => updateSubSection(index, 'eyebrow', event.target.value)} /></Field>
+        <Field label="Title"><input className={inputClass} value={item.title || ''} onChange={event => updateSubSection(index, 'title', event.target.value)} /></Field>
+        <Field label="Description"><textarea rows={3} className={textareaClass} value={item.description || ''} onChange={event => updateSubSection(index, 'description', event.target.value)} /></Field>
+        <Field label="Icon name"><input className={inputClass} value={item.icon || ''} onChange={event => updateSubSection(index, 'icon', event.target.value)} placeholder="sparkles, printer, heart..." /></Field>
+        <Field label="Image URL"><input className={inputClass} value={item.image || ''} onChange={event => updateSubSection(index, 'image', event.target.value)} /></Field>
+      </div>)}
+    </div>
+  );
+
   if (type === 'features_grid') {
     const items = data.items || [];
     return (
@@ -116,6 +143,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -158,6 +186,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -187,6 +216,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -215,6 +245,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -250,6 +281,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -291,6 +323,7 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
             </>
           )}
         </ItemEditor>
+        {nestedItemsEditor}
       </div>
     );
   }
@@ -304,9 +337,10 @@ export default function ExtendedSectionInspector({ type, data = {}, onChange }) 
         <Field label="Email"><input type="email" className={inputClass} value={data.email || ''} onChange={(event) => onChange('email', event.target.value)} /></Field>
         <Field label="Opening Hours"><textarea rows={4} className={textareaClass} value={data.hours || ''} onChange={(event) => onChange('hours', event.target.value)} /></Field>
         <Field label="Optional Map Embed URL"><input className={`${inputClass} font-mono text-[10px]`} value={data.mapEmbedUrl || ''} onChange={(event) => onChange('mapEmbedUrl', event.target.value)} /></Field>
+        {nestedItemsEditor}
       </div>
     );
   }
 
-  return null;
+  return <div className="space-y-4">{nestedItemsEditor}</div>;
 }

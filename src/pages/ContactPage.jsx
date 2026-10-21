@@ -78,7 +78,7 @@ export default function ContactPage() {
                 <MapPin className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">{coreContent.text("content-5", "Physical Address:")}</strong>
-                  <span>{storeInfo.address}</span>
+                  <span>{coreContent.text("contact-address", storeInfo.address)}</span>
                   <p className="text-neutral-500 text-[11px] mt-0.5">{coreContent.text("content-6", "Landmark: ")}{storeInfo.landmark}
                   </p>
                 </div>
@@ -88,9 +88,9 @@ export default function ContactPage() {
                 <Clock className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:rotate-45 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">{coreContent.text("content-7", "Store Operating Hours:")}</strong>
-                  <p>{storeInfo.hours.weekdays}</p>
-                  <p>{storeInfo.hours.saturday}</p>
-                  <p className="text-neutral-500">{storeInfo.hours.sunday}</p>
+                  <p>{coreContent.text("contact-hours-weekdays", storeInfo.hours.weekdays)}</p>
+                  <p>{coreContent.text("contact-hours-saturday", storeInfo.hours.saturday)}</p>
+                  <p className="text-neutral-500">{coreContent.text("contact-hours-sunday", storeInfo.hours.sunday)}</p>
                 </div>
               </div>
 
@@ -98,7 +98,7 @@ export default function ContactPage() {
                 <Phone className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">{coreContent.text("content-8", "Direct Telephone & Hotline:")}</strong>
-                  <span>{storeInfo.phone}</span>
+                  <span>{coreContent.text("contact-phone", storeInfo.phone)}</span>
                 </div>
               </div>
 
@@ -106,7 +106,7 @@ export default function ContactPage() {
                 <Mail className="w-4 h-4 text-black shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
                   <strong className="text-black block font-medium">{coreContent.text("content-9", "Email Address:")}</strong>
-                  <span>{storeInfo.email}</span>
+                  <span>{coreContent.text("contact-email", storeInfo.email)}</span>
                 </div>
               </div>
             </div>
@@ -115,11 +115,11 @@ export default function ContactPage() {
             <div className="pt-4 border-t border-neutral-200">
               <span className="text-[10px] uppercase tracking-wider text-neutral-400 block mb-2 font-medium">{coreContent.text("content-10", "Official Channels")}</span>
               <div className="flex flex-wrap gap-3 text-xs text-neutral-600">
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("content-11", "FB: ")}{storeInfo.social.facebook}
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("contact-facebook", `FB: ${storeInfo.social.facebook}`)}
                 </span>
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("content-12", "IG: ")}{storeInfo.social.instagram}
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("contact-instagram", `IG: ${storeInfo.social.instagram}`)}
                 </span>
-                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("content-13", "Viber: ")}{storeInfo.social.viber}
+                <span className="bg-white px-2.5 py-1 border border-neutral-200 font-mono text-[11px] hover-lift">{coreContent.text("contact-viber", `Viber: ${storeInfo.social.viber}`)}
                 </span>
               </div>
             </div>
@@ -251,9 +251,10 @@ export default function ContactPage() {
           <h3 className="text-2xl font-light font-editorial text-black tracking-wide mt-1 uppercase">{coreContent.text("content-40", "Frequently Asked Questions")}</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <div data-native-section="contact-faq" className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           {faqs.map((faq) => (
-            <div key={faq.id} className="p-6 bg-white border border-neutral-200 space-y-2 card-interactive hover-lift">
+            <div key={faq.id} data-builder-item-id={faq.id} className="relative p-6 bg-white border border-neutral-200 space-y-2 card-interactive hover-lift">
+              {coreContent.editable && <button type="button" data-subsection-action="true" onClick={() => coreContent.removeCollectionItem(CORE_COLLECTIONS['/contact'][0], faq.id)} aria-label={`Delete ${faq.q || 'question'}`} className="absolute right-3 top-3 rounded border border-rose-200 bg-white px-2 py-1 text-sm text-rose-600">×</button>}
               <h4 className="text-xs font-semibold text-black leading-snug">
                 {coreContent.text(`faq-${faq.id}-q`, faq.q || '')}
               </h4>
@@ -262,6 +263,7 @@ export default function ContactPage() {
               </p>
             </div>
           ))}
+          {coreContent.editable && <button type="button" data-add-subsection="true" onClick={() => coreContent.addCollectionItem(CORE_COLLECTIONS['/contact'][0], { q: 'New question', a: 'Add an answer.' })} className="min-h-32 rounded-xl border-2 border-dashed border-amber-500/70 px-4 py-6 text-sm font-medium text-amber-800 hover:bg-amber-50">+ Add Sub-Section / Card</button>}
         </div>
       </div>
 

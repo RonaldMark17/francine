@@ -26,13 +26,21 @@ import {
 export default function AboutPage() {
   const coreContent = useCoreContent();
   const { storeInfo, navigateTo } = useApp();
+  const floorItems = coreContent.subSections('section-about-floor-layout-items');
+  const groundFloor = floorItems.find(item => item.id === 'ground-floor');
+  const secondFloor = floorItems.find(item => item.id === 'second-floor');
+  const addFloorItem = () => coreContent.addSubSection('section-about-floor-layout-items', { id: `item-${crypto.randomUUID()}`, title: 'New Sub-Section', description: 'Add a description.' });
+  const missionVisionCards = coreContent.subSections('section-about-mission-vision-items');
+  const uspCards = coreContent.subSections('section-about-usp-items');
+  const addCard = key => coreContent.addSubSection(key, { id: `item-${crypto.randomUUID()}`, eyebrow: 'New Detail', title: 'New Card', description: 'Add a description.' });
+  const floorExtensions = floorItems.filter(item => !['ground-floor', 'second-floor'].includes(item.id));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20 animate-fade-in text-[#121212]">
       
       <CoreSectionSlot placement="before:0" />
       {/* Editorial Hero */}
-      <div className="text-center max-w-3xl mx-auto space-y-4 animate-fade-down">
+      <div data-native-section="about-hero" className="text-center max-w-3xl mx-auto space-y-4 animate-fade-down">
         <span className="text-[11px] uppercase tracking-[0.3em] text-amber-700 font-semibold font-mono bg-amber-50 border border-amber-200 px-3 py-1 rounded-full inline-block animate-pulse-subtle">{coreContent.text("content-1", "Established 2026 • Nagcarlan, Laguna")}</span>
         <h1 className="text-4xl sm:text-5xl font-light font-editorial text-black tracking-tight uppercase leading-tight">{coreContent.text("content-2", "Mama Mo Ink Print and Supplies")}</h1>
         <p className="font-editorial text-xl sm:text-2xl text-neutral-800 italic">{coreContent.text("content-3", "“Plumang abot kaya, dito lang yan kay Mama”")}</p>
@@ -41,12 +49,12 @@ export default function AboutPage() {
 
       <CoreSectionSlot placement="before:1" />
       {/* Feature Story Image & Text Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 shadow-xs card-interactive hover-lift animate-fade-up delay-100">
+      <div data-native-section="about-origin" className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 shadow-xs card-interactive hover-lift animate-fade-up delay-100">
         <div className="space-y-6">
           <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-semibold font-mono">{coreContent.text("content-5", "Strategic Retail Origin")}</span>
           <h2 className="text-3xl font-light font-editorial text-black uppercase leading-tight">{coreContent.text("content-6", "Designed for Learners & Educators in Banago")}</h2>
           <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">{coreContent.text("content-7", "The retail store was established in 2026 to solve a critical pain point in Barangay Banago: students and local teachers previously had to travel to disjointed locations to purchase basic school materials or secure printing services, adding extra travel expenses and taking valuable study time.")}</p>
-          <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">{coreContent.text("content-8", "Strategically situated just ")}<strong>{coreContent.text("content-9", "30 meters from Plaridel Elementary School")}</strong>{coreContent.text("content-10", " and ")}<strong>{coreContent.text("content-11", "50 meters from Plaridel Integrated National High School")}</strong>{coreContent.text("content-12", ", Mama Mo Ink provides immediate, friendly assistance with everyday supplies—from notebooks, exam bond papers, precision gel pens, and art materials, to document rush printing, photocopying, scanning, and bookbinding.")}</p>
+          <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">{coreContent.text("content-8", "Strategically situated just 30 meters from Plaridel Elementary School and 50 meters from Plaridel Integrated National High School, Mama Mo Ink provides immediate, friendly assistance with everyday supplies—from notebooks, exam bond papers, precision gel pens, and art materials, to document rush printing, photocopying, scanning, and bookbinding.")}</p>
 
           <div className="pt-2 grid grid-cols-2 gap-4">
             <div className="border-l-2 border-black pl-3 space-y-0.5 hover-lift">
@@ -76,7 +84,7 @@ export default function AboutPage() {
 
       <CoreSectionSlot placement="before:2" />
       {/* Mission & Vision Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up delay-150">
+      <div data-native-section="about-mission-vision" className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up delay-150">
         
         {/* Mission */}
         <div className="bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs relative overflow-hidden group hover:border-black transition-all hover-lift card-interactive">
@@ -98,27 +106,33 @@ export default function AboutPage() {
           <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">{coreContent.text("content-26", "“To be known to the community of Banago, Nagcarlan, as the most reliable and preferred school supply provider that offers convenience and affordability in purchasing school supplies and dependable customer service that will cater to the needs of every learner.”")}</p>
         </div>
 
+        {missionVisionCards.map(item => <article key={item.id} data-builder-item-id={item.id} onClick={() => coreContent.setActiveItemId?.(item.id)} className={`relative bg-white border border-neutral-200 rounded-2xl p-8 space-y-4 shadow-xs ${coreContent.activeItemId === item.id ? 'ring-2 ring-amber-400' : ''}`}>
+          {coreContent.editable && <button type="button" data-subsection-action="true" onClick={() => coreContent.removeSubSection('section-about-mission-vision-items', item.id)} aria-label={`Delete ${item.title || 'card'}`} className="absolute right-3 top-3 rounded border border-rose-200 bg-white px-2 py-1 text-sm text-rose-600">×</button>}
+          {item.eyebrow && <span className="block text-[10px] uppercase font-mono tracking-widest text-neutral-400">{item.eyebrow}</span>}
+          <h3 className="font-editorial text-2xl text-black font-semibold">{item.title}</h3><p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed">{item.description}</p>
+        </article>)}
+        {coreContent.editable && <button type="button" data-add-subsection="true" onClick={() => addCard('section-about-mission-vision-items')} className="min-h-32 rounded-xl border-2 border-dashed border-amber-500/70 px-4 py-6 text-sm font-medium text-amber-800 hover:bg-amber-50">+ Add Sub-Section / Card</button>}
       </div>
 
       <CoreSectionSlot placement="before:3" />
       {/* Two-Floor Store Layout Breakdown (From PDF Page 4) */}
-      <div className="bg-white border border-neutral-200 rounded-2xl p-8 sm:p-10 shadow-xs space-y-8">
+      <div data-native-section="about-floor-layout" className={`bg-white border border-neutral-200 rounded-2xl p-8 sm:p-10 shadow-xs space-y-8 ${coreContent.activeSectionId === 'about-floor-layout' ? 'ring-2 ring-amber-400 ring-inset' : ''}`}>
         <div className="text-center max-w-xl mx-auto space-y-2">
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 font-bold">{coreContent.text("content-27", "Architectural Retail Design")}</span>
           <h3 className="font-editorial text-3xl text-black font-semibold uppercase">{coreContent.text("content-28", "Two-Floor Purpose-Built Layout")}</h3>
           <p className="text-xs text-neutral-500 font-light">{coreContent.text("content-29", "Designed for optimal foot traffic flow, rapid service turnaround, and student comfort.")}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid grid-cols-1 ${floorExtensions.length >= 1 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6`}>
           
           {/* Ground Floor */}
-          <div className="p-6 rounded-xl border border-neutral-200 bg-[#FAF9F5] space-y-4">
+          {groundFloor && <div style={{ order: floorItems.indexOf(groundFloor) }} className="p-6 rounded-xl border border-neutral-200 bg-[#FAF9F5] space-y-4">
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-amber-700" />
-                <h4 className="font-semibold text-black text-sm uppercase tracking-wider">{coreContent.text("content-30", "Ground Floor")}</h4>
+                <h4 className="font-semibold text-black text-sm uppercase tracking-wider">{groundFloor.title || coreContent.text("content-30", "Ground Floor")}</h4>
               </div>
-              <span className="text-[10px] font-mono bg-neutral-200 px-2 py-0.5 rounded text-neutral-700">{coreContent.text("content-31", "Service Hub")}</span>
+              <span className="text-[10px] font-mono bg-neutral-200 px-2 py-0.5 rounded text-neutral-700">{groundFloor.description || coreContent.text("content-31", "Service Hub")}</span>
             </div>
             <ul className="space-y-2.5 text-xs text-neutral-600 font-light">
               <li className="flex items-center gap-2">
@@ -138,16 +152,16 @@ export default function AboutPage() {
                 <span><strong>{coreContent.text("content-38", "Printing & Waiting Counter:")}</strong>{coreContent.text("content-39", " Rush printing, photocopying, and comfortable seating.")}</span>
               </li>
             </ul>
-          </div>
+          </div>}
 
           {/* Second Floor */}
-          <div className="p-6 rounded-xl border border-neutral-200 bg-[#FAF9F5] space-y-4">
+          {secondFloor && <div style={{ order: floorItems.indexOf(secondFloor) }} className="p-6 rounded-xl border border-neutral-200 bg-[#FAF9F5] space-y-4">
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-blue-700" />
-                <h4 className="font-semibold text-black text-sm uppercase tracking-wider">{coreContent.text("content-40", "Second Floor")}</h4>
+                <h4 className="font-semibold text-black text-sm uppercase tracking-wider">{secondFloor.title || coreContent.text("content-40", "Second Floor")}</h4>
               </div>
-              <span className="text-[10px] font-mono bg-neutral-200 px-2 py-0.5 rounded text-neutral-700">{coreContent.text("content-41", "Supplies Gallery")}</span>
+              <span className="text-[10px] font-mono bg-neutral-200 px-2 py-0.5 rounded text-neutral-700">{secondFloor.description || coreContent.text("content-41", "Supplies Gallery")}</span>
             </div>
             <ul className="space-y-2.5 text-xs text-neutral-600 font-light">
               <li className="flex items-center gap-2">
@@ -167,14 +181,21 @@ export default function AboutPage() {
                 <span><strong>{coreContent.text("content-48", "Bundle Corner:")}</strong>{coreContent.text("content-49", " Semester starter packages and exam week survival bundles.")}</span>
               </li>
             </ul>
-          </div>
+          </div>}
+
+          {floorExtensions.map(item => <article key={item.id} style={{ order: floorItems.indexOf(item) }} className="relative rounded-xl border border-neutral-200 bg-[#FAF9F5] p-6 shadow-sm">
+            {coreContent.editable && <button type="button" data-subsection-action="true" onClick={() => coreContent.removeSubSection('section-about-floor-layout-items', item.id)} aria-label={`Delete ${item.title || 'sub-section'}`} title="Delete sub-section" className="absolute right-3 top-3 rounded border border-rose-200 bg-white px-2 py-1 text-sm text-rose-600 hover:bg-rose-50">×</button>}
+            <h4 className="mb-3 pr-7 text-sm font-semibold uppercase tracking-wider text-black">{item.title}</h4>
+            <p className="text-xs leading-relaxed text-neutral-600">{item.description}</p>
+          </article>)}
+          {coreContent.editable && <button type="button" data-add-subsection="true" onClick={addFloorItem} style={{ order: floorItems.length }} className="min-h-32 rounded-xl border-2 border-dashed border-amber-500/70 px-4 py-6 text-sm font-medium text-amber-800 hover:bg-amber-50">+ Add Sub-Section / Card</button>}
 
         </div>
       </div>
 
       <CoreSectionSlot placement="before:4" />
       {/* Unique Selling Proposition (USP) Grid */}
-      <div className="space-y-8">
+      <div data-native-section="about-usp" className="space-y-8">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 font-bold">{coreContent.text("content-50", "Value Proposition")}</span>
           <h3 className="font-editorial text-3xl text-black font-semibold uppercase">{coreContent.text("content-51", "Our Competitive Advantage")}</h3>
@@ -199,12 +220,18 @@ export default function AboutPage() {
             <h4 className="font-editorial text-lg text-black font-semibold group-hover:text-amber-900 transition-colors">{coreContent.text("content-57", "Multichannel Access")}</h4>
             <p className="text-xs text-neutral-600 font-light leading-relaxed">{coreContent.text("content-58", "Browse products, reserve reams, and pre-order rush prints online or via Facebook, picking up packed orders ready at Counter 2 in minutes.")}</p>
           </div>
+          {uspCards.map(item => <article key={item.id} data-builder-item-id={item.id} onClick={() => coreContent.setActiveItemId?.(item.id)} className={`relative p-8 bg-white border border-neutral-200 rounded-xl space-y-3 shadow-xs ${coreContent.activeItemId === item.id ? 'ring-2 ring-amber-400' : ''}`}>
+            {coreContent.editable && <button type="button" data-subsection-action="true" onClick={() => coreContent.removeSubSection('section-about-usp-items', item.id)} aria-label={`Delete ${item.title || 'card'}`} className="absolute right-3 top-3 rounded border border-rose-200 bg-white px-2 py-1 text-sm text-rose-600">×</button>}
+            {item.eyebrow && <span className="text-[10px] uppercase tracking-wider text-neutral-400">{item.eyebrow}</span>}
+            <h4 className="font-editorial text-lg text-black font-semibold">{item.title}</h4><p className="text-xs text-neutral-600 font-light leading-relaxed">{item.description}</p>
+          </article>)}
+          {coreContent.editable && <button type="button" data-add-subsection="true" onClick={() => addCard('section-about-usp-items')} className="min-h-32 rounded-xl border-2 border-dashed border-amber-500/70 px-4 py-6 text-sm font-medium text-amber-800 hover:bg-amber-50">+ Add Sub-Section / Card</button>}
         </div>
       </div>
 
       <CoreSectionSlot placement="before:5" />
       {/* Team / Founders Section (From PDF Page 1) */}
-      <div className="bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 space-y-8 shadow-xs animate-fade-up delay-150">
+      <div data-native-section="about-team" className="bg-[#FAF9F5] border border-neutral-300 rounded-2xl p-8 sm:p-12 space-y-8 shadow-xs animate-fade-up delay-150">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400 font-bold">{coreContent.text("content-59", "Strategic Retail Plan Team • 4BSBA-MM1")}</span>
           <h3 className="font-editorial text-3xl text-black font-semibold uppercase">{coreContent.text("content-60", "Founders & Management Team")}</h3>
@@ -213,10 +240,10 @@ export default function AboutPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {coreContent.collection(CORE_COLLECTIONS['/about'][0]).map((member) => (
-            <div key={member.id} data-core-field={`team-${member.id}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
-              <div data-core-field={`team-${member.id}-image`} tabIndex={coreContent.editable ? 0 : undefined} role={coreContent.editable ? 'button' : undefined} aria-label={coreContent.editable ? `Add or change photo for ${coreContent(`team-${member.id}-name`, member.name)}` : undefined} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
-                {coreContent(`team-${member.id}-image`, '') ? (
-                  <img src={coreContent(`team-${member.id}-image`, '')} alt={coreContent(`team-${member.id}-name`, member.name)} className="w-full h-full object-cover" />
+            <div key={member.id} data-builder-item-id={member.id} data-core-field={`team-${member.id}-name`} className="bg-white border border-neutral-200 rounded-xl p-5 text-center space-y-3 shadow-2xs card-interactive hover-lift group">
+              <div data-core-field={`team-${member.id}-image`} tabIndex={coreContent.editable ? 0 : undefined} role={coreContent.editable ? 'button' : undefined} aria-label={coreContent.editable ? `Add or change photo for ${member.name}` : undefined} className="w-12 h-12 overflow-hidden rounded-full bg-neutral-900 text-amber-300 mx-auto flex items-center justify-center font-mono font-bold text-sm group-hover:scale-110 group-hover:bg-black transition-all duration-300 shadow-2xs">
+                {coreContent(`team-${member.id}-image`, member.image || '') ? (
+                  <img src={coreContent(`team-${member.id}-image`, member.image || '')} alt={coreContent(`team-${member.id}-name`, member.name)} className="w-full h-full object-cover" />
                 ) : coreContent(`team-${member.id}-initials`, member.initials)}
               </div>
               <div>
@@ -230,7 +257,7 @@ export default function AboutPage() {
 
       <CoreSectionSlot placement="before:6" />
       {/* Call to Action */}
-      <div className="p-10 bg-[#161616] text-white text-center space-y-4 rounded-2xl shadow-md">
+      <div data-native-section="about-cta" className="p-10 bg-[#161616] text-white text-center space-y-4 rounded-2xl shadow-md">
         <h3 className="font-editorial text-2xl sm:text-3xl uppercase tracking-wide">{coreContent.text("content-62", "Ready to Experience Convenient School Shopping?")}</h3>
         <p className="text-xs text-neutral-300 max-w-md mx-auto font-light">{coreContent.text("content-63", "Visit our store in Purok 5, Barangay Banago, Nagcarlan, Laguna or reserve your materials online for immediate counter pickup.")}</p>
         <div className="pt-2">

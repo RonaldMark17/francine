@@ -12,7 +12,7 @@ export function useCoreContent() {
   const content = (id, fallback) => values[id] ?? fallback;
   const text = (id, fallback) => selectable
     ? <span data-core-field={id} tabIndex={0} role="textbox" aria-label={`Edit: ${fallback}`}
-        contentEditable={Boolean(selection?.onChange)} suppressContentEditableWarning
+        contentEditable={Boolean(selection?.onChange && selection.selectedField === id)} suppressContentEditableWarning
         onBlur={event => {
           const next = event.currentTarget.textContent.replace(/\u200b/g, '');
           if (next !== content(id, fallback)) selection?.onChange?.(id, next);
@@ -33,5 +33,24 @@ export function useCoreContent() {
           }
         }}>{content(id, fallback) || '\u200b'}</span>
     : content(id, fallback);
-  return Object.assign(content, { text, editable: selectable, collection: definition => getCollectionItems(values, definition) });
+  const itemText = (definition, item, field, fallback = '') => {
+    const id = `${definition.id}-${item.id}-${field}`;
+    const current = values[id] ?? item[field] ?? fallback;
+    return selectable
+      ? <span data-core-field={id} tabIndex={0} role="textbox" aria-label={`Edit: ${fallback || field}`}
+          contentEditable={Boolean(selection?.onChange && selection.selectedField === id)} suppressContentEditableWarning
+          onBlur={event => {
+            const next = event.currentTarget.textContent.replace(/\u200b/g, '');
+            if (next !== current) selection?.onChange?.(id, next);
+          }}>{current || '\u200b'}</span>
+      : current;
+  };
+  const subSections = key => Array.isArray(values[key]) ? values[key] : [];
+  const addSubSection = (key, item) => selection?.onAddSubSection?.(key, item);
+  const removeSubSection = (key, id) => selection?.onRemoveSubSection?.(key, id);
+  const addCollectionItem = (definition, item) => selection?.onAddCollectionItem?.(definition, item);
+  const removeCollectionItem = (definition, id) => selection?.onRemoveCollectionItem?.(definition, id);
+  const addContentItem = (key, item) => selection?.onAddContentItem?.(key, item);
+  const removeContentItem = (key, id) => selection?.onRemoveContentItem?.(key, id);
+  return Object.assign(content, { text, itemText, editable: selectable, activeSectionId: selection?.activeSectionId, activeItemId: selection?.activeItemId, setActiveItemId: selection?.setActiveItemId, collection: definition => getCollectionItems(values, definition), subSections, addSubSection, removeSubSection, addCollectionItem, removeCollectionItem, addContentItem, removeContentItem });
 }
