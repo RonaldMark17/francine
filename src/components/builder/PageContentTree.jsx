@@ -65,6 +65,7 @@ export default function PageContentTree({
   components,
   nativeContent,
   activeSectionId,
+  activeItemId,
   activeInspectorNode,
   onSelectNativeField,
   onSelectComponentField,

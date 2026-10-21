@@ -1037,6 +1037,7 @@ export default function VisualPageEditor({ page, isNewPage = false, onClose, onS
               components={components}
               nativeContent={nativeContent}
               activeSectionId={activeSectionId}
+              activeItemId={activeItemId}
               activeInspectorNode={activeInspectorNode}
               onSelectNativeField={(fieldId, sectionId, nodeId) => {
                 setSelectedCompId('native-content');
