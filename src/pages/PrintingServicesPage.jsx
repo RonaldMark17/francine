@@ -20,6 +20,8 @@ export default function PrintingServicesPage() {
   const coreContent = useCoreContent();
   const {
     currentUser,
+    setIsAuthModalOpen,
+    setAuthModalMode,
     submitPrintRequest,
     showToast,
     cart = [],
@@ -29,6 +31,7 @@ export default function PrintingServicesPage() {
     applyPromoCode,
     removePromoCode
   } = useApp();
+  const isAuthenticated = Boolean(currentUser?.sessionToken);
 
   // Interactive Calculator State
   const [calcService, setCalcService] = useState('Document Printing');
@@ -235,18 +238,25 @@ export default function PrintingServicesPage() {
 
             <button
               onClick={() => {
+                if (!isAuthenticated) {
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                  return;
+                }
                 setCalcService(srv.title);
                 window.scrollTo({ top: 750, behavior: 'smooth' });
               }}
               className="w-full py-2.5 bg-white border border-neutral-300 hover:border-black hover:bg-neutral-900 hover:text-white text-black text-xs uppercase tracking-wider font-medium transition-all active:scale-95 shadow-2xs"
-            >{coreContent.text("content-7", "Calculate & Request This Service")}</button>
+            >{isAuthenticated
+              ? coreContent.text("content-7", "Calculate & Request This Service")
+              : "Sign In to Calculate & Request"}</button>
           </div>
         ))}
       </div>
 
       <CoreSectionSlot placement="before:2" />
       {/* INTERACTIVE PRICE ESTIMATOR & INQUIRY FORM */}
-      <div className="bg-[#FAF9F5] border border-neutral-300 p-4 sm:p-6">
+      {isAuthenticated && <div className="bg-[#FAF9F5] border border-neutral-300 p-4 sm:p-6">
         <div className="max-w-3xl mb-5">
           <div className="flex items-center gap-2 text-neutral-500 mb-1">
             <Calculator className="w-4 h-4" />
@@ -493,7 +503,7 @@ export default function PrintingServicesPage() {
 
           </form>
         )}
-      </div>
+      </div>}
 
     </div>
   );
