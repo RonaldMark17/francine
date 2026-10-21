@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,32 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Local files
 *.local
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Deployment backups
+backup-pre-vercel-*/
+
+# SQLite temporary WAL/SHM files
+*.sqlite-wal
+*.sqlite-shm
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# SQLite temporary WAL/SHM files
-*.sqlite-wal
-*.sqlite-shm
-
-# Deployment secrets
-.env
-.env.*
-!.env.example
-backup-pre-vercel-*/
-
-.env
-.env.*
-!.env.example
